@@ -1,0 +1,10 @@
+{
+  "USUARIO_ID": null,
+  "USUARIO_CPF": null,
+  "USUARIO_NOME": null,
+  "USUARIO_LOGIN": null,
+  "USUARIO_SENHA": null,
+  "USUARIO_ATIVO": null,
+  "USUARIO_ADM": null,
+  "usuarioLocais": []
+}

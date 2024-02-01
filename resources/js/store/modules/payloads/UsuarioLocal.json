@@ -1,0 +1,25 @@
+{
+  "USUARIO_LOCAL_ID": null,
+  "USUARIO_ID": null,
+  "LOCAL_ID": null,
+  "USUARIO_LOCAL_ATIVO": null,
+  "local": {
+    "LOCAL_ID": null,
+    "LOCAL_DESCRICAO": null,
+    "LOCAL_ENDERECO": null,
+    "LOCAL_TELEFONE": null,
+    "LOCAL_ABERTURA": null,
+    "LOCAL_FECHAMENTO": null,
+    "LOCAL_TIPO": null,
+    "LOCAL_ATUALIZACAO": null,
+    "LOCAL_ATIVO": null,
+    "publicoUltimo": {
+      "PUBLICO_ID": null,
+      "PUBLICO_DESCRICAO": null,
+      "PUBLICO_DATA": null,
+      "PUBLICO_ULTIMO": null,
+      "LOCAL_ID": null
+    },
+    "vacinaLocais": []
+  }
+}
