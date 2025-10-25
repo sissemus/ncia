@@ -19,7 +19,7 @@
 
                         <!--MENU SEM SUBMENU-->
                         <v-list-item :class="baseUrl + '/' + aplicacao['APLICACAO_URL'] === url ? 'grey lighten-2' : ''"
-                            v-if="aplicacao['children'].length === 0" link v-model="aplicacoes[x].model = inclui(x)"
+                            v-if="aplicacao['children'].length === 0" link v-model="aplicacoes[x].model"
                             :href="`${baseUrl}/${aplicacao['APLICACAO_URL']}`">
                             <v-list-item-action>
                                 <v-icon>{{ aplicacao['APLICACAO_ICONE'] }}</v-icon>
@@ -35,7 +35,7 @@
 
                         <!--MENU COM SUBMENU-->
                         <v-list-group v-if="aplicacao['children'].length > 0" :key="aplicacao['APLICACAO_ID']"
-                            v-model="aplicacoes[x].model = inclui(x)" :color="color"
+                            v-model="aplicacoes[x].model" :color="color"
                             :prepend-icon="aplicacao['APLICACAO_ICONE'] ? aplicacao['APLICACAO_ICONE'] : 'mdi-menu'"
                             append-icon="mdi-chevron-up">
                             <!--texto do grupo pai-->

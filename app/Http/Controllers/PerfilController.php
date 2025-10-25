@@ -7,7 +7,6 @@ use App\Http\Requests\Perfil\PerfilUpdateRequest;
 use App\Models\Acesso;
 use App\Models\Aplicacao;
 use App\Models\Perfil;
-use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

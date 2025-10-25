@@ -35,6 +35,7 @@ Vue.component('usuario-view', require('./components/usuario/UsuarioView').defaul
 Vue.component('usuario-alterar-senha-view', require('./components/usuario/UsuarioAlterarSenhaView').default);
 Vue.component('aplicacao-view', require('./components/aplicacao/AplicacaoView').default);
 Vue.component('perfil-view', require('./components/perfil/PerfilView').default);
+Vue.component('departamento-view', require('./components/departamento/DepartamentoView.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

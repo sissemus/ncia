@@ -123,4 +123,12 @@ class TabelaGenerica extends Model
             return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
+
+    public static function hierarquia($colunaId = null)
+    {
+        $tabela = RTG::HIERARQUIA;
+        if ($colunaId)
+            return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela);
+    }
 }

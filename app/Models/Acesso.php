@@ -43,14 +43,14 @@ class Acesso extends Model
 
     public static function getByUsuarioId($usuarioId)
     {
-        //        $perfisIds = UsuarioPerfil::with([])->where("USUARIO_ID", $usuarioId)->pluck("PERFIL_ID");
         $aplicacaoIds = DB::select(
             "SELECT ACS.APLICACAO_ID
-                    FROM ACESSO ACS
-                    INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
-                    WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = $usuarioId AND UP.USUARIO_PERFIL_ATIVO = 1)
-                    AND A.APLICACAO_PAI_ID IS NULL
-                    GROUP BY ACS.APLICACAO_ID"
+            FROM ACESSO ACS
+            INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
+            WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = ? AND UP.USUARIO_PERFIL_ATIVO = 1)
+            AND A.APLICACAO_PAI_ID IS NULL
+            GROUP BY ACS.APLICACAO_ID",
+            [$usuarioId]
         );
         $aplicacaoIdsArray = [];
         if (count($aplicacaoIds) > 0) {
@@ -58,18 +58,22 @@ class Acesso extends Model
                 $aplicacaoIdsArray[] = $aplicacaoId->APLICACAO_ID;
             }
         }
-        $aplicacoesPai = Aplicacao::with([])->whereIn("APLICACAO_ID", $aplicacaoIdsArray)->get();
+        $aplicacoesPai = Aplicacao::with([])
+            ->whereIn("APLICACAO_ID", $aplicacaoIdsArray)
+            ->orderBy("APLICACAO_ORDEM")
+            ->get();
         if ($aplicacoesPai) {
             $aplicacoesPaiArray = $aplicacoesPai->toArray();
             for ($i = 0; $i < count($aplicacoesPaiArray); $i++) {
                 $children = DB::select(
                     "SELECT ACS.APLICACAO_ID,
-                                    A.APLICACAO_PAI_ID
-                            FROM ACESSO ACS
-                            INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
-                            WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = $usuarioId AND UP.USUARIO_PERFIL_ATIVO = 1)
-                            AND A.APLICACAO_PAI_ID = {$aplicacoesPaiArray[$i]['APLICACAO_ID']}
-                            GROUP BY ACS.APLICACAO_ID, A.APLICACAO_PAI_ID"
+                    A.APLICACAO_PAI_ID
+                    FROM ACESSO ACS
+                    INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
+                    WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = ? AND UP.USUARIO_PERFIL_ATIVO = 1)
+                    AND A.APLICACAO_PAI_ID = ?
+                    GROUP BY ACS.APLICACAO_ID, A.APLICACAO_PAI_ID",
+                    [$usuarioId, $aplicacoesPaiArray[$i]['APLICACAO_ID']]
                 );
                 $childrenArray = [];
                 if ($children) {

@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
         $caracteresRemocao = ["/[^0-9]/"];
         Config::set(['vcp' => $versao]);
         Config::set(['vsp' => preg_replace($caracteresRemocao, "", $versao)]);
-        Config::set(['APP_NAME' => 'SEMUS BASE']);
+        Config::set(['APP_NAME' => 'SISINDICADORES']);
         Config::set(['APP_DESCRICAO' => 'Sistema Base da SIS']);
 
         Auditables::register();

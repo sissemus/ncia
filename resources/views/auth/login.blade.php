@@ -11,7 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link rel="shortcut icon" type="image/png" href="{{ asset('img/favicons.png') }}"/>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <title>{{ env('APP_SIGLA', 'SEMUS BASE') }}{{' v'.config('vcp')}}</title>
+    <title>{{ env('APP_SIGLA', 'SISINDICADORES') }}{{' v'.config('vcp')}}</title>
 </head>
 <body>
 <div id="app">
