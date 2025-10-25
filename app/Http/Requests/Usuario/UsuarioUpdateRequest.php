@@ -2,32 +2,29 @@
 
 namespace App\Http\Requests\Usuario;
 
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class UsuarioUpdateRequest extends FormRequest {
-    public function authorize() {
-        return true;
-    }
-
-    public function rules() {
+class UsuarioUpdateRequest extends UsuarioCreateRequest
+{
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        $uniqueIgnoreId = Rule::unique('USUARIO')->ignore($this->request->all()["USUARIO_ID"],"USUARIO_ID");
         return [
-            "USUARIO_ID"    => ["required"],
-            "USUARIO_LOGIN" => ["required"],
-//            "USUARIO_SENHA" => ["required"],
-            "USUARIO_ATIVO" => ["required"],
-            "USUARIO_ADM"   => ["required"],
-            "usuarioLocais" => ["required"],
+            "USUARIO_ID" => ["required","integer"],
+            "USUARIO_LOGIN" => ["required",$uniqueIgnoreId,"max:50"],
+            "USUARIO_SENHA" => ["required_unless:USUARIO_SENHA_CONFIRMATION,","same:USUARIO_SENHA_CONFIRMATION","max:32"],
+            "USUARIO_NOME" => ["required",$uniqueIgnoreId,"max:255"],
+            "USUARIO_CPF" => ["required",$uniqueIgnoreId,"size:11",'cpf'],
+            "USUARIO_EMAIL" => ["required",$uniqueIgnoreId,"max:50"],
+            "USUARIO_ATIVO" => ["required","integer"],
+//            "USUARIO_VIGENCIA" => ["date"],
+            "USUARIO_SENHA_CONFIRMATION" => ["required_unless:USUARIO_SENHA,"],
         ];
     }
 
-    public function attributes() {
-        return [
-            "USUARIO_ID"    => "<b>ID DO USUÁRIO</b>",
-            "USUARIO_LOGIN" => "<b>LOGIN</b>",
-            "USUARIO_SENHA" => "<b>SENHA</b>",
-            "USUARIO_ATIVO" => "<b>ATIVO</b>",
-            "USUARIO_ADM"   => "<b>ADMINISTRADOR</b>",
-            "usuarioLocais" => "<b>LOCAL</b>",
-        ];
-    }
 }

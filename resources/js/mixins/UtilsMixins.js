@@ -17,16 +17,13 @@ export default {
                 deepOrange: 'rgb(255, 87, 34)',
                 lightGreen: 'rgb(139,195,74)'
             },
-            Situacao: {
-                SEM_FILA: 1,
-                POUCA_FILA: 2,
-                FILA_MODERADA: 3,
-                FILA_INTENSA: 4,
-                ENCERRADO: 5,
-            },
-            LocalTipo: {
-                CMV: 1,
-                DRIVE_THRU: 2,
+            EventoEscalaEnum: {
+                CADASTRADA: 1,
+                ATUALIZADA: 2,
+                AVALIADA: 3,
+                DEFERIDA: 4,
+                INDEFERIDA: 5,
+                CLONADA: 6,
             },
         }
     },
@@ -68,6 +65,22 @@ export default {
         },
         formatarMoedaBR(value){
             return 'R$ '+ parseFloat(value).toLocaleString('pt-br',{minimumFractionDigits:2});
+        },
+
+        parseData(valor,formatoEntrda="DD/MM/YYYY"){
+            if(valor)
+                return moment(valor,formatoEntrda);
+            else return '';
+        },
+        formatarData(value, formato = 'DD/MM/YYYY') {
+            if (value === '' || value === undefined || value === null) {
+                return '';
+            } else {
+                return moment(value).format(formato);
+            }
+        },
+        formatarPercentual(value){
+            return parseFloat(value).toLocaleString() + " %";
         }
     },
 

@@ -1,31 +1,50 @@
 <template>
     <v-app id="inspire">
-        <v-app-bar app color="gray" light extended class="pa-5">
-            <v-container>
-                <v-layout row>
-                    <h2 style="color: #2071B7"><b>FILÔMETRO</b></h2>
-                </v-layout>
-                <v-layout row>
-                    <h5 style="color: #2071B7"><b>CONSULTA DE PONTOS DE VACINAÇÃO</b></h5>
-                </v-layout>
-            </v-container>
-
-            <v-spacer></v-spacer>
-            <div class="d-flex align-center">
-                <v-img alt="Prefeitura de São Luís" class="shrink mr-0" contain :src="baseUrl+'/img/logo_topo.png'" transition="scale-transition" width="150"/>
-            </div>
+        <v-app-bar :clipped-left="$vuetify.breakpoint.lgAndUp" :color="color" dark flat app prominent style="max-height: 108px; margin-left: 0 !important;">
+            <v-row no-gutters>
+                <v-col cols="2" style="max-width: 60px">
+                    <v-img contain :src="baseUrl + '/img/brasao.png'" alt="Logo" height="100" width="50"></v-img>
+                </v-col>
+                <v-col cols="10">
+                    <div class="d-flex flex-column ml-0 mt-2" style="font-size: 14px">
+                        <div class="py-0 my-0">
+                            PREFEITURA DE SÃO LUÍS
+                        </div>
+                        <div class="py-0 my-0">
+                            SECRETARIA MUNICIPAL DE SAÚDE - SEMUS
+                        </div>
+                        <div class="py-0 my-0">
+                            SUPERINTENDÊNCIA DE INFORMAÇÃO DA SAÚDE - SIS
+                        </div>
+                        <div class="py-0 my-0">
+                            {{ appName }}
+                        </div>
+                    </div>
+                </v-col>
+            </v-row>
         </v-app-bar>
 
-        <v-main style="background-color: #eee">
+        <v-main>
             <v-container fluid class="fill-height">
                 <v-row align="center" justify="center">
                     <v-col cols="12" sm="12" md="5">
                         <v-card class="elevation-2">
-                            <v-toolbar color="gray" light elevation="1">
+                            <v-toolbar :color="color" dark flat>
                                 <v-toolbar-title>Identifique-se</v-toolbar-title>
                             </v-toolbar>
                             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
                             <div :id="msgIdDebug"></div>
+                            <v-card
+                                class="d-flex align-center justify-center pa-4 mx-auto"
+                                max-width="550"
+                                min-height="76"
+                                outlined
+                                v-if="ambiente === 'homolog'"
+                            >
+                                <p class="font-weight-black" style="color: red">
+                                    AMBIENTE DE HOMOLOGAÇÃO
+                                </p>
+                            </v-card>
                             <v-card-text>
                                 <v-text-field
                                     label="Login"
@@ -33,8 +52,8 @@
                                     prepend-icon="mdi-account"
                                     type="text"
                                     v-model="USUARIO_LOGIN"
-                                    solo
                                     @keyup.enter="logar"
+                                    :color="color"
                                 ></v-text-field>
 
                                 <v-text-field
@@ -43,49 +62,19 @@
                                     prepend-icon="mdi-lock"
                                     type="password"
                                     v-model="USUARIO_SENHA"
-                                    solo
                                     @keyup.enter="logar"
+                                    :color="color"
                                 ></v-text-field>
                             </v-card-text>
                             <v-card-actions>
-                                <v-btn x-large color="green darken-2" block dark @click="logar">Acessar</v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn :color="color" outlined tile @click="logar">Acessar</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-col>
                 </v-row>
             </v-container>
         </v-main>
-        <v-footer light padless>
-            <v-card flat tile class="text-center" style="width: 100%">
-                <v-card-text>
-                    <v-btn class="mx-4" icon href="https://twitter.com/prefeiturasl" target="_blank">
-                        <v-icon size="24px">
-                            mdi-twitter
-                        </v-icon>
-                    </v-btn>
-                    <v-btn class="mx-4" icon href="https://www.facebook.com/PrefeituraDeSaoLuis" target="_blank">
-                        <v-icon size="24px">
-                            mdi-facebook
-                        </v-icon>
-                    </v-btn>
-                    <v-btn class="mx-4" icon href="https://www.instagram.com/prefeiturasaoluis/" target="_blank">
-                        <v-icon size="24px">
-                            mdi-instagram
-                        </v-icon>
-                    </v-btn>
-                </v-card-text>
-
-                <v-card-text class="pt-0">
-                    PREFEITURA DE SÃO LUÍS<br>
-                    Av. Pedro II, S/N° - Palácio De La Ravardière - Centro - São Luís - MA - CEP: 65010-904
-                </v-card-text>
-
-                <v-card-text>
-                    {{ new Date().getFullYear() }} — SEMIT
-                </v-card-text>
-                <v-img :src="baseUrl+'/img/predios3.png'"></v-img>
-            </v-card>
-        </v-footer>
 
         <block-u-i></block-u-i>
     </v-app>
@@ -104,7 +93,15 @@ export default {
         appName: {
             type: String,
             required: true
-        }
+        },
+        color: {
+            type: String,
+            required: true
+        },
+        ambiente: {
+            type: String,
+            required: true
+        },
     },
     data: function () {
         return {
@@ -114,17 +111,9 @@ export default {
             USUARIO_LOGIN: '',
             USUARIO_SENHA: '',
             initiated: false,
-            icons: [
-                'mdi-facebook',
-                'mdi-twitter',
-                'mdi-linkedin',
-                'mdi-instagram',
-            ],
         }
     },
     mounted() {
-        console.log(this.baseUrl)
-        console.log('appName', this.appName)
     },
     created() {
         axios.interceptors.request.use((config) => {

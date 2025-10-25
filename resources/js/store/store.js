@@ -1,19 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import AuthModule from "./modules/assets/AuthModule"
 import BlockUIModule from "./modules/assets/BlockUIModule"
 import TratarErroAjaxModule from "./modules/assets/TratarErroAjaxModule";
 import VariaveisModule from "./modules/assets/VariaveisModule";
 import MdNovoUsuarioModule from "./modules/usuario/MdNovoUsuarioModule";
 import DominioModule from "./modules/assets/DominioModule";
+import TabelaGenericaViewModule from "./modules/tabela_generica/TabelaGenericaViewModule";
+import MdNovaColunaModule from "./modules/tabela_generica/MdNovaColunaModule";
+import MdNovaTabelaModule from "./modules/tabela_generica/MdNovaTabelaModule";
 import PerfectScrollbar from 'vue2-perfect-scrollbar'
 import 'vue2-perfect-scrollbar/dist/vue2-perfect-scrollbar.css'
-import MdOrientacoesModule from "./modules/MdOrientacoesModule"
 import UsuarioViewModule from "./modules/usuario/UsuarioViewModule";
-import MdGraficoSituacaoFilaModule from "./modules/grafico/MdGraficoSituacaoFilaModule";
-import DoseViewModule from "./modules/dose/DoseViewModule";
-import VacinaViewModule from "./modules/vacina/VacinaViewModule";
-import VacinaLocalViewModule from "./modules/vacina_local/VacinaLocalViewModule";
-import VacinacaoViewModule from "./modules/vacinacao/VacinacaoViewModule";
+import TabUsuarioPerfilModule from "./modules/usuario/TabUsuarioPerfilModule";
+import MdNovoPerfilModule from "./modules/perfil/MdNovoPerfilModule";
+import AplicacaoViewModule from './modules/aplicacao/AplicacaoViewModule';
+import MdNovaAplicacaoModule from './modules/aplicacao/MdNovaAplicacaoModule';
+import PerfilViewModule from "./modules/perfil/PerfilViewModule";
+import MdSelecionarPerfilModule from "./modules/perfil/MdSelecionarPerfilModule";
 
 Vue.use(PerfectScrollbar)
 Vue.use(Vuex)
@@ -33,22 +37,26 @@ export default new Vuex.Store({
         }
     },
     actions: {
-        setOverlay({commit}, value) {
+        setOverlay({ commit }, value) {
             commit('setOverlay', value);
         }
     },
     modules: {
+        AuthModule,
         BlockUIModule,
         TratarErroAjaxModule,
         VariaveisModule,
         MdNovoUsuarioModule,
         DominioModule,
-        MdOrientacoesModule,
+        TabelaGenericaViewModule,
+        MdNovaColunaModule,
+        MdNovaTabelaModule,
         UsuarioViewModule,
-        MdGraficoSituacaoFilaModule,
-        DoseViewModule,
-        VacinaViewModule,
-        VacinaLocalViewModule,
-        VacinacaoViewModule,
+        AplicacaoViewModule,
+        MdNovaAplicacaoModule,
+        MdNovoPerfilModule,
+        PerfilViewModule,
+        MdSelecionarPerfilModule,
+        TabUsuarioPerfilModule,
     }
 });

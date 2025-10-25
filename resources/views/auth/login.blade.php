@@ -11,11 +11,16 @@
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
     <link rel="shortcut icon" type="image/png" href="{{ asset('img/favicons.png') }}"/>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <title>{{ config('APP_NAME', 'FILOMETRO') }}{{' v'.config('vcp')}}</title>
+    <title>{{ env('APP_SIGLA', 'SEMUS BASE') }}{{' v'.config('vcp')}}</title>
 </head>
 <body>
 <div id="app">
-    <login app-name="{{ config('APP_NAME') .' - '. config('APP_DESCRICAO').' v'.config('vcp') }}"></login>
+    <login
+            app-name="{{ config('APP_NAME') .' - '. config('APP_DESCRICAO').' v'.config('vcp') }}"
+            ambiente="{{ env('AMBIENTE') }}"
+            color="{{ env('AMBIENTE') === 'producao' ||  env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4' }}"
+    >
+    </login>
 </div>
 <script src="{{ asset('js/app.js') }}"></script>
 </body>

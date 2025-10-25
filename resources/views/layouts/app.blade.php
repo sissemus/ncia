@@ -2,8 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-{{--    <meta name="viewport" content="width=device-width, initial-scale=1">--}}
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link rel="shortcut icon" type="image/png" href="{{ asset('img/favicons.png') }}"/>
@@ -20,9 +19,10 @@
 <body>
 <div id="app">
     <app
-            :menus="{{ json_encode($menus) }}"
-            :usuario="{{ $usuario }}"
-            app-name="{{ config('APP_NAME') }}"
+        :usuario="{{ $usuario }}"
+        :aplicacoes="{{ json_encode($aplicacoes) }}"
+        app-name="{{ config('APP_NAME') }}"
+        color="{{ env('AMBIENTE') === 'producao' ||  env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4' }}"
     >
         <template v-slot:conteudo>
             @yield('content')

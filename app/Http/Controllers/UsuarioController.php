@@ -3,78 +3,90 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Usuario\UsuarioCreateRequest;
+use App\Http\Requests\Usuario\UsuarioUpdatePasswordRequest;
 use App\Http\Requests\Usuario\UsuarioUpdateRequest;
-use App\Models\Local;
 use App\Models\Usuario;
-use App\Models\UsuarioLocal;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
-class UsuarioController extends Controller {
-    public function __construct() {
-        $this->middleware(["UsuarioAdmin"]);
+class UsuarioController extends Controller
+{
+    public function view()
+    {
+        return view('usuario.usuario_view');
     }
 
-    public function view() {
-        return view("usuario.usuario_view")
-            ->with([
-                "locais" => Local::listar()
-            ]);
+    public function alterarSenhaView()
+    {
+        return view('usuario.alteracao_senha');
     }
 
-    public function create(UsuarioCreateRequest $request) {
-        try {
-            DB::beginTransaction();
-            $usuario = new Usuario($request->post());
-            $usuario->save();
-            $usuarioLocais = $request->post("usuarioLocais");
-            if ($usuarioLocais) {
-                foreach ($usuarioLocais as $usuarioLocalRow) {
-                    $usuarioLocal = new UsuarioLocal($usuarioLocalRow);
-                    $usuarioLocal->USUARIO_ID = $usuario->USUARIO_ID;
-                    $usuarioLocal->save();
-                }
-            }
-            DB::commit();
-            return response(Usuario::getById($usuario->USUARIO_ID));
-        } catch (Exception $e) {
-            DB::rollBack();
-            throw new Exception($e->getMessage());
+    public function inserir(UsuarioCreateRequest $request)
+    {
+        $usuario = new Usuario($request->input());
+        $usuario->USUARIO_ATIVO = 1;
+        $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);
+        $usuario->save();
+
+        return response([
+            "cod" => 1,
+            "msg" => "Usuário adicionado com sucesso",
+            "retorno" => Usuario::buscar($usuario->USUARIO_ID)
+        ], 200);
+    }
+
+    public function listar(Request $request)
+    {
+        $usuario = Usuario::listar($request)->paginate();
+
+        return response([
+            "cod" => 1,
+            "msg" => "Usuário listado com sucesso",
+            "retorno" => $usuario
+        ], 200);
+    }
+
+    public function buscar($id)
+    {
+        $usuario = Usuario::buscar($id);
+
+        return response([
+            "cod" => 1,
+            "msg" => "Usuário id {$request->id} buscado com sucesso",
+            "retorno" => $usuario
+        ], 200);
+    }
+
+
+    public function alterar(UsuarioUpdateRequest $request)
+    {
+        $usuario = Usuario::buscar($request->USUARIO_ID);
+        $senha_original = $usuario->USUARIO_SENHA;
+        $usuario->fill($request->post());
+        if ($request->USUARIO_SENHA == null || $request->USUARIO_SENHA == '') {
+            $usuario->USUARIO_SENHA = $senha_original;
+        } else {
+            $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);
         }
+        $usuario->update();
+
+        return response([
+            "cod" => 1,
+            "msg" => "Usuário id {$request->USUARIO_ID} alterado com sucesso",
+            "retorno" => $usuario
+        ], 200);
     }
 
-    public function update(UsuarioUpdateRequest $request) {
-        try {
-            DB::beginTransaction();
-            $usuario = Usuario::find($request->input("USUARIO_ID"));
-            $senhaAtual = $usuario->USUARIO_SENHA;
-            $senhaNova = $request->input("USUARIO_SENHA");
-            $usuario->fill($request->input());
-            if ($senhaNova != null) {
-                $usuario->USUARIO_SENHA = $senhaNova;
-            } else {
-                $usuario->USUARIO_SENHA = $senhaAtual;
-            }
-            $usuario->update();
-            UsuarioLocal::deleteByUsuarioId($usuario->USUARIO_ID);
-            $usuarioLocais = $request->post("usuarioLocais");
-            if ($usuarioLocais) {
-                foreach ($usuarioLocais as $usuarioLocalRow) {
-                    $usuarioLocal = new UsuarioLocal($usuarioLocalRow);
-                    $usuarioLocal->USUARIO_ID = $usuario->USUARIO_ID;
-                    $usuarioLocal->save();
-                }
-            }
-            DB::commit();
-            return response(Usuario::getById($usuario->USUARIO_ID));
-        } catch (Exception $e) {
-            DB::rollBack();
-            throw new Exception($e->getMessage());
-        }
-    }
+    public function alterarSenha(UsuarioUpdatePasswordRequest $request)
+    {
+        $usuario = Auth::user();
+        $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);
+        $usuario->update();
 
-    public function listAll() {
-        return response(Usuario::listAll());
+        return response([
+            "cod" => 1,
+            "msg" => "Senha alterada com sucesso",
+            "retorno" => $usuario
+        ], 200);
     }
 }

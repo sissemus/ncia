@@ -3,7 +3,6 @@
 namespace App\Http;
 
 use App\Http\Middleware\CompartilharVariaveis;
-use App\Http\Middleware\UsuarioAdmin;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -65,6 +64,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         "CompartilharVariaveis"=>CompartilharVariaveis::class,
-        'UsuarioAdmin' => UsuarioAdmin::class,
+        "alterar.senha"=>\App\Http\Middleware\AlterarSenha::class,
     ];
 }

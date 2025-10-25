@@ -3,7 +3,6 @@
  * includes Vue and other libraries. It is a great starting point when
  * building robust, powerful web applications using Vue and Laravel.
  */
-
 import Vue from "vue";
 require('./bootstrap');
 import store from './store/store';
@@ -11,10 +10,11 @@ import Vuetify from "../plugins/vuetify";
 import 'vuetify/dist/vuetify.min.css'
 import "../plugins/vuetify-money.js";
 import VueTheMask from 'vue-the-mask';
-import VueApexCharts from 'vue-apexcharts'
+import UUID from "vue-uuid";
 
-Vue.use(VueApexCharts)
 Vue.use(VueTheMask)
+Vue.use(UUID);
+// window.Vue = require('vue').default;
 
 /**
  * The following block of code may be used to automatically register your
@@ -29,17 +29,12 @@ Vue.use(VueTheMask)
 
 Vue.component('login', require('./components/auth/Login').default);
 Vue.component('app', require('./components/App').default);
-Vue.component('home', require('./components/Home').default);
-Vue.component('public', require('./components/Public').default);
-Vue.component('local-view', require('./components/local/LocalView').default);
+Vue.component('home', require('./components/home/Home').default);
+Vue.component('tabela-generica-view', require('./components/tabela_generica/TabelaGenericaView').default);
 Vue.component('usuario-view', require('./components/usuario/UsuarioView').default);
-Vue.component('dose-view', require('./components/dose/DoseView').default);
-Vue.component('vacina-view', require('./components/vacina/VacinaView').default);
-Vue.component('vacina-local-view', require('./components/vacina_local/VacinaLocalView').default);
-Vue.component('vacinacao-view', require('./components/vacinacao/VacinacaoView').default);
-
-Vue.component('LineChart', require('./components/grafico/LineChart').default);
-Vue.component('apexchart', VueApexCharts);
+Vue.component('usuario-alterar-senha-view', require('./components/usuario/UsuarioAlterarSenhaView').default);
+Vue.component('aplicacao-view', require('./components/aplicacao/AplicacaoView').default);
+Vue.component('perfil-view', require('./components/perfil/PerfilView').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -50,6 +45,7 @@ Vue.component('apexchart', VueApexCharts);
 const vm = new Vue({
     el: '#app',
     vuetify: Vuetify,
+    uuid: UUID,
     store
 });
 

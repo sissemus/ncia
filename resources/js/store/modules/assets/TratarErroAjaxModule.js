@@ -29,6 +29,8 @@ export default {
                     });
                     errosUl+='</ul>';
                     mensagem = errosUl;
+                }else if(payload.response.status === 419){
+                    mensagem = payload.response.data.message;
                 }
                 else {
                     mensagem = payload.response.status + ' - ' + payload.response.statusText

@@ -1,15 +1,15 @@
 
 ![Kiku](public/img/brasao.png)
 
-## PROJETO BASE
+## SISFOLHA
 
 ### Configurar o VirtualHost do wamp/xampp
 Abra o arquivo **httpd-vhosts.conf** e adicione as seguintes linhas:
 
 ```
 <VirtualHost *:80>
-  ServerName vacinometro.me
-  DocumentRoot "${INSTALL_DIR}/www/vacinometro/public"
+  ServerName sisfolha.me
+  DocumentRoot "${INSTALL_DIR}/www/sisfolha/public"
 </VirtualHost>
 ```
 >**Obs.:** Sem a barra deitada pra esquerda em `${INSTALL_DIR}` 
@@ -44,7 +44,7 @@ Crie o arquivo /public/.htaccess (caso ainda nao o tenha criado) e adicione as s
 ### Configurar o Host do Windows
 Inicie o **bloco de notas** em modo **administrador** e abra o arquivo "C:\Windows\System32\drivers\etc\hosts", adicionando a seguinte linha:
 ```sh
-127.0.0.1 vacinometro.me
+127.0.0.1 sisfolha.me
 ```
 Salve o arquivo e feche o bloco de notas
 
@@ -55,7 +55,7 @@ export default {
         baseUrl: window.location.origin ===
         'http://localhost:3000' ?
             (window.location.origin) :
-            (window.location.origin === 'http://vacinometro.me' ? 'http://vacinometro.me' : (window.location.origin + '/vacinometro') )
+            (window.location.origin === 'http://sisfolha.me' ? 'http://sisfolha.me' : (window.location.origin + '/sisfolha') )
     },
     getters: {
         getBaseUrl(state) {

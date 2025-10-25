@@ -6,19 +6,33 @@ export default {
             current_page: 1,
             total: 0,
             last_page: 0
-        }
+        },
+        usuarioPesquisa: {
+            USUARIO_NOME: null
+        },
+        listar:null
     },
     getters: {
+        getUsuarioPesquisa(state) {
+            return state.usuarioPesquisa
+        },
         getPagination(state) {
             return state.pagination
         },
         getUsuarios(state) {
             return state.usuarios
         },
+        getListar(state){
+            return state.listar.bind(this);
+        }
     },
     mutations: {
+        setUsuarioPesquisa(state, usuarioPesquisa) {
+            state.usuarioPesquisa = JSON.parse(JSON.stringify(usuarioPesquisa))
+        },
         setPagination(state, pagination = null) {
             if (pagination) {
+                pagination = pagination['retorno'];
                 state.pagination = {
                     current_page: pagination.current_page,
                     total: pagination.total,
@@ -35,35 +49,22 @@ export default {
         setUsuarios(state, usuarios) {
             state.usuarios = JSON.parse(JSON.stringify(usuarios))
         },
+        setListar(state,funcao){
+            state.listar = funcao;
+        }
     },
     actions: {
+        setUsuarioPesquisa({commit}, usuarioPesquisa) {
+            commit('setUsuarioPesquisa', usuarioPesquisa)
+        },
         setPagination({commit}, pagination) {
             commit('setPagination', pagination)
         },
         setUsuarios({commit}, usuarios) {
             commit('setUsuarios', usuarios)
         },
-        listar(context, msgId) {
-            console.log(context)
-            let baseUrl = context.rootGetters['getBaseUrl']
-            let page = context.state.pagination.current_page
-            axios({
-                method: 'GET',
-                url: `${baseUrl}/usuario/list-all`,
-                params: {
-                    page: page
-                }
-            }).then(r => {
-                console.log(r.data)
-                context.dispatch('setUsuarios', r.data['data']).then()
-                context.dispatch('setPagination',r.data).then()
-            }).catch(e => {
-                console.error('ERRO: ', e)
-                this.rootState.dispatch('TratarErroAjaxModule/tratarErro', {
-                    id: msgId,
-                    response: e.response
-                })
-            })
-        }
+        setListar({commit},funcao){
+            commit('setListar',funcao);
+        },
     }
 }

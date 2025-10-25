@@ -1,6 +1,7 @@
 @extends('layouts.app')
+
 @section('content')
-    <usuario-view
-            :locais="{{ $locais->toJson() }}"
-    ></usuario-view>
+
+    <usuario-view></usuario-view>
+
 @endsection

@@ -18,11 +18,11 @@ const webpackConfig = {
     plugins: [
         new VuetifyLoaderPlugin(),
         new CaseSensitivePathsPlugin(),
-    ],
+    ]
 };
 mix.webpackConfig(webpackConfig);
 
 mix.js('resources/js/app.js', 'public/js')
     .vue()
     .sass('resources/sass/app.scss', 'public/css')
-    .browserSync('http://semus-base.me');
+    .browserSync('http://supdam.me');

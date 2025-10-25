@@ -48,21 +48,25 @@ class LoginController extends Controller {
     }
 
     protected function attemptLogin(Request $request): bool {
-        $user = Usuario::with([])
-            ->where([
-                'USUARIO_LOGIN' => $request->post('USUARIO_LOGIN'),
-//                'USUARIO_SENHA' => md5($request->post('USUARIO_SENHA')),
-                'USUARIO_SENHA' => $request->post('USUARIO_SENHA'),
-                'USUARIO_ATIVO' => 1
-            ])
-            ->first();
+        $user = Usuario::where([
+            'USUARIO_LOGIN' => $request->post('USUARIO_LOGIN'),
+            'USUARIO_SENHA' => md5($request->post('USUARIO_SENHA')),
+            'USUARIO_ATIVO' => 1
+        ])->first();
 
-        if ($user) {
-            //$this->guard()->login($user, false);
-            Auth::login($user, false);
-            return true;
+        if($user) {
+            if($user->USUARIO_VIGENCIA >= date('Y-m-d') || $user->USUARIO_VIGENCIA == null){
+                //$this->guard()->login($user, false);
+                Auth::login($user, false);
+                $user->USUARIO_ULTIMO_ACESSO = date("Y-m-d H:i:s");
+                $user->save();
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
-        return false;
     }
 
     protected function validateLogin(Request $request) {
