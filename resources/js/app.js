@@ -37,6 +37,7 @@ Vue.component('aplicacao-view', require('./components/aplicacao/AplicacaoView').
 Vue.component('perfil-view', require('./components/perfil/PerfilView').default);
 Vue.component('departamento-view', require('./components/departamento/DepartamentoView.vue').default);
 Vue.component('procedimento-view', require('./components/procedimento/ProcedimentoView.vue').default);
+Vue.component('diagnostico-view', require('./components/diagnostico/DiagnosticoView.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to

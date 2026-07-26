@@ -13,7 +13,6 @@ class Procedimento extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        "PROCEDIMENTO_DESCRICAO",
         "PROCEDIMENTO_CODIGO",
         "PROCEDIMENTO_DESCRICAO",
         "PROCEDIMENTO_ATIVO",
