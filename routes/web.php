@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AplicacaoController;
 use App\Http\Controllers\DepartamentoController;
+use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TabelaGenericaController;
 use App\Http\Controllers\UsuarioController;
@@ -100,5 +101,17 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post('pesquisar', [DepartamentoController::class, 'pesquisar']);
         Route::get('buscar/{id}', [DepartamentoController::class, 'buscar']);
         Route::get('search', [DepartamentoController::class, 'search']);
+    });
+
+    Route::prefix('procedimento')->group(function () {
+        Route::get('/', [ProcedimentoController::class, 'view']);
+        Route::get('view', [ProcedimentoController::class, 'view']);
+        Route::post('inserir', [ProcedimentoController::class, 'inserir']);
+        Route::put('alterar', [ProcedimentoController::class, 'alterar']);
+        Route::delete('deletar', [ProcedimentoController::class, 'deletar']);
+        Route::get('listar', [ProcedimentoController::class, 'listar']);
+        Route::post('pesquisar', [ProcedimentoController::class, 'pesquisar']);
+        Route::get('buscar/{id}', [ProcedimentoController::class, 'buscar']);
+        Route::get('search', [ProcedimentoController::class, 'search']);
     });
 });

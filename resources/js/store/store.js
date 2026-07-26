@@ -20,6 +20,8 @@ import PerfilViewModule from "./modules/perfil/PerfilViewModule";
 import MdSelecionarPerfilModule from "./modules/perfil/MdSelecionarPerfilModule";
 import DepartamentoViewModule from "./modules/departamento/DepartamentoViewModule";
 import MdNovoDepartamentoModule from "./modules/departamento/MdNovoDepartamentoModule";
+import ProcedimentoViewModule from "./modules/procedimento/ProcedimentoViewModule";
+import MdNovoProcedimentoModule from "./modules/procedimento/MdNovoProcedimentoModule";
 
 Vue.use(PerfectScrollbar)
 Vue.use(Vuex)
@@ -62,5 +64,7 @@ export default new Vuex.Store({
         TabUsuarioPerfilModule,
         DepartamentoViewModule,
         MdNovoDepartamentoModule,
+        ProcedimentoViewModule,
+        MdNovoProcedimentoModule,
     }
 });
