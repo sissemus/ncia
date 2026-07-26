@@ -5,8 +5,8 @@ Abra o arquivo **httpd-vhosts.conf** e adicione as seguintes linhas:
 
 ```
 <VirtualHost *:80>
-  ServerName sisindicadores.me
-  DocumentRoot "${INSTALL_DIR}/www/sisindicadores/public"
+  ServerName ncia.me
+  DocumentRoot "${INSTALL_DIR}/www/ncia/public"
 </VirtualHost>
 ```
 >**Obs.:** Sem a barra deitada pra esquerda em `${INSTALL_DIR}` 
@@ -41,7 +41,7 @@ Crie o arquivo /public/.htaccess (caso ainda nao o tenha criado) e adicione as s
 ### Configurar o Host do Windows
 Inicie o **bloco de notas** em modo **administrador** e abra o arquivo "C:\Windows\System32\drivers\etc\hosts", adicionando a seguinte linha:
 ```sh
-127.0.0.1 sisindicadores.me
+127.0.0.1 ncia.me
 ```
 Salve o arquivo e feche o bloco de notas
 
@@ -52,7 +52,7 @@ export default {
         baseUrl: window.location.origin ===
         'http://localhost:3000' ?
             (window.location.origin) :
-            (window.location.origin === 'http://sisindicadores.me' ? 'http://sisindicadores.me' : (window.location.origin + '/sisindicadores') )
+            (window.location.origin === 'http://ncia.me' ? 'http://ncia.me' : (window.location.origin + '/ncia') )
     },
     getters: {
         getBaseUrl(state) {

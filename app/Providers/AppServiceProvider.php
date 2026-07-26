@@ -15,13 +15,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $versao = "1.0.1";
+        $versao = "5.0.0";
         Config::set(['versao' => $versao]);
         $caracteresRemocao = ["/[^0-9]/"];
         Config::set(['vcp' => $versao]);
         Config::set(['vsp' => preg_replace($caracteresRemocao, "", $versao)]);
-        Config::set(['APP_NAME' => 'SISINDICADORES']);
-        Config::set(['APP_DESCRICAO' => 'Sistema Base da SIS']);
+        Config::set(['APP_NAME' => 'NOVO CIA']);
+        Config::set(['APP_DESCRICAO' => 'Central Interna de Ambulância']);
 
         Auditables::register();
     }

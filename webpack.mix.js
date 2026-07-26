@@ -25,4 +25,4 @@ mix.webpackConfig(webpackConfig);
 mix.js('resources/js/app.js', 'public/js')
     .vue()
     .sass('resources/sass/app.scss', 'public/css')
-    .browserSync('http://supdam.me');
+    .browserSync('http://ncia.me');
