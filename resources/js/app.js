@@ -35,7 +35,6 @@ Vue.component('usuario-view', require('./components/usuario/UsuarioView').defaul
 Vue.component('usuario-alterar-senha-view', require('./components/usuario/UsuarioAlterarSenhaView').default);
 Vue.component('aplicacao-view', require('./components/aplicacao/AplicacaoView').default);
 Vue.component('perfil-view', require('./components/perfil/PerfilView').default);
-Vue.component('departamento-view', require('./components/departamento/DepartamentoView.vue').default);
 Vue.component('procedimento-view', require('./components/procedimento/ProcedimentoView.vue').default);
 Vue.component('diagnostico-view', require('./components/diagnostico/DiagnosticoView.vue').default);
 Vue.component('unidade-view', require('./components/unidade/UnidadeView.vue').default);

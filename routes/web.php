@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\AplicacaoController;
-use App\Http\Controllers\DepartamentoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\PerfilController;
@@ -91,18 +90,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete('delete', [AplicacaoController::class, "delete"]);
         Route::put('update', [AplicacaoController::class, "update"]);
         Route::match(['get', 'post'], 'list', [AplicacaoController::class, "list"]);
-    });
-
-    Route::prefix('departamento')->group(function () {
-        Route::get('/', [DepartamentoController::class, 'view']);
-        Route::get('view', [DepartamentoController::class, 'view']);
-        Route::post('inserir', [DepartamentoController::class, 'inserir']);
-        Route::put('alterar', [DepartamentoController::class, 'alterar']);
-        Route::delete('deletar', [DepartamentoController::class, 'deletar']);
-        Route::get('listar', [DepartamentoController::class, 'listar']);
-        Route::post('pesquisar', [DepartamentoController::class, 'pesquisar']);
-        Route::get('buscar/{id}', [DepartamentoController::class, 'buscar']);
-        Route::get('search', [DepartamentoController::class, 'search']);
     });
 
     Route::prefix('procedimento')->group(function () {

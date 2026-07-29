@@ -18,8 +18,6 @@ import AplicacaoViewModule from './modules/aplicacao/AplicacaoViewModule';
 import MdNovaAplicacaoModule from './modules/aplicacao/MdNovaAplicacaoModule';
 import PerfilViewModule from "./modules/perfil/PerfilViewModule";
 import MdSelecionarPerfilModule from "./modules/perfil/MdSelecionarPerfilModule";
-import DepartamentoViewModule from "./modules/departamento/DepartamentoViewModule";
-import MdNovoDepartamentoModule from "./modules/departamento/MdNovoDepartamentoModule";
 import ProcedimentoViewModule from "./modules/procedimento/ProcedimentoViewModule";
 import MdNovoProcedimentoModule from "./modules/procedimento/MdNovoProcedimentoModule";
 import DiagnosticoViewModule from "./modules/diagnostico/DiagnosticoViewModule";
@@ -66,8 +64,6 @@ export default new Vuex.Store({
         PerfilViewModule,
         MdSelecionarPerfilModule,
         TabUsuarioPerfilModule,
-        DepartamentoViewModule,
-        MdNovoDepartamentoModule,
         ProcedimentoViewModule,
         MdNovoProcedimentoModule,
         DiagnosticoViewModule,
