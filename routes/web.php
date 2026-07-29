@@ -6,6 +6,7 @@ use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\TabelaGenericaController;
+use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
 use Illuminate\Support\Facades\Auth;
@@ -126,5 +127,17 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post('pesquisar', [DiagnosticoController::class, 'pesquisar']);
         Route::get('buscar/{id}', [DiagnosticoController::class, 'buscar']);
         Route::get('search', [DiagnosticoController::class, 'search']);
+    });
+
+    Route::prefix('unidade')->group(function () {
+        Route::get('/', [UnidadeController::class, 'view']);
+        Route::get('view', [UnidadeController::class, 'view']);
+        Route::post('inserir', [UnidadeController::class, 'inserir']);
+        Route::put('alterar', [UnidadeController::class, 'alterar']);
+        Route::delete('deletar', [UnidadeController::class, 'deletar']);
+        Route::get('listar', [UnidadeController::class, 'listar']);
+        Route::post('pesquisar', [UnidadeController::class, 'pesquisar']);
+        Route::get('buscar/{id}', [UnidadeController::class, 'buscar']);
+        Route::get('search', [UnidadeController::class, 'search']);
     });
 });
