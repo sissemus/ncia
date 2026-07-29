@@ -28,12 +28,19 @@
                                 PERFIS
                             </v-tab>
 
+                            <v-tab key="TabUsuarioUnidade" :disabled="usuario.USUARIO_ID === null">
+                                UNIDADES
+                            </v-tab>
+
                             <v-tabs-items v-model="tab">
                                 <v-tab-item key="TabUsuario">
                                     <TabUsuario ref="TabUsuario"></TabUsuario>
                                 </v-tab-item>
                                 <v-tab-item key="TabUsuarioPerfil">
                                     <TabUsuarioPerfil ref="TabUsuarioPerfil"></TabUsuarioPerfil>
+                                </v-tab-item>
+                                <v-tab-item key="TabUsuarioUnidade">
+                                    <TabUsuarioUnidade ref="TabUsuarioUnidade"></TabUsuarioUnidade>
                                 </v-tab-item>
                             </v-tabs-items>
                         </v-tabs>
@@ -49,10 +56,11 @@
 import { mapGetters } from "vuex";
 import TabUsuario from "./TabUsuario";
 import TabUsuarioPerfil from "./TabUsuarioPerfil";
+import TabUsuarioUnidade from "./TabUsuarioUnidade";
 
 export default {
     name: "MdNovoUsuario",
-    components: { TabUsuarioPerfil, TabUsuario },
+    components: { TabUsuarioPerfil, TabUsuario, TabUsuarioUnidade },
     data() {
         return {
             tab: 0,
@@ -81,6 +89,8 @@ export default {
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
             if (typeof this.$refs.TabUsuarioPerfil != "undefined")
                 this.$refs.TabUsuarioPerfil.clearForm();
+            if (typeof this.$refs.TabUsuarioUnidade != "undefined")
+                this.$refs.TabUsuarioUnidade.clearForm();   
             this.usuario = null;
             this.showModal = false;
             this.tab = 0;

@@ -13,7 +13,8 @@ export default {
             USUARIO_ATIVO: null,
             USUARIO_VIGENCIA: null,
             USUARIO_SENHA_CONFIRMATION: null,
-            usuarioPerfis:[],
+            usuarioPerfis: [],
+            usuarioUnidades: [],
         }
     },
     getters: {
@@ -31,6 +32,12 @@ export default {
         setUsuario(state, usuario = null) {
             if (usuario) {
                 state.usuario = JSON.parse(JSON.stringify(usuario))
+
+                if (!state.usuario.usuarioPerfis)
+                    state.usuario.usuarioPerfis = []
+
+                if (!state.usuario.usuarioUnidades)
+                    state.usuario.usuarioUnidades = []
             } else {
                 state.usuario = {
                     USUARIO_ID: null,
@@ -42,7 +49,8 @@ export default {
                     USUARIO_ATIVO: null,
                     USUARIO_VIGENCIA: null,
                     USUARIO_SENHA_CONFIRMATION: null,
-                    usuarioPerfis:[],
+                    usuarioPerfis: [],
+                    usuarioUnidades: [],
                 }
             }
         },
@@ -54,13 +62,13 @@ export default {
         },
     },
     actions: {
-        setUsuario({commit}, usuario) {
+        setUsuario({ commit }, usuario) {
             commit('setUsuario', usuario)
         },
-        setShowModal({commit}, showModal) {
+        setShowModal({ commit }, showModal) {
             commit('setShowModal', showModal)
         },
-        setFullScreen({commit}, fullScreen) {
+        setFullScreen({ commit }, fullScreen) {
             commit('setFullScreen', fullScreen)
         }
     }

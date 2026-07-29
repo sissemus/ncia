@@ -16,6 +16,7 @@ class Usuario extends Authenticatable
     protected $primaryKey = "USUARIO_ID";
     public $timestamps = false;
     public static $snakeAttributes = false;
+
     protected $fillable = [
         "USUARIO_LOGIN",
         "USUARIO_SENHA",
@@ -33,7 +34,8 @@ class Usuario extends Authenticatable
     ];
 
     protected $hidden = [
-        'remember_token', 'USUARIO_SENHA'
+        'remember_token',
+        'USUARIO_SENHA'
     ];
 
     public function getAuthPassword()
@@ -48,13 +50,20 @@ class Usuario extends Authenticatable
 
     public function usuarioPerfis()
     {
-        return $this->hasMany(UsuarioPerfil::class, 'USUARIO_ID', 'USUARIO_ID');
+        return $this->hasMany(UsuarioPerfil::class, "USUARIO_ID", "USUARIO_ID");
+    }
+
+    public function usuarioUnidades()
+    {
+        return $this->hasMany(UsuarioUnidade::class, "USUARIO_ID", "USUARIO_ID")
+            ->with("unidade");
     }
 
     public static function relacionamento()
     {
         return [
             "usuarioPerfis.perfil",
+            "usuarioUnidades.unidade",
         ];
     }
 
@@ -62,17 +71,17 @@ class Usuario extends Authenticatable
     {
         return self::with(self::relacionamento())
             ->when($requisicao->USUARIO_NOME, function (Builder $query) use ($requisicao) {
-                return $query->where('USUARIO_NOME', 'like', "%$requisicao->USUARIO_NOME%");
+                return $query->where("USUARIO_NOME", "like", "%$requisicao->USUARIO_NOME%");
             })
             ->when($requisicao->USUARIO_LOGIN, function (Builder $query) use ($requisicao) {
-                return $query->where('USUARIO_LOGIN', 'like', "%$requisicao->USUARIO_LOGIN%");
+                return $query->where("USUARIO_LOGIN", "like", "%$requisicao->USUARIO_LOGIN%");
             })
             ->when($requisicao->orderBy, function (Builder $query) use ($requisicao) {
-                $requisicao->sort = $requisicao->sort ?: 'asc';
+                $requisicao->sort = $requisicao->sort ?: "asc";
                 $query->orderBy($requisicao->orderBy, $requisicao->sort);
             })
             ->when(!$requisicao->orderBy, function (Builder $query) {
-                $query->orderBy('USUARIO_NOME');
+                $query->orderBy("USUARIO_NOME");
             });
     }
 
@@ -84,6 +93,7 @@ class Usuario extends Authenticatable
 
     public static function getById($userId)
     {
-        return self::with(self::relacionamento())->find($userId);
+        return self::with(self::relacionamento())
+            ->find($userId);
     }
 }

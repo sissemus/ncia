@@ -13,6 +13,7 @@ import PerfectScrollbar from 'vue2-perfect-scrollbar'
 import 'vue2-perfect-scrollbar/dist/vue2-perfect-scrollbar.css'
 import UsuarioViewModule from "./modules/usuario/UsuarioViewModule";
 import TabUsuarioPerfilModule from "./modules/usuario/TabUsuarioPerfilModule";
+import TabUsuarioUnidadeModule from "./modules/usuario/TabUsuarioUnidadeModule";
 import MdNovoPerfilModule from "./modules/perfil/MdNovoPerfilModule";
 import AplicacaoViewModule from './modules/aplicacao/AplicacaoViewModule';
 import MdNovaAplicacaoModule from './modules/aplicacao/MdNovaAplicacaoModule';
@@ -64,6 +65,7 @@ export default new Vuex.Store({
         PerfilViewModule,
         MdSelecionarPerfilModule,
         TabUsuarioPerfilModule,
+        TabUsuarioUnidadeModule,
         ProcedimentoViewModule,
         MdNovoProcedimentoModule,
         DiagnosticoViewModule,

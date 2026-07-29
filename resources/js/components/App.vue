@@ -10,8 +10,26 @@
 
                         <v-list-item-content>
                             <v-list-item-title>{{ usuario['USUARIO_NOME'].toUpperCase() }}</v-list-item-title>
-                            <v-list-item-subtitle v-for="(usuarioPerfil, i) in usuario['usuarioPerfis']" :key="i">{{
-                                usuarioPerfil['perfil']['PERFIL_NOME'] }}</v-list-item-subtitle>
+
+                            <v-list-item-subtitle v-for="(usuarioPerfil, i) in usuario['usuarioPerfis']" :key="i">
+                                {{ usuarioPerfil['perfil']['PERFIL_NOME'] }}
+                            </v-list-item-subtitle>
+
+                            <v-tooltip bottom v-if="totalUnidades > 0">
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-list-item-subtitle
+                                        class="unidade-subtitle grey--text text--darken-1 cursor-pointer" v-bind="attrs"
+                                        v-on="on">
+                                        <v-icon x-small class="mr-1">mdi-map-marker</v-icon>
+                                        {{ unidadePrincipal }}
+                                        <span v-if="totalUnidades > 1">
+                                            + {{ totalUnidades - 1 }}
+                                        </span>
+                                    </v-list-item-subtitle>
+                                </template>
+
+                                <span v-html="unidadesTooltip"></span>
+                            </v-tooltip>
                         </v-list-item-content>
                     </v-list-item>
 
@@ -77,37 +95,7 @@
                 <v-toolbar-title style="width: 300px" class="ml-0 pl-1">
                     <span class="hidden-sm-and-down">{{ appName }}</span>
                 </v-toolbar-title>
-                <!--                    <v-text-field flat solo-inverted hide-details prepend-inner-icon="mdi-magnify" label="Search" class="hidden-sm-and-down"></v-text-field>-->
                 <v-spacer></v-spacer>
-                <!--                <v-card-text>-->
-                <!--                    <template v-if="loja">-->
-                <!--                        {{loja['lojaNome']}} | {{loja['lojaEndereco']}} | {{loja['lojaTelefones']}}-->
-                <!--                    </template>-->
-                <!--                </v-card-text>-->
-
-                <!--                <v-menu left bottom tile>-->
-                <!--                    <template v-slot:activator="{ on, attrs }">-->
-                <!--                        <v-btn icon v-bind="attrs" v-on="on">-->
-                <!--                            <v-badge :content="10" :value="10" color="green" overlap dark>-->
-                <!--                                <v-icon>mdi-bell</v-icon>-->
-                <!--                            </v-badge>-->
-                <!--                        </v-btn>-->
-                <!--                    </template>-->
-                <!--                    <v-list>-->
-                <!--                        <v-list-item three-line>-->
-                <!--                            <v-list-item-content>-->
-                <!--                                <v-list-item-title>-->
-                <!--                                    <b>Data: </b>xxx-->
-                <!--                                </v-list-item-title>-->
-                <!--                                <v-list-item-subtitle>-->
-                <!--                                    <b>Para: </b>xxxx-->
-                <!--                                </v-list-item-subtitle>-->
-                <!--                                <v-list-item-subtitle>sasasas</v-list-item-subtitle>-->
-                <!--                            </v-list-item-content>-->
-                <!--                        </v-list-item>-->
-                <!--                    </v-list>-->
-                <!--                </v-menu>-->
-
                 <v-menu :close-on-content-click="false" :nudge-width="200" offset-x>
                     <template v-slot:activator="{ on, attrs }">
                         <v-btn x-large icon v-bind="attrs" v-on="on">
@@ -124,7 +112,7 @@
                                     <v-list-item-title>{{ usuario['USUARIO_NOME'] }}</v-list-item-title>
                                     <v-list-item-subtitle v-for="(usuarioPerfil, i) in usuario['usuarioPerfis']"
                                         :key="i">{{
-                                        usuarioPerfil['perfil']['PERFIL_NOME'] }}</v-list-item-subtitle>
+                                            usuarioPerfil['perfil']['PERFIL_NOME'] }}</v-list-item-subtitle>
                                 </v-list-item-content>
                             </v-list-item>
                         </v-list>
@@ -231,6 +219,28 @@ export default {
         url() {
             return window.location.href;
         },
+        unidades() {
+            return this.usuario?.usuarioUnidades || [];
+        },
+
+        totalUnidades() {
+            return this.unidades.length;
+        },
+
+        unidadePrincipal() {
+            return this.totalUnidades > 0 && this.unidades[0].unidade
+                ? this.unidades[0].unidade.UNIDADE_NOME
+                : '';
+        },
+
+        unidadesTooltip() {
+            let unidades = this.unidades
+                .filter(u => u.unidade)
+                .map(u => `<li>${u.unidade.UNIDADE_NOME}</li>`)
+                .join('');
+
+            return `<ul class="unidades-tooltip-list">${unidades}</ul>`;
+        },
     },
     methods: {
         listarAvisos() {
@@ -295,5 +305,16 @@ export default {
 <style>
 .cursor-pointer {
     cursor: pointer;
+}
+
+.unidades-tooltip-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.unidade-subtitle {
+    white-space: normal !important;
+    word-break: break-word;
+    line-height: 1.2;
 }
 </style>

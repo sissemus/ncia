@@ -8,6 +8,7 @@ use App\Http\Controllers\TabelaGenericaController;
 use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
+use App\Http\Controllers\UsuarioUnidadeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -127,4 +128,11 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get('buscar/{id}', [UnidadeController::class, 'buscar']);
         Route::get('search', [UnidadeController::class, 'search']);
     });
+
+    Route::prefix('usuario_unidade')->group(function () {
+        Route::post('inserir', [UsuarioUnidadeController::class, 'inserir']);
+        Route::get('listar/{usuarioId}', [UsuarioUnidadeController::class, 'listar']);
+        Route::delete('deletar', [UsuarioUnidadeController::class, 'deletar']);
+    });
+    
 });
