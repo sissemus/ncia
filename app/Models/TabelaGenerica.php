@@ -131,4 +131,20 @@ class TabelaGenerica extends Model
             return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
+
+    public static function sexo($colunaId = null)
+    {
+        $tabela = RTG::SEXO;
+        if ($colunaId)
+            return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela);
+    }
+
+    public static function tipoProfissional($colunaId = null)
+    {
+        $tabela = RTG::TIPO_PROFISSIONAL;
+        if ($colunaId)
+            return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela);
+    }
 }

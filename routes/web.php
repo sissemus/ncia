@@ -4,6 +4,7 @@ use App\Http\Controllers\AplicacaoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\ProfissionalController;
 use App\Http\Controllers\TabelaGenericaController;
 use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\UsuarioController;
@@ -133,6 +134,17 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post('inserir', [UsuarioUnidadeController::class, 'inserir']);
         Route::get('listar/{usuarioId}', [UsuarioUnidadeController::class, 'listar']);
         Route::delete('deletar', [UsuarioUnidadeController::class, 'deletar']);
+    });
+
+    Route::prefix("profissional")->group(function () {
+        Route::get("/", [ProfissionalController::class, "view"]);
+        Route::get("view", [ProfissionalController::class, "view"]);
+        Route::post("inserir", [ProfissionalController::class, "inserir"]);
+        Route::put("alterar", [ProfissionalController::class, "alterar"]);
+        Route::delete("deletar", [ProfissionalController::class, "deletar"]);
+        Route::get("listar", [ProfissionalController::class, "listar"]);
+        Route::post("pesquisar", [ProfissionalController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [ProfissionalController::class, "buscar"]);
     });
     
 });

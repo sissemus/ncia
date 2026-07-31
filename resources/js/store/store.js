@@ -25,6 +25,8 @@ import DiagnosticoViewModule from "./modules/diagnostico/DiagnosticoViewModule";
 import MdNovoDiagnosticoModule from "./modules/diagnostico/MdNovoDiagnosticoModule";
 import UnidadeViewModule from "./modules/unidade/UnidadeViewModule";
 import MdNovoUnidadeModule from "./modules/unidade/MdNovoUnidadeModule";
+import ProfissionalViewModule from "./modules/profissional/ProfissionalViewModule";
+import MdNovoProfissionalModule from "./modules/profissional/MdNovoProfissionalModule";
 
 Vue.use(PerfectScrollbar)
 Vue.use(Vuex)
@@ -72,5 +74,7 @@ export default new Vuex.Store({
         MdNovoDiagnosticoModule,
         UnidadeViewModule,
         MdNovoUnidadeModule,
+        ProfissionalViewModule,
+        MdNovoProfissionalModule,
     }
 });

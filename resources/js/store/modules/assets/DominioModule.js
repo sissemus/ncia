@@ -3,6 +3,8 @@ export default {
     state: {
         aplicacoes: [],
         hierarquias: [],
+        sexos: [],
+        tipoProfissionais: [],
     },
     getters: {
         getAplicacoes(state) {
