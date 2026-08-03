@@ -50,4 +50,10 @@ class UsuarioCreateRequest extends FormRequest
         ];
     }
 
+    public function messages()
+    {
+        return [
+          "USUARIO_DOC.cpf" => 'O campo :attribute é inválido.'
+        ];
+    }
 }
