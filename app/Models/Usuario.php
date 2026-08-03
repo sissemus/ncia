@@ -18,19 +18,28 @@ class Usuario extends Authenticatable
     public static $snakeAttributes = false;
 
     protected $fillable = [
+        "USUARIO_NOME",
         "USUARIO_LOGIN",
         "USUARIO_SENHA",
-        "USUARIO_NOME",
-        "USUARIO_CPF",
-        "USUARIO_EMAIL",
         "USUARIO_ATIVO",
-        "USUARIO_VIGENCIA"
+        "USUARIO_VIGENCIA",
+        "USUARIO_ULTIMO_ACESSO",
+        "TG_DOCUMENTO_ID",
+        "USUARIO_DOC",
+        "USUARIO_EMAIL",
     ];
 
     protected $casts = [
         "USUARIO_ID" => "integer",
+        "USUARIO_NOME" => "string",
+        "USUARIO_LOGIN" => "string",
+        "USUARIO_SENHA" => "string",
         "USUARIO_ATIVO" => "integer",
-        "USUARIO_CPF" => Cpf::class,
+        "USUARIO_VIGENCIA" => "datetime",
+        "USUARIO_ULTIMO_ACESSO" => "datetime",
+        "TG_DOCUMENTO_ID" => "integer",
+        "USUARIO_DOC" => "string",
+        "USUARIO_EMAIL" => "string",
     ];
 
     protected $hidden = [

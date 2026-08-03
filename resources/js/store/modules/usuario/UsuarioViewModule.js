@@ -8,7 +8,16 @@ export default {
             last_page: 0
         },
         usuarioPesquisa: {
-            USUARIO_NOME: null
+            USUARIO_ID: null,
+            USUARIO_NOME: null,
+            USUARIO_LOGIN: null,
+            USUARIO_SENHA: null,
+            USUARIO_ATIVO: null,
+            USUARIO_VIGENCIA: null,
+            USUARIO_ULTIMO_ACESSO: null,
+            TG_DOCUMENTO_ID: 7,
+            USUARIO_DOC: null,
+            USUARIO_EMAIL: null,
         },
         listar:null
     },
@@ -29,6 +38,24 @@ export default {
     mutations: {
         setUsuarioPesquisa(state, usuarioPesquisa) {
             state.usuarioPesquisa = JSON.parse(JSON.stringify(usuarioPesquisa))
+        },
+        setUsuarioPesquisa(state, usuarioPesquisa = null) {
+            if (usuarioPesquisa) {
+                state.usuarioPesquisa = JSON.parse(JSON.stringify(usuarioPesquisa))
+            } else {
+                state.usuarioPesquisa = {
+                    USUARIO_ID: null,
+                    USUARIO_NOME: null,
+                    USUARIO_LOGIN: null,
+                    USUARIO_SENHA: null,
+                    USUARIO_ATIVO: null,
+                    USUARIO_VIGENCIA: null,
+                    USUARIO_ULTIMO_ACESSO: null,
+                    TG_DOCUMENTO_ID: 7,
+                    USUARIO_DOC: null,
+                    USUARIO_EMAIL: null,
+                }
+            }
         },
         setPagination(state, pagination = null) {
             if (pagination) {
