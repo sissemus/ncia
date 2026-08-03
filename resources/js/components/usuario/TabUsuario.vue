@@ -19,7 +19,6 @@
                         v-mask="'###.###.###-##'"
                         autocomplete="off"
                         v-model="usuario.USUARIO_DOC"
-                        :error-messages="errors.USUARIO_DOC"
                     ></v-text-field>
                 </v-col>
             </v-row>
