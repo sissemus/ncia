@@ -13,6 +13,12 @@ export default {
         getHierarquias(state) {
             return state.hierarquias
         },
+        getSexos(state) {
+            return state.sexos
+        },
+        getTipoProfissionais(state) {
+            return state.tipoProfissionais
+        },
     },
     mutations: {
         setAplicacoes(state, aplicacoes) {
@@ -21,6 +27,12 @@ export default {
         setHierarquias(state, hierarquias) {
             state.hierarquias = JSON.parse(JSON.stringify(hierarquias))
         },
+        setSexos(state, sexos) {
+            state.sexos = JSON.parse(JSON.stringify(sexos))
+        },
+        setTipoProfissionais(state, tipoProfissionais) {
+            state.tipoProfissionais = JSON.parse(JSON.stringify(tipoProfissionais))
+        },
     },
     actions: {
         setAplicacoes({commit}, aplicacoes) {
@@ -28,6 +40,12 @@ export default {
         },
         setHierarquias({commit}, hierarquias) {
             commit('setHierarquias', hierarquias)
+        },
+        setSexos({commit}, sexos) {
+            commit('setSexos', sexos)
+        },
+        setTipoProfissionais({commit}, tipoProfissionais) {
+            commit('setTipoProfissionais', tipoProfissionais)
         },
     }
 }

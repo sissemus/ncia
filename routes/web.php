@@ -3,6 +3,7 @@
 use App\Http\Controllers\AplicacaoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
+use App\Http\Controllers\PacienteController;
 use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\ProfissionalController;
 use App\Http\Controllers\TabelaGenericaController;
@@ -145,6 +146,17 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("listar", [ProfissionalController::class, "listar"]);
         Route::post("pesquisar", [ProfissionalController::class, "pesquisar"]);
         Route::get("buscar/{id}", [ProfissionalController::class, "buscar"]);
+    });
+
+    Route::prefix("paciente")->group(function () {
+        Route::get("/", [PacienteController::class, "view"]);
+        Route::get("view", [PacienteController::class, "view"]);
+        Route::post("inserir", [PacienteController::class, "inserir"]);
+        Route::put("alterar", [PacienteController::class, "alterar"]);
+        Route::get("listar", [PacienteController::class, "listar"]);
+        Route::post("pesquisar", [PacienteController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [PacienteController::class, "buscar"]);
+        Route::get("buscar-por-cpf", [PacienteController::class, "buscarPorCpf"]);
     });
     
 });
