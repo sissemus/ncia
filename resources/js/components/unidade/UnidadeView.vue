@@ -15,13 +15,17 @@
 
             <v-card-text>
                 <v-row>
-                    <v-col>
+                    <v-col cols="12" md="5">
                         <v-text-field label="Nome da Unidade" autocomplete="off" hide-details
                             v-model="unidadePesquisa.UNIDADE_NOME"></v-text-field>
                     </v-col>
-                    <v-col>
-                        <v-select label="Unidade Solicitante" :items="solicitantes" item-value="id" item-text="text"
+                    <v-col cols="12" md="4">
+                        <v-select label="Unidade Solicitante" :items="situacoes" item-value="id" item-text="text"
                             clearable hide-details v-model="unidadePesquisa.UNIDADE_SOLICITANTE"></v-select>
+                    </v-col>
+                    <v-col cols="12" md="3">
+                        <v-select label="Ativo" :items="situacoes" item-value="id" item-text="text" clearable
+                            hide-details v-model="unidadePesquisa.UNIDADE_ATIVO"></v-select>
                     </v-col>
                 </v-row>
 
@@ -40,21 +44,29 @@
                             <th class="text-left">Id</th>
                             <th class="text-left">Nome da Unidade</th>
                             <th class="text-left">Solicitante</th>
+                            <th class="text-left">Ativo</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="unidade in unidades" :key="unidade['UNIDADE_ID']">
-                            <td>{{ unidade['UNIDADE_ID'] }}</td>
-                            <td>{{ unidade['UNIDADE_NOME'] }}</td>
+                        <tr v-for="unidade in unidades" :key="unidade.UNIDADE_ID">
+                            <td>{{ unidade.UNIDADE_ID }}</td>
+                            <td>{{ unidade.UNIDADE_NOME }}</td>
                             <td>
-                                <v-chip x-small v-if="unidade['UNIDADE_SOLICITANTE'] === 1" color="green"
-                                    dark>Sim</v-chip>
+                                <v-chip x-small v-if="unidade.UNIDADE_SOLICITANTE === 1" color="green" dark>Sim</v-chip>
+                                <v-chip x-small v-else color="red" dark>Não</v-chip>
+                            </td>
+                            <td>
+                                <v-chip x-small v-if="unidade.UNIDADE_ATIVO === 1" color="green" dark>Sim</v-chip>
                                 <v-chip x-small v-else color="red" dark>Não</v-chip>
                             </td>
                             <td>
                                 <v-btn icon @click="selecionar(unidade)" title="Editar">
                                     <v-icon>mdi-pencil</v-icon>
+                                </v-btn>
+                                <v-btn v-show="unidade.UNIDADE_ATIVO === 1" icon @click="deletar(unidade)"
+                                    title="Inativar">
+                                    <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                             </td>
                         </tr>
@@ -79,7 +91,7 @@
                 <v-row>
                     <v-col>
                         <v-chip>
-                            {{ pagination.total }} registro{{ pagination.total > 1 ? 's' : '' }}
+                            {{ pagination.total }} registro{{ pagination.total !== 1 ? 's' : '' }}
                         </v-chip>
                     </v-col>
                 </v-row>
@@ -92,6 +104,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import Swal from "sweetalert2";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import MdNovoUnidade from "./MdNovoUnidade";
 
@@ -102,15 +115,9 @@ export default {
         return {
             msgId: 'msgUnidadeView',
             msgIdDebug: 'msgUnidadeViewDebug',
-            solicitantes: [
-                {
-                    id: 1,
-                    text: 'Sim'
-                },
-                {
-                    id: 0,
-                    text: 'Não'
-                }
+            situacoes: [
+                { id: 1, text: 'Sim' },
+                { id: 0, text: 'Não' }
             ]
         }
     },
@@ -149,22 +156,48 @@ export default {
         },
 
         clear() {
-            this.unidadePesquisa = {
-                UNIDADE_ID: null,
-                UNIDADE_NOME: null,
-                UNIDADE_SOLICITANTE: null
-            };
+            this.unidadePesquisa = null;
             this.pagination.current_page = 1;
             this.search();
         },
 
         novaUnidade() {
-            this.$store.dispatch('MdNovoUnidadeModule/setShowModal', true)
+            this.$store.dispatch('MdNovoUnidadeModule/setUnidade', null);
+            this.$store.dispatch('MdNovoUnidadeModule/setShowModal', true);
         },
 
         selecionar(unidade) {
-            this.$store.dispatch('MdNovoUnidadeModule/setUnidade', unidade)
-            this.$store.dispatch('MdNovoUnidadeModule/setShowModal', true)
+            this.$store.dispatch('MdNovoUnidadeModule/setUnidade', unidade);
+            this.$store.dispatch('MdNovoUnidadeModule/setShowModal', true);
+        },
+
+        deletar(unidade) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja inativar a unidade ${unidade.UNIDADE_NOME}?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: 'Cancelar'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    let params = { id: unidade.UNIDADE_ID };
+
+                    axios.delete(`${this.baseUrl}/unidade/deletar`, { params })
+                        .then(() => {
+                            Swal.fire('Sucesso', 'Unidade inativada com sucesso', 'success');
+                            this.search();
+                        })
+                        .catch(e => {
+                            console.error('ERRO: ', e);
+                            this.$store.dispatch('TratarErroAjaxModule/tratarErro', {
+                                id: this.msgId,
+                                response: e.response
+                            });
+                        });
+                }
+            });
         }
     }
 }

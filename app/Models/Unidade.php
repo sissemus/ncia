@@ -14,12 +14,14 @@ class Unidade extends Model
     protected $fillable = [
         "UNIDADE_NOME",
         "UNIDADE_SOLICITANTE",
+        "UNIDADE_ATIVO",
     ];
 
     protected $casts = [
         "UNIDADE_ID" => "integer",
         "UNIDADE_NOME" => "string",
         "UNIDADE_SOLICITANTE" => "integer",
+        "UNIDADE_ATIVO" => "integer",
     ];
 
     public static function pesquisar($requisicao)
@@ -32,6 +34,12 @@ class Unidade extends Model
                 $requisicao->UNIDADE_SOLICITANTE !== null && $requisicao->UNIDADE_SOLICITANTE !== '',
                 function (Builder $query) use ($requisicao) {
                     return $query->where("UNIDADE_SOLICITANTE", $requisicao->UNIDADE_SOLICITANTE);
+                }
+            )
+            ->when(
+                $requisicao->UNIDADE_ATIVO !== null && $requisicao->UNIDADE_ATIVO !== '',
+                function (Builder $query) use ($requisicao) {
+                    return $query->where("UNIDADE_ATIVO", $requisicao->UNIDADE_ATIVO);
                 }
             )
             ->orderBy("UNIDADE_NOME")

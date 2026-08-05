@@ -22,14 +22,17 @@
 
                     <v-card-text class="mt-5">
                         <v-row>
-                            <v-col cols="8">
+                            <v-col cols="12" md="6">
                                 <v-text-field label="Nome da Unidade*" autocomplete="off"
                                     v-model="unidade.UNIDADE_NOME"></v-text-field>
                             </v-col>
-                            <v-col cols="4">
-                                <v-select label="Unidade Solicitante*" :items="solicitantes" :item-value="'id'"
-                                    :item-text="'text'" v-model="unidade.UNIDADE_SOLICITANTE">
-                                </v-select>
+                            <v-col cols="12" md="3">
+                                <v-select label="Unidade Solicitante*" :items="situacoes" item-value="id"
+                                    item-text="text" v-model="unidade.UNIDADE_SOLICITANTE"></v-select>
+                            </v-col>
+                            <v-col cols="12" md="3">
+                                <v-select label="Ativo*" :items="situacoes" item-value="id" item-text="text"
+                                    v-model="unidade.UNIDADE_ATIVO"></v-select>
                             </v-col>
                         </v-row>
                     </v-card-text>
@@ -38,12 +41,8 @@
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="primary" dark tile @click="salvar">
-                            salvar
-                        </v-btn>
-                        <v-btn color="red" dark outlined tile @click="clearFormAndClose">
-                            fechar
-                        </v-btn>
+                        <v-btn color="primary" dark tile @click="salvar">salvar</v-btn>
+                        <v-btn color="red" dark outlined tile @click="clearFormAndClose">fechar</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -63,73 +62,58 @@ export default {
         return {
             msgId: 'msgMdNovoUnidade',
             msgIdDebug: 'msgMdNovoUnidadeDebug',
-            solicitantes: [
-                {
-                    id: 1,
-                    text: 'Sim'
-                },
-                {
-                    id: 0,
-                    text: 'Não'
-                }
-            ],
+            situacoes: [
+                { id: 1, text: 'Sim' },
+                { id: 0, text: 'Não' }
+            ]
         }
     },
     computed: {
         ...mapGetters({
-            baseUrl: 'getBaseUrl',
+            baseUrl: 'getBaseUrl'
         }),
         showModal: {
-            get() {
-                return this.$store.getters['MdNovoUnidadeModule/getShowModal']
-            },
-            set(newValue) {
-                this.$store.dispatch('MdNovoUnidadeModule/setShowModal', newValue)
-            }
+            get() { return this.$store.getters['MdNovoUnidadeModule/getShowModal'] },
+            set(newValue) { this.$store.dispatch('MdNovoUnidadeModule/setShowModal', newValue) }
         },
         fullScreen: {
-            get() {
-                return this.$store.getters['MdNovoUnidadeModule/getFullScreen']
-            },
-            set(newValue) {
-                this.$store.dispatch('MdNovoUnidadeModule/setFullScreen', newValue)
-            }
+            get() { return this.$store.getters['MdNovoUnidadeModule/getFullScreen'] },
+            set(newValue) { this.$store.dispatch('MdNovoUnidadeModule/setFullScreen', newValue) }
         },
         unidade: {
-            get() {
-                return this.$store.getters['MdNovoUnidadeModule/getUnidade']
-            },
-            set(newValue) {
-                this.$store.dispatch('MdNovoUnidadeModule/setUnidade', newValue)
-            }
+            get() { return this.$store.getters['MdNovoUnidadeModule/getUnidade'] },
+            set(newValue) { this.$store.dispatch('MdNovoUnidadeModule/setUnidade', newValue) }
         }
     },
     methods: {
         clearFormAndClose() {
-            this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId)
-            this.unidade = null
-            this.showModal = false
+            this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
+            this.unidade = null;
+            this.fullScreen = false;
+            this.showModal = false;
         },
 
         salvar() {
-            this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId)
+            this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
 
             axios({
                 method: this.unidade.UNIDADE_ID === null ? 'POST' : 'PUT',
-                url: this.unidade.UNIDADE_ID === null ? `${this.baseUrl}/unidade/inserir` : `${this.baseUrl}/unidade/alterar`,
+                url: this.unidade.UNIDADE_ID === null
+                    ? `${this.baseUrl}/unidade/inserir`
+                    : `${this.baseUrl}/unidade/alterar`,
                 data: this.unidade
-            }).then(r => {
+            }).then(() => {
                 this.clearFormAndClose();
-                Swal.fire('Sucesso', 'Salvo com sucesso', 'success').then(r => {
-                    this.$store.dispatch('UnidadeViewModule/search', this.msgId)
-                })
+                Swal.fire('Sucesso', 'Salvo com sucesso', 'success').then(() => {
+                    this.$store.dispatch('UnidadeViewModule/search', this.msgId);
+                });
             }).catch(e => {
-                console.error('ERRO: ', e)
+                console.error('ERRO: ', e);
                 this.$store.dispatch('TratarErroAjaxModule/tratarErro', {
                     id: this.msgId,
                     response: e.response
-                })
-            })
+                });
+            });
         }
     }
 }

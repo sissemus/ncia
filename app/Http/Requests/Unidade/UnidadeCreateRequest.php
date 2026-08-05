@@ -15,8 +15,9 @@ class UnidadeCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            "UNIDADE_NOME" => ["required", "string", "max:150", "unique:UNIDADE,UNIDADE_NOME",],
-            "UNIDADE_SOLICITANTE" => ["required", "integer", "in:0,1",],
+            "UNIDADE_NOME" => ["required", "string", "max:150", "unique:UNIDADE,UNIDADE_NOME"],
+            "UNIDADE_SOLICITANTE" => ["required", "integer", "in:0,1"],
+            "UNIDADE_ATIVO" => ["required", "integer", "in:0,1"],
         ];
     }
 
@@ -26,6 +27,7 @@ class UnidadeCreateRequest extends FormRequest
             "UNIDADE_ID" => "<b>UNIDADE ID</b>",
             "UNIDADE_NOME" => "<b>NOME DA UNIDADE</b>",
             "UNIDADE_SOLICITANTE" => "<b>UNIDADE SOLICITANTE</b>",
+            "UNIDADE_ATIVO" => "<b>ATIVO</b>",
         ];
     }
 }

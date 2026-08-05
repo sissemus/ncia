@@ -4,11 +4,11 @@ export default {
     state: {
         showModal: false,
         fullScreen: false,
-
         unidade: {
             UNIDADE_ID: null,
             UNIDADE_NOME: null,
             UNIDADE_SOLICITANTE: 0,
+            UNIDADE_ATIVO: 1
         }
     },
 
@@ -23,7 +23,7 @@ export default {
 
         getFullScreen(state) {
             return state.fullScreen;
-        },
+        }
     },
 
     mutations: {
@@ -35,6 +35,7 @@ export default {
                     UNIDADE_ID: null,
                     UNIDADE_NOME: null,
                     UNIDADE_SOLICITANTE: 0,
+                    UNIDADE_ATIVO: 1
                 };
             }
         },
@@ -45,7 +46,7 @@ export default {
 
         setFullScreen(state, fullScreen) {
             state.fullScreen = fullScreen;
-        },
+        }
     },
 
     actions: {
@@ -59,6 +60,6 @@ export default {
 
         setFullScreen({ commit }, fullScreen) {
             commit('setFullScreen', fullScreen);
-        },
+        }
     }
 }

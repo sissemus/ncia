@@ -3,17 +3,16 @@ export default {
 
     state: {
         unidades: [],
-
         pagination: {
             current_page: 1,
             total: 0,
             last_page: 0
         },
-
         unidadePesquisa: {
             UNIDADE_ID: null,
             UNIDADE_NOME: null,
             UNIDADE_SOLICITANTE: null,
+            UNIDADE_ATIVO: null
         }
     },
 
@@ -28,20 +27,19 @@ export default {
 
         getUnidades(state) {
             return state.unidades;
-        },
+        }
     },
 
     mutations: {
         setUnidadePesquisa(state, unidadePesquisa = null) {
             if (unidadePesquisa) {
-                state.unidadePesquisa = JSON.parse(
-                    JSON.stringify(unidadePesquisa)
-                );
+                state.unidadePesquisa = JSON.parse(JSON.stringify(unidadePesquisa));
             } else {
                 state.unidadePesquisa = {
                     UNIDADE_ID: null,
                     UNIDADE_NOME: null,
                     UNIDADE_SOLICITANTE: null,
+                    UNIDADE_ATIVO: null
                 };
             }
         },
@@ -64,7 +62,7 @@ export default {
 
         setUnidades(state, unidades) {
             state.unidades = JSON.parse(JSON.stringify(unidades));
-        },
+        }
     },
 
     actions: {
@@ -88,22 +86,19 @@ export default {
                 method: 'GET',
                 url: `${baseUrl}/unidade/search`,
                 params: {
-                    page: page,
-                    ...context.state.unidadePesquisa,
+                    page,
+                    ...context.state.unidadePesquisa
                 }
-            })
-                .then(r => {
-                    context.dispatch('setUnidades', r.data['data']);
-                    context.dispatch('setPagination', r.data);
-                })
-                .catch(e => {
-                    console.error('ERRO: ', e);
-
-                    this.dispatch('TratarErroAjaxModule/tratarErro', {
-                        id: msgId,
-                        response: e.response
-                    });
+            }).then(r => {
+                context.dispatch('setUnidades', r.data.data);
+                context.dispatch('setPagination', r.data);
+            }).catch(e => {
+                console.error('ERRO: ', e);
+                this.dispatch('TratarErroAjaxModule/tratarErro', {
+                    id: msgId,
+                    response: e.response
                 });
+            });
         }
     }
 }

@@ -11,7 +11,7 @@ class UnidadeController extends Controller
 {
     public function view()
     {
-        return view('unidade.unidade_view');
+        return view("unidade.unidade_view");
     }
 
     public function inserir(UnidadeCreateRequest $request)
@@ -24,36 +24,31 @@ class UnidadeController extends Controller
 
     public function listar()
     {
-        $unidades = Unidade::orderBy('UNIDADE_NOME')->get();
+        $unidades = Unidade::where("UNIDADE_ATIVO", 1)
+            ->orderBy("UNIDADE_NOME")
+            ->get();
 
         return response($unidades);
     }
 
     public function pesquisar(Request $request)
     {
-        $unidades = Unidade::pesquisar($request);
-
-        return response($unidades);
+        return response(Unidade::pesquisar($request));
     }
 
     public function search(Request $request)
     {
-        $unidades = Unidade::pesquisar($request);
-
-        return response($unidades);
+        return response(Unidade::pesquisar($request));
     }
 
     public function buscar($id)
     {
-        $unidade = Unidade::findOrFail($id);
-
-        return response($unidade);
+        return response(Unidade::findOrFail($id));
     }
 
     public function alterar(UnidadeUpdateRequest $request)
     {
         $unidade = Unidade::findOrFail($request->UNIDADE_ID);
-
         $unidade->fill($request->validated());
         $unidade->save();
 
@@ -63,7 +58,8 @@ class UnidadeController extends Controller
     public function deletar(Request $request)
     {
         $unidade = Unidade::findOrFail($request->id);
-        $unidade->delete();
+        $unidade->UNIDADE_ATIVO = 0;
+        $unidade->save();
 
         return response($unidade);
     }
