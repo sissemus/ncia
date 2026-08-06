@@ -5,7 +5,7 @@ export default {
         fullScreen: false,
         procedimento: {
             PROCEDIMENTO_ID: null,
-            PROCEDIMENTO_CODIGO: null,
+            // PROCEDIMENTO_CODIGO: null,
             PROCEDIMENTO_DESCRICAO: null,
             PROCEDIMENTO_ATIVO: null,
         }
@@ -28,7 +28,7 @@ export default {
             } else {
                 state.procedimento = {
                     PROCEDIMENTO_ID: null,
-                    PROCEDIMENTO_CODIGO: null,
+                    // PROCEDIMENTO_CODIGO: null,
                     PROCEDIMENTO_DESCRICAO: null,
                     PROCEDIMENTO_ATIVO: null,
                 }

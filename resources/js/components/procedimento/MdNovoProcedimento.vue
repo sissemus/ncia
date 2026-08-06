@@ -24,10 +24,10 @@
                                 <v-text-field label="Descrição*" autocomplete="off"
                                     v-model="procedimento.PROCEDIMENTO_DESCRICAO"></v-text-field>
                             </v-col>
-                            <v-col cols="6">
+                            <!-- <v-col cols="6">
                                 <v-text-field label="Código*" autocomplete="off"
                                     v-model="procedimento.PROCEDIMENTO_CODIGO"></v-text-field>
-                            </v-col>
+                            </v-col> -->
                         </v-row>
                         <v-row v-if="procedimento.PROCEDIMENTO_ID">
                             <v-col>
@@ -113,7 +113,7 @@ export default {
             this.showModal = false
         },
         salvar() {
-            this.procedimento.PROCEDIMENTO_CODIGO = this.procedimento.PROCEDIMENTO_CODIGO ? this.procedimento.PROCEDIMENTO_CODIGO.toUpperCase() : null;
+            // this.procedimento.PROCEDIMENTO_CODIGO = this.procedimento.PROCEDIMENTO_CODIGO ? this.procedimento.PROCEDIMENTO_CODIGO.toUpperCase() : null;
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId)
             axios({
                 method: this.procedimento.PROCEDIMENTO_ID === null ? 'POST' : 'PUT',
