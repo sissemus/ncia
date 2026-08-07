@@ -5,6 +5,7 @@
                 <v-icon class="mr-1">mdi-database</v-icon>
                 <v-toolbar-title>Cadastro de Pacientes</v-toolbar-title>
                 <v-spacer></v-spacer>
+
                 <v-btn title="Novo paciente" fab small elevation="2" color="primary" dark @click="novoPaciente">
                     <v-icon>mdi-plus</v-icon>
                 </v-btn>
@@ -15,32 +16,31 @@
 
             <v-card-text>
                 <v-row>
-                    <v-col cols="12" md="4">
+                    <v-col cols="12" md="6">
                         <v-text-field label="Nome do Paciente" autocomplete="off" hide-details
                             v-model="pacientePesquisa.PACIENTE_NOME"></v-text-field>
                     </v-col>
 
-                    <v-col cols="12" md="2">
+                    <v-col cols="12" md="4">
                         <v-text-field label="CPF" v-mask="'###.###.###-##'" autocomplete="off" hide-details
                             v-model="pacientePesquisa.PACIENTE_CPF"></v-text-field>
                     </v-col>
 
-                    <v-col cols="12" md="3">
-                        <v-text-field label="Código Temporário" autocomplete="off" hide-details
-                            v-model="pacientePesquisa.PACIENTE_CODIGO_TEMPORARIO"></v-text-field>
-                    </v-col>
-
-                    <v-col cols="12" md="3">
-                        <v-select label="Vulnerabilidade Social" :items="situacoes" item-value="id" item-text="text"
-                            clearable hide-details
-                            v-model="pacientePesquisa.PACIENTE_VULNERABILIDADE_SOCIAL"></v-select>
+                    <v-col cols="12" md="2">
+                        <v-select label="Sexo" :items="sexosDominio" item-value="COLUNA_ID" item-text="DESCRICAO"
+                            clearable hide-details v-model="pacientePesquisa.TG_SEXO_ID"></v-select>
                     </v-col>
                 </v-row>
 
                 <v-row>
                     <v-col class="text-right">
-                        <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
-                        <v-btn color="red" dark tile @click="clear">limpar</v-btn>
+                        <v-btn color="primary" tile @click="pesquisar">
+                            pesquisar
+                        </v-btn>
+
+                        <v-btn color="red" dark tile @click="clear">
+                            limpar
+                        </v-btn>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -55,7 +55,6 @@
                             <th class="text-left">Nascimento</th>
                             <th class="text-left">Idade</th>
                             <th class="text-left">Sexo</th>
-                            <th class="text-left">Vulnerabilidade Social</th>
                             <th class="text-left">Ações</th>
                         </tr>
                     </thead>
@@ -63,19 +62,12 @@
                     <tbody>
                         <tr v-for="paciente in pacientes" :key="paciente.PACIENTE_ID">
                             <td>{{ paciente.PACIENTE_ID }}</td>
-                            <td>{{ paciente.PACIENTE_NOME || paciente.PACIENTE_CODIGO_TEMPORARIO }}</td>
-                            <td>{{ paciente.PACIENTE_CPF || "-" }}</td>
-                            <td>{{ paciente.PACIENTE_DT_NASCIMENTO ? formatarDataBR(paciente.PACIENTE_DT_NASCIMENTO) :
-                                "-" }}</td>
+                            <td>{{ paciente.PACIENTE_NOME }}</td>
+                            <td>{{ paciente.PACIENTE_CPF }}</td>
+                            <td>{{ formatarDataBR(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ calcularIdadeCompleta(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ descricaoTabelaGenerica(sexosDominio, paciente.TG_SEXO_ID) }}</td>
-                            <td>
-                                <v-chip v-if="paciente.PACIENTE_VULNERABILIDADE_SOCIAL === 1" x-small color="orange"
-                                    dark>
-                                    Sim
-                                </v-chip>
-                                <v-chip v-else x-small color="green" dark>Não</v-chip>
-                            </td>
+
                             <td>
                                 <v-btn icon @click="selecionar(paciente)" title="Editar">
                                     <v-icon>mdi-pencil</v-icon>
@@ -125,46 +117,63 @@ export default {
     name: "PacienteView",
     components: { MdNovoPaciente, TratarErroAjax },
     mixins: [UtilsMixins],
+
     props: {
         sexos: {
             type: Array,
             default: () => []
         }
     },
+
     data() {
         return {
             msgId: "msgPacienteView",
-            msgIdDebug: "msgPacienteViewDebug",
-            situacoes: [
-                { id: 1, text: "Sim" },
-                { id: 0, text: "Não" }
-            ]
+            msgIdDebug: "msgPacienteViewDebug"
         }
     },
+
     mounted() {
         this.$store.dispatch("DominioModule/setSexos", this.sexos);
         this.search();
     },
+
     computed: {
         ...mapGetters({
             baseUrl: "getBaseUrl"
         }),
+
         pacientes: {
-            get() { return this.$store.getters["PacienteViewModule/getPacientes"] },
-            set(newValue) { this.$store.dispatch("PacienteViewModule/setPacientes", newValue) }
+            get() {
+                return this.$store.getters["PacienteViewModule/getPacientes"];
+            },
+            set(newValue) {
+                this.$store.dispatch("PacienteViewModule/setPacientes", newValue);
+            }
         },
+
         pagination: {
-            get() { return this.$store.getters["PacienteViewModule/getPagination"] },
-            set(newValue) { this.$store.dispatch("PacienteViewModule/setPagination", newValue) }
+            get() {
+                return this.$store.getters["PacienteViewModule/getPagination"];
+            },
+            set(newValue) {
+                this.$store.dispatch("PacienteViewModule/setPagination", newValue);
+            }
         },
+
         pacientePesquisa: {
-            get() { return this.$store.getters["PacienteViewModule/getPacientePesquisa"] },
-            set(newValue) { this.$store.dispatch("PacienteViewModule/setPacientePesquisa", newValue) }
+            get() {
+                return this.$store.getters["PacienteViewModule/getPacientePesquisa"];
+            },
+            set(newValue) {
+                this.$store.dispatch("PacienteViewModule/setPacientePesquisa", newValue);
+            }
         },
+
         sexosDominio() {
             return this.$store.getters["DominioModule/getSexos"];
         }
     },
+
     methods: {
         search() {
             this.$store.dispatch("PacienteViewModule/search", this.msgId);
@@ -206,7 +215,9 @@ export default {
             let nascimento = moment(data);
             let hoje = moment();
             let anos = hoje.diff(nascimento, "years");
+
             nascimento.add(anos, "years");
+
             let meses = hoje.diff(nascimento, "months");
 
             return `${anos} ano${anos !== 1 ? "s" : ""} e ${meses} ${meses !== 1 ? "meses" : "mês"}`;

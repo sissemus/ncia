@@ -12,9 +12,7 @@ export default {
             PACIENTE_ID: null,
             PACIENTE_NOME: null,
             PACIENTE_CPF: null,
-            PACIENTE_CODIGO_TEMPORARIO: null,
-            TG_SEXO_ID: null,
-            PACIENTE_VULNERABILIDADE_SOCIAL: null
+            TG_SEXO_ID: null
         }
     },
 
@@ -61,9 +59,7 @@ export default {
                     PACIENTE_ID: null,
                     PACIENTE_NOME: null,
                     PACIENTE_CPF: null,
-                    PACIENTE_CODIGO_TEMPORARIO: null,
-                    TG_SEXO_ID: null,
-                    PACIENTE_VULNERABILIDADE_SOCIAL: null
+                    TG_SEXO_ID: null
                 };
             }
         }

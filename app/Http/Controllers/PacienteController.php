@@ -25,14 +25,8 @@ class PacienteController extends Controller
             $paciente = new Paciente($request->validated());
             $paciente->USUARIO_ID = Auth::id();
             $paciente->PACIENTE_DT_CAD = now();
-
-            if ($request->PACIENTE_CPF)
-                $paciente->PACIENTE_DT_IDENTIFICACAO = now();
-
+            $paciente->PACIENTE_DT_IDENTIFICACAO = now();
             $paciente->save();
-
-            if (!$paciente->PACIENTE_CPF)
-                $paciente->gerarCodigoTemporario();
 
             return $paciente;
         });
@@ -48,22 +42,12 @@ class PacienteController extends Controller
     {
         $paciente = DB::transaction(function () use ($request) {
             $paciente = Paciente::findOrFail($request->PACIENTE_ID);
-            $possuiaCpf = !empty($paciente->PACIENTE_CPF);
-
             $paciente->fill($request->validated());
 
-            if (!$possuiaCpf && $paciente->PACIENTE_CPF)
+            if (!$paciente->PACIENTE_DT_IDENTIFICACAO)
                 $paciente->PACIENTE_DT_IDENTIFICACAO = now();
 
-            if ($paciente->PACIENTE_CPF && $paciente->PACIENTE_CODIGO_TEMPORARIO) {
-                $paciente->PACIENTE_CODIGO_TEMPORARIO = null;
-                $paciente->PACIENTE_VULNERABILIDADE_SOCIAL = 0;
-            }
-
             $paciente->save();
-
-            if (!$paciente->PACIENTE_CPF && !$paciente->PACIENTE_CODIGO_TEMPORARIO)
-                $paciente->gerarCodigoTemporario();
 
             return $paciente;
         });
