@@ -63,7 +63,7 @@
                         <tr v-for="paciente in pacientes" :key="paciente.PACIENTE_ID">
                             <td>{{ paciente.PACIENTE_ID }}</td>
                             <td>{{ paciente.PACIENTE_NOME }}</td>
-                            <td>{{ paciente.PACIENTE_CPF }}</td>
+                            <td>{{ mascararCpf(paciente.PACIENTE_CPF) }}</td>
                             <td>{{ formatarDataBR(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ calcularIdadeCompleta(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ descricaoTabelaGenerica(sexosDominio, paciente.TG_SEXO_ID) }}</td>
@@ -221,7 +221,16 @@ export default {
             let meses = hoje.diff(nascimento, "months");
 
             return `${anos} ano${anos !== 1 ? "s" : ""} e ${meses} ${meses !== 1 ? "meses" : "mês"}`;
-        }
+        },
+
+        mascararCpf(cpf) {
+            if (!cpf) return "-";
+
+            let numeros = cpf.replace(/\D/g, "");
+            if (numeros.length !== 11) return cpf;
+
+            return `***.***.${numeros.substring(6, 9)}-**`;
+        },
     }
 }
 </script>
