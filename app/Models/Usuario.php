@@ -65,6 +65,9 @@ class Usuario extends Authenticatable
     public function usuarioUnidades()
     {
         return $this->hasMany(UsuarioUnidade::class, "USUARIO_ID", "USUARIO_ID")
+            ->whereHas("unidade", function ($query) {
+                $query->where("UNIDADE_ATIVO", 1);
+            })
             ->with("unidade");
     }
 

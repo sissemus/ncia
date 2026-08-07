@@ -96,19 +96,24 @@ export default {
         salvar() {
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
 
+            let editando = this.unidade.UNIDADE_ID !== null;
+
             axios({
-                method: this.unidade.UNIDADE_ID === null ? 'POST' : 'PUT',
-                url: this.unidade.UNIDADE_ID === null
-                    ? `${this.baseUrl}/unidade/inserir`
-                    : `${this.baseUrl}/unidade/alterar`,
+                method: editando ? 'PUT' : 'POST',
+                url: editando ? `${this.baseUrl}/unidade/alterar` : `${this.baseUrl}/unidade/inserir`,
                 data: this.unidade
             }).then(() => {
                 this.clearFormAndClose();
+
                 Swal.fire('Sucesso', 'Salvo com sucesso', 'success').then(() => {
-                    this.$store.dispatch('UnidadeViewModule/search', this.msgId);
+                    if (editando)
+                        window.location.reload();
+                    else
+                        this.$store.dispatch('UnidadeViewModule/search', this.msgId);
                 });
             }).catch(e => {
                 console.error('ERRO: ', e);
+
                 this.$store.dispatch('TratarErroAjaxModule/tratarErro', {
                     id: this.msgId,
                     response: e.response
