@@ -8,6 +8,8 @@ use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\ProfissionalController;
 use App\Http\Controllers\TabelaGenericaController;
 use App\Http\Controllers\UnidadeController;
+use App\Http\Controllers\VeiculoController;
+use App\Http\Controllers\VeiculoUnidadeController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
@@ -129,6 +131,31 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post('pesquisar', [UnidadeController::class, 'pesquisar']);
         Route::get('buscar/{id}', [UnidadeController::class, 'buscar']);
         Route::get('search', [UnidadeController::class, 'search']);
+    });
+
+    Route::prefix('veiculo')->group(function () {
+        Route::get('/', [VeiculoController::class, 'view']);
+        Route::get('view', [VeiculoController::class, 'view']);
+        Route::post('inserir', [VeiculoController::class, 'inserir']);
+        Route::put('alterar', [VeiculoController::class, 'alterar']);
+        Route::delete('deletar', [VeiculoController::class, 'deletar']);
+        Route::get('listar', [VeiculoController::class, 'listar']);
+        Route::post('pesquisar', [VeiculoController::class, 'pesquisar']);
+        Route::get('buscar/{id}', [VeiculoController::class, 'buscar']);
+        Route::get('search', [VeiculoController::class, 'search']);
+        Route::put('alterar_situacao', [VeiculoController::class, 'alterarSituacao']);
+    });
+
+    Route::prefix('veiculo_unidade')->group(function () {
+        Route::get('/', [VeiculoUnidadeController::class, 'view']);
+        Route::get('view', [VeiculoUnidadeController::class, 'view']);
+        Route::post('inserir', [VeiculoUnidadeController::class, 'inserir']);
+        Route::put('alterar', [VeiculoUnidadeController::class, 'alterar']);
+        Route::delete('deletar', [VeiculoUnidadeController::class, 'deletar']);
+        Route::post('pesquisar', [VeiculoUnidadeController::class, 'pesquisar']);
+        Route::get('buscar/{id}', [VeiculoUnidadeController::class, 'buscar']);
+        Route::get('search', [VeiculoUnidadeController::class, 'search']);
+        Route::post('desvincular', [VeiculoUnidadeController::class, 'desvincular']);
     });
 
     Route::prefix('usuario_unidade')->group(function () {

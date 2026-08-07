@@ -147,4 +147,20 @@ class TabelaGenerica extends Model
             return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
+
+    public static function tipoVeiculo($colunaId = null)
+    {
+        $tabela = RTG::TIPO_VEICULO;
+        if ($colunaId)
+            return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function situacaoVeiculo($colunaId = null)
+    {
+        $tabela = RTG::SITUACAO_VEICULO;
+        if ($colunaId)
+            return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
 }

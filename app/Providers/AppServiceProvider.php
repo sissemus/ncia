@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Observers\Auditables;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,6 +16,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        Schema::defaultStringLength(191);
         $versao = "1.0.0";
         Config::set(['versao' => $versao]);
         $caracteresRemocao = ["/[^0-9]/"];

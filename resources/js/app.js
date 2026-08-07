@@ -40,6 +40,8 @@ Vue.component('diagnostico-view', require('./components/diagnostico/DiagnosticoV
 Vue.component('unidade-view', require('./components/unidade/UnidadeView.vue').default);
 Vue.component('profissional-view', require('./components/profissional/ProfissionalView.vue').default);
 Vue.component('paciente-view', require('./components/paciente/PacienteView.vue').default);
+Vue.component('veiculo-view', require('./components/veiculo/VeiculoView.vue').default);
+Vue.component('veiculo-unidade-view', require('./components/veiculo_unidade/VeiculoUnidadeView.vue').default);
 
 
 /**
