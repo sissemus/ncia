@@ -23,7 +23,6 @@ class UsuarioController extends Controller
 
     public function inserir(UsuarioCreateRequest $request)
     {
-        
         $usuario = new Usuario($request->input());
         $usuario->USUARIO_ATIVO = 1;
         $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);

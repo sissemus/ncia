@@ -15,8 +15,7 @@ export default {
             USUARIO_ATIVO: null,
             USUARIO_VIGENCIA: null,
             USUARIO_ULTIMO_ACESSO: null,
-            TG_DOCUMENTO_ID: 7,
-            USUARIO_DOC: null,
+            USUARIO_CPF: null,
             USUARIO_EMAIL: null,
         },
         listar:null
@@ -51,8 +50,7 @@ export default {
                     USUARIO_ATIVO: null,
                     USUARIO_VIGENCIA: null,
                     USUARIO_ULTIMO_ACESSO: null,
-                    TG_DOCUMENTO_ID: 7,
-                    USUARIO_DOC: null,
+                    USUARIO_CPF: null,
                     USUARIO_EMAIL: null,
                 }
             }

@@ -24,8 +24,7 @@ class Usuario extends Authenticatable
         "USUARIO_ATIVO",
         "USUARIO_VIGENCIA",
         "USUARIO_ULTIMO_ACESSO",
-        "TG_DOCUMENTO_ID",
-        "USUARIO_DOC",
+        "USUARIO_CPF",
         "USUARIO_EMAIL",
     ];
 
@@ -37,8 +36,7 @@ class Usuario extends Authenticatable
         "USUARIO_ATIVO" => "integer",
         "USUARIO_VIGENCIA" => "datetime",
         "USUARIO_ULTIMO_ACESSO" => "datetime",
-        "TG_DOCUMENTO_ID" => "integer",
-        "USUARIO_DOC" => "string",
+        "USUARIO_CPF" => Cpf::class,
         "USUARIO_EMAIL" => "string",
     ];
 

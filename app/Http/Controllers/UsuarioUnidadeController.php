@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UsuarioUnidade\UsuarioUnidadeCreateRequest;
+use App\Models\Unidade;
 use App\Models\Usuario;
 use App\Models\UsuarioUnidade;
 use Illuminate\Http\Request;
@@ -11,6 +12,18 @@ class UsuarioUnidadeController extends Controller
 {
     public function inserir(UsuarioUnidadeCreateRequest $request)
     {
+        $unidade = Unidade::where("UNIDADE_ID", $request->UNIDADE_ID)
+            ->where("UNIDADE_SOLICITANTE", 1)
+            ->where("UNIDADE_ATIVO", 1)
+            ->first();
+
+        if (!$unidade) {
+            return response([
+                "cod" => 0,
+                "msg" => "Apenas unidades solicitantes e ativas podem ser vinculadas a usuários."
+            ], 422);
+        }
+
         $usuarioUnidade = new UsuarioUnidade($request->input());
         $usuarioUnidade->save();
 

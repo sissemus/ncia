@@ -7,8 +7,8 @@
 
             <v-row>
                 <v-col cols="12">
-                    <v-select label="Unidade*" :items="unidades" item-value="UNIDADE_ID" item-text="UNIDADE_NOME"
-                        v-model="usuarioUnidade.UNIDADE_ID"></v-select>
+                    <v-select label="Unidade*" :items="unidadesSolicitantes" item-value="UNIDADE_ID"
+                        item-text="UNIDADE_NOME" v-model="usuarioUnidade.UNIDADE_ID"></v-select>
                 </v-col>
             </v-row>
 
@@ -86,7 +86,13 @@ export default {
             set(newValue) {
                 this.$store.dispatch("TabUsuarioUnidadeModule/setUsuarioUnidade", newValue)
             }
-        }
+        },
+        unidadesSolicitantes() {
+            return (this.unidades || []).filter(unidade =>
+                Number(unidade.UNIDADE_SOLICITANTE) === 1 &&
+                Number(unidade.UNIDADE_ATIVO) === 1
+            );
+        },
     },
     methods: {
         listarUnidades() {

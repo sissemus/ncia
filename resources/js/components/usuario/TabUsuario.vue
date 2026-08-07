@@ -18,7 +18,7 @@
                         label="CPF*"
                         v-mask="'###.###.###-##'"
                         autocomplete="off"
-                        v-model="usuario.USUARIO_DOC"
+                        v-model="usuario.USUARIO_CPF"
                     ></v-text-field>
                 </v-col>
             </v-row>
@@ -162,7 +162,6 @@ export default {
             this.confirmarSenha = null;
         },
         salvar() {
-            this.usuario.USUARIO_DOC = this.usuario.USUARIO_DOC.replace(/\D/g, '');
             this.usuario.USUARIO_SENHA = this.senha;
             this.usuario.USUARIO_SENHA_CONFIRMATION = this.confirmarSenha;
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
