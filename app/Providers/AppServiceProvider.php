@@ -17,7 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Schema::defaultStringLength(191);
-        $versao = "1.0.0";
+        $versao = "1.0.1";
         Config::set(['versao' => $versao]);
         $caracteresRemocao = ["/[^0-9]/"];
         Config::set(['vcp' => $versao]);
