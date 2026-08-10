@@ -9,7 +9,6 @@ export default {
         },
         procedimentoPesquisa: {
             PROCEDIMENTO_ID: null,
-            // PROCEDIMENTO_CODIGO: null,
             PROCEDIMENTO_DESCRICAO: null,
             PROCEDIMENTO_ATIVO: null,
         }
@@ -32,7 +31,6 @@ export default {
             } else {
                 state.procedimentoPesquisa = {
                     PROCEDIMENTO_ID: null,
-                    // PROCEDIMENTO_CODIGO: null,
                     PROCEDIMENTO_DESCRICAO: null,
                     PROCEDIMENTO_ATIVO: null,
                 }

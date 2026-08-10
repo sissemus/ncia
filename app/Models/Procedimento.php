@@ -13,14 +13,12 @@ class Procedimento extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        // "PROCEDIMENTO_CODIGO",
         "PROCEDIMENTO_DESCRICAO",
         "PROCEDIMENTO_ATIVO",
     ];
 
     protected $casts = [
         "PROCEDIMENTO_ID" => "integer",
-        // "PROCEDIMENTO_CODIGO" => "string",
         "PROCEDIMENTO_DESCRICAO" => "string",
         "PROCEDIMENTO_ATIVO" => "integer",
     ];

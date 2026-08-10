@@ -17,10 +17,6 @@
                         <v-text-field label="Descrição" autocomplete="off" hide-details
                             v-model="procedimentoPesquisa.PROCEDIMENTO_DESCRICAO"></v-text-field>
                     </v-col>
-                    <!-- <v-col>
-                        <v-text-field label="Código" autocomplete="off" hide-details
-                            v-model="procedimentoPesquisa.PROCEDIMENTO_CODIGO"></v-text-field>
-                    </v-col> -->
                 </v-row>
                 <v-row>
 
@@ -38,7 +34,6 @@
                         <tr>
                             <th class="text-left">Id</th>
                             <th class="text-left">Descrição do Procedimento</th>
-                            <!-- <th class="text-left">Código do Procedimento</th> -->
                             <th class="text-left">Ativo</th>
                             <th>Ações</th>
                         </tr>
@@ -47,7 +42,6 @@
                         <tr v-for="procedimento in procedimentos" :key="procedimento['PROCEDIMENTO_ID']">
                             <td>{{ procedimento['PROCEDIMENTO_ID'] }}</td>
                             <td>{{ procedimento['PROCEDIMENTO_DESCRICAO'] }}</td>
-                            <!-- <td>{{ procedimento['PROCEDIMENTO_CODIGO'] }}</td> -->
                             <td>
                                 <v-chip x-small v-if="procedimento['PROCEDIMENTO_ATIVO'] === 1" color="green" dark>Sim
                                 </v-chip>
