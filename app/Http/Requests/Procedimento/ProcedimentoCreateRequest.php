@@ -25,7 +25,6 @@ class ProcedimentoCreateRequest extends FormRequest
     public function rules()
     {
         return [
-            // "PROCEDIMENTO_CODIGO" => ["required"],
             "PROCEDIMENTO_DESCRICAO" => ["required"],
         ];
     }
@@ -33,7 +32,6 @@ class ProcedimentoCreateRequest extends FormRequest
     public function attributes()
     {
         return [
-            // "PROCEDIMENTO_CODIGO" => "<b>PROCEDIMENTO_CODIGO</b>",
             "PROCEDIMENTO_DESCRICAO" => "<b>PROCEDIMENTO_DESCRICAO</b>",
         ];
     }

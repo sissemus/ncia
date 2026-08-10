@@ -15,7 +15,6 @@ class ProcedimentoUpdateRequest extends ProcedimentoCreateRequest
     {
         $uniqueIgnoreId = Rule::unique('PROCEDIMENTO')->ignore($this->request->all()["PROCEDIMENTO_ID"], "PROCEDIMENTO_ID");
         return [
-            "PROCEDIMENTO_CODIGO" => ["required", "string", $uniqueIgnoreId, "max:20",],
             "PROCEDIMENTO_DESCRICAO" => ["required", "string", "min:3"],
             "PROCEDIMENTO_ATIVO" => ["required", "integer"],
         ];
