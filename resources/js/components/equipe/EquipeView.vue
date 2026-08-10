@@ -1,0 +1,202 @@
+<template>
+    <div>
+        <v-card>
+            <v-toolbar class="elevation-1">
+                <v-icon class="mr-1">mdi-database</v-icon>
+                <v-toolbar-title>Cadastro de Equipes</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn title="Nova equipe" fab small elevation="2" color="primary" dark @click="novoEquipe">
+                    <v-icon>mdi-plus</v-icon>
+                </v-btn>
+            </v-toolbar>
+            <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
+            <div :id="msgIdDebug"></div>
+            <v-card-text>
+                <v-row>
+                    <v-col>
+                        <v-text-field label="Equipe" autocomplete="off" hide-details
+                            v-model="equipePesquisa.EQUIPE_ID"></v-text-field>
+                    </v-col>
+                </v-row>
+                <v-row>
+
+                </v-row>
+                <v-row>
+                    <v-col class="text-right">
+                        <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
+                        <v-btn color="red" dark tile @click="clear">limpar</v-btn>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+            <v-simple-table dense v-show="equipes.length" class="mb-0">
+                <template v-slot:default>
+                    <thead>
+                        <tr>
+                            <th class="text-left">Id</th>
+                            <th class="text-left">Veículo</th>
+                            <th class="text-left">Profissional</th>
+                            <th class="text-left">Tipo de Profissional</th>
+                            <th class="text-left">Ativo</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="equipe in equipes" :key="equipe['EQUIPE_ID']">
+                            <td>{{ equipe['EQUIPE_ID'] }}</td>
+                            <td>
+                                {{ equipe.veiculo && equipe.veiculo.VEICULO_IDENTIFICACAO
+                                    ? equipe.veiculo.VEICULO_IDENTIFICACAO
+                                    : 'Sem veículo' }}
+                            </td>
+                            <td>
+                                {{ equipe.profissional && equipe.profissional.PROFISSIONAL_NOME
+                                    ? equipe.profissional.PROFISSIONAL_NOME
+                                    : 'Sem profissional' }}
+                            </td>
+                            <td>
+                                {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}
+                            </td>                            
+                            <td>
+                                <v-chip x-small v-if="equipe['EQUIPE_ATIVO'] === 1" color="green" dark>Sim
+                                </v-chip>
+                                <v-chip x-small v-else color="red" dark>Não</v-chip>
+                            </td>
+                            <td>
+                                <v-btn icon @click="selecionar(equipe)" title="Editar">
+                                    <v-icon>mdi-pencil</v-icon>
+                                </v-btn>
+                                <v-btn icon @click="deletar(equipe)" title="Remover">
+                                    <v-icon>mdi-delete</v-icon>
+                                </v-btn>
+                            </td>
+                        </tr>
+                    </tbody>
+                </template>
+            </v-simple-table>
+            <v-divider></v-divider>
+            <v-card-actions>
+                <v-row>
+                    <v-col>
+                        <v-pagination v-show="pagination.total" v-model="pagination.current_page"
+                            :length="pagination.last_page" total-visible="10" @input="onPageChange"></v-pagination>
+                    </v-col>
+                </v-row>
+            </v-card-actions>
+            <v-divider></v-divider>
+            <v-card-actions class="text-center">
+                <v-row>
+                    <v-col>
+                        <v-chip>
+                            {{ pagination.total }} registro{{ pagination.total > 1 ? 's' : '' }}
+                        </v-chip>
+                    </v-col>
+                </v-row>
+            </v-card-actions>
+        </v-card>
+        <MdNovoEquipe></MdNovoEquipe>
+    </div>
+</template>
+
+<script>
+import Swal from 'sweetalert2';
+import { mapGetters } from "vuex";
+import TratarErroAjax from "../assets/TratarErroAjax";
+import MdNovoEquipe from "./MdNovoEquipe";
+
+export default {
+    name: "EquipeView",
+    components: { MdNovoEquipe, TratarErroAjax },
+    data() {
+        return {
+            msgId: 'msgEquipeView',
+            msgIdDebug: 'msgEquipeViewDebug',
+        }
+    },
+    mounted() {
+        // Carga inicial
+        // this.search();
+    },
+    computed: {
+        ...mapGetters({
+            baseUrl: 'getBaseUrl'
+        }),
+        equipes: {
+            get() { return this.$store.getters['EquipeViewModule/getEquipes'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipes', newValue) }
+        },
+        pagination: {
+            get() { return this.$store.getters['EquipeViewModule/getPagination'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
+        },
+        equipePesquisa: {
+            get() { return this.$store.getters['EquipeViewModule/getEquipePesquisa'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipePesquisa', newValue) }
+        },
+    },
+    methods: {
+        search() {
+            this.$store.dispatch('EquipeViewModule/search', this.msgId);
+        },
+
+        onPageChange() {
+            this.search();
+        },
+
+        pesquisar() {
+            this.pagination.current_page = 1;
+            this.search();
+        },
+
+        clear() {
+            this.equipePesquisa = {
+                EQUIPE_ID: null,
+            };
+            this.pagination.current_page = 1;
+            this.search();
+        },
+
+        novoEquipe() {
+            this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
+        },
+
+        selecionar(equipe) {
+            this.$store.dispatch('MdNovoEquipeModule/setEquipe', equipe)
+            this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
+        },
+
+        deletar(equipe) {
+            let params = {
+                id: equipe.EQUIPE_ID
+            }
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja excluir a equipe ${equipe.EQUIPE_ID} ?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            })
+                .then(result => {
+                    if (result.isConfirmed)
+                        axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
+                            .then(res => {
+                                Swal.fire('Excluído com sucesso!', '', 'success')
+                                    .then(res => {
+                                        this.search();
+                                    })
+                            })
+                })
+        },
+
+        truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+    }
+}
+</script>
+
+<style></style>

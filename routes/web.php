@@ -13,6 +13,7 @@ use App\Http\Controllers\VeiculoUnidadeController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
+use App\Http\Controllers\EquipeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -173,9 +174,9 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("listar", [ProfissionalController::class, "listar"]);
         Route::post("pesquisar", [ProfissionalController::class, "pesquisar"]);
         Route::get("buscar/{id}", [ProfissionalController::class, "buscar"]);
-    });
+        });
 
-    Route::prefix("paciente")->group(function () {
+        Route::prefix("paciente")->group(function () {
         Route::get("/", [PacienteController::class, "view"]);
         Route::get("view", [PacienteController::class, "view"]);
         Route::post("inserir", [PacienteController::class, "inserir"]);
@@ -184,6 +185,18 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [PacienteController::class, "pesquisar"]);
         Route::get("buscar/{id}", [PacienteController::class, "buscar"]);
         Route::get("buscar-por-cpf", [PacienteController::class, "buscarPorCpf"]);
+    });
+    
+    Route::prefix("equipe")->group(function () {
+        Route::get("/", [EquipeController::class, "view"]);
+        Route::get("view", [EquipeController::class, "view"]);
+        Route::post("inserir", [EquipeController::class, "inserir"]);
+        Route::put("alterar", [EquipeController::class, "alterar"]);
+        Route::delete("deletar", [EquipeController::class, "deletar"]);
+        Route::get("listar", [EquipeController::class, "listar"]);
+        Route::post("pesquisar", [EquipeController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [EquipeController::class, "buscar"]);
+        Route::get('search', [EquipeController::class, 'search']);
     });
     
 });
