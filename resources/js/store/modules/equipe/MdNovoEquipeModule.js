@@ -8,6 +8,9 @@ export default {
             VEICULO_ID: null,
             PROFISSIONAL_ID: null,
             EQUIPE_ATIVO: null,
+            EQUIPE_DATA_INI: null,
+            EQUIPE_DATA_FIM: null,
+
         }
     },
     getters: {
@@ -31,6 +34,8 @@ export default {
                     VEICULO_ID: null,
                     PROFISSIONAL_ID: null,
                     EQUIPE_ATIVO: null,
+                    EQUIPE_DATA_INI: null,
+                    EQUIPE_DATA_FIM: null,
                 }
             }
         },

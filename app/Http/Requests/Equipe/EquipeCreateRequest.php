@@ -27,6 +27,8 @@ class EquipeCreateRequest extends FormRequest
         return [
             "VEICULO_ID" => ["required"],
             "PROFISSIONAL_ID" => ["required"],
+            "EQUIPE_DATA_INI" => ["required", "date"],
+            "EQUIPE_DATA_FIM" => ["required", "date"],
         ];
     }
 
@@ -35,6 +37,8 @@ class EquipeCreateRequest extends FormRequest
         return [
             "VEICULO_ID" => "<b>VEICULO_ID</b>",
             "PROFISSIONAL_ID" => "<b>PROFISSIONAL_ID</b>",
+            "EQUIPE_DATA_INI" => "<b>EQUIPE_DATA_INI</b>",
+            "EQUIPE_DATA_FIM" => "<b>EQUIPE_DATA_FIM</b>",
         ];
     }
 }

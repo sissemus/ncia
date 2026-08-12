@@ -18,6 +18,8 @@ class EquipeUpdateRequest extends EquipeCreateRequest
             "VEICULO_ID" => ["required", "integer"],
             "PROFISSIONAL_ID" => ["required", "integer"],
             "EQUIPE_ATIVO" => ["required", "integer"],
+            "EQUIPE_DATA_INI" => ["required", "date"],
+            "EQUIPE_DATA_FIM" => ["required", "date"],
         ];
     }
 }

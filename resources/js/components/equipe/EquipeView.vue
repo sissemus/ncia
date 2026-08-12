@@ -32,12 +32,17 @@
                 <template v-slot:default>
                     <thead>
                         <tr>
-                            <th class="text-left">Id</th>
-                            <th class="text-left">Veículo</th>
-                            <th class="text-left">Profissional</th>
-                            <th class="text-left">Tipo de Profissional</th>
-                            <th class="text-left">Ativo</th>
+                            <th rowspan="2" class="text-left">Id</th>
+                            <th rowspan="2" class="text-left">Veículo</th>
+                            <th rowspan="2" class="text-left">Profissional</th>
+                            <th rowspan="2" class="text-left">Tipo de Profissional</th>
+                            <th colspan="4" class="text-center">Datas</th>
+                            <th class="text-left">Ativa</th>
                             <th>Ações</th>
+                        </tr>
+                        <tr>
+                            <th colspan="2" class="text-center">Início</th>
+                            <th colspan="2" class="text-center">Fim</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,6 +61,18 @@
                             <td>
                                 {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}
                             </td>                            
+                            <td style="text-align: center;">
+                                {{ formatarData(equipe.EQUIPE_DATA_INI)}}
+                            </td>
+                            <td style="text-align: center;">
+                                {{ formatarHora(equipe.EQUIPE_DATA_INI)}}
+                            </td>
+                            <td style="text-align: center;">
+                                {{ formatarData(equipe.EQUIPE_DATA_FIM)}}
+                            </td>
+                            <td style="text-align: center;">
+                                {{ formatarHora(equipe.EQUIPE_DATA_FIM)}}
+                            </td>
                             <td>
                                 <v-chip x-small v-if="equipe['EQUIPE_ATIVO'] === 1" color="green" dark>Sim
                                 </v-chip>
@@ -194,7 +211,38 @@ export default {
             if (!text) return '';
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
-        }
+        },
+        formatarData(data) {
+            if (!data) {
+                return '';
+            }
+
+            const dataParte = data.substring(0, 10);
+            const partes = dataParte.split('-');
+
+            if (partes.length !== 3) {
+                return '';
+            }
+
+            return `${partes[2]}-${partes[1]}-${partes[0]}`;
+        },
+        formatarHora(hora) {
+            if (!hora) {
+                return '';
+            }
+
+            // Exemplo:
+            // 2026-08-12T03:00:00.000000Z
+            // Retorno:
+            // 03:00
+            const partes = hora.split('T');
+
+            if (partes.length !== 2) {
+                return '';
+            }
+
+            return partes[1].substring(0, 5);
+        }    
     }
 }
 </script>
