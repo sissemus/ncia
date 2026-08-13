@@ -16,7 +16,7 @@
                         dark
                     >
                         <v-toolbar-title>
-                            Detalhes da Equipe
+                            Equipe
                         </v-toolbar-title>
 
                         <v-spacer></v-spacer>
@@ -59,55 +59,7 @@
 
                     <v-card-text class="mt-5">
                         <v-row>
-                            <v-col cols="4">
-                                <label>Data início*</label>
-
-                                <input
-                                    type="date"
-                                    v-model="dataInicioFormatada"
-                                >
-                            </v-col>
-
-                            <v-col cols="2">
-                                <label>Hora início*</label>
-
-                                <input
-                                    type="time"
-                                    v-model="horaInicioFormatada"
-                                >
-                            </v-col>
-
-                            <v-col cols="4">
-                                <label>Data final*</label>
-
-                                <input
-                                    type="date"
-                                    v-model="dataFimFormatada"
-                                >
-                            </v-col>
-
-                            <v-col cols="2">
-                                <label>Hora final*</label>
-
-                                <input
-                                    type="time"
-                                    v-model="horaFimFormatada"
-                                >
-                            </v-col>
-                        </v-row>
-
-                        <v-row>
-                            <v-col>
-                                <v-select
-                                    label="Ativo*"
-                                    :items="ativos"
-                                    item-value="id"
-                                    item-text="text"
-                                    v-model="equipe.EQUIPE_ATIVO"
-                                ></v-select>
-                            </v-col>
-
-                            <v-col>
+                            <v-col cols="8">
                                 <v-select
                                     label="Veículo*"
                                     :items="veiculos"
@@ -116,18 +68,63 @@
                                     v-model="equipe.VEICULO_ID"
                                 ></v-select>
                             </v-col>
-
-                            <v-col>
-                                <v-select
-                                    label="Profissional*"
-                                    :items="profissionais"
-                                    item-value="PROFISSIONAL_ID"
-                                    item-text="PROFISSIONAL_NOME"
-                                    v-model="equipe.PROFISSIONAL_ID"
+                            <v-col cols="4">
+                                <v-select 
+                                    label="Turno*" 
+                                    item-value="value" 
+                                    item-text="text" 
+                                    v-model="equipe.EQUIPE_TURNO"
+                                    :items="opcoesTurno"
                                 ></v-select>
                             </v-col>
                         </v-row>
+                        <v-row>
+                            <v-col cols="11">
+                                <v-select
+                                    label="Profissional*"
+                                    :items="profissionalEspecifico"
+                                    item-value="value"
+                                    item-text="text"
+                                    v-model="equipe.PROFISSIONAL_ID"
+                                ></v-select>
+                            </v-col>
+                            <v-col cols="1" style="text-align: right;">
+                                <v-btn title="Adicionar profissional" fab small elevation="3" color="success" dark @click="novoProfissional">
+                                    <v-icon>mdi-plus</v-icon>
+                                </v-btn>
+                            </v-col>
+                        </v-row>
                     </v-card-text>
+                        <v-simple-table dense v-show="profissionaisSelecionados.length" class="mb-0">
+                            <template v-slot:default>
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Id</th>
+                                        <th class="text-left">Profissional</th>
+                                        <th class="text-left">Tipo de Profissional</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="row in profissionaisSelecionados" :key="equipe['EQUIPE_ID']">
+                                        <td>{{ row['PROFISSIONAL_ID'] }}</td>
+
+                                        <td>
+                                            {{ row.profissional.PROFISSIONAL_NOME }}
+                                        </td>
+                                        <td>
+                                            {{ row.profissional.tipoProfissional ? row.profissional.tipoProfissional.DESCRICAO : '' }}
+                                        </td>                            
+
+                                        <td>
+                                            <v-btn icon @click="deletarProfissional(row)" title="Remover">
+                                                <v-icon>mdi-delete</v-icon>
+                                            </v-btn>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </template>
+                        </v-simple-table>
 
                     <v-divider class="ma-0"></v-divider>
 
@@ -185,19 +182,37 @@ export default {
                     id: 0,
                     text: 'Não'
                 }
-            ]
-        };
-    },
+            ],
 
+            opcoesTurno: [
+                { 
+                    text: 'SD', 
+                    value: 'SD' 
+                },
+                { 
+                    text: 'SN', 
+                    value: 'SN' 
+                }
+            ],
+            profissionaisSelecionados:[]
+        }
+    },
     mounted() {
         this.$store.dispatch(
             'VeiculoViewModule/search',
-            this.msgId
+            {
+                msgId: this.msgId,
+                VEICULO_ATIVO: 1
+            }
         );
 
         this.$store.dispatch(
             'ProfissionalViewModule/search',
-            this.msgId
+            {
+                msgId: this.msgId,
+                PROFISSIONAL_ATIVO: 1
+            }
+            
         );
     },
 
@@ -252,79 +267,52 @@ export default {
         },
 
         veiculos() {
-            return this.$store.getters[
-                'VeiculoViewModule/getVeiculos'
-            ];
+            return this.$store.getters['VeiculoViewModule/getVeiculos']
+                .filter(veiculo =>
+                    veiculo.TG_SITUACAO_VEICULO_ID == 1 &&
+                    veiculo.VEICULO_ATIVO == 1
+                )
         },
 
         profissionais() {
             return this.$store.getters[
-                'ProfissionalViewModule/getProfissionais'
-            ];
+                'ProfissionalViewModule/getProfissionais']
+                .filter(profissional => 
+                profissional.PROFISSIONAL_ATIVO == 1
+            );
         },
 
-        dataInicioFormatada: {
+        dataFormatada: {
             get() {
                 return this.formatarDataParaInput(
                     this.equipe &&
-                    this.equipe.EQUIPE_DATA_INI
+                    this.equipe.EQUIPE_DATA
                 );
             },
 
             set(valor) {
                 this.atualizarData(
-                    'EQUIPE_DATA_INI',
+                    'EQUIPE_DATA',
                     valor
                 );
             }
         },
-
-        horaInicioFormatada: {
-            get() {
-                return this.formatarHoraParaInput(
-                    this.equipe &&
-                    this.equipe.EQUIPE_DATA_INI
-                );
-            },
-
-            set(valor) {
-                this.atualizarHora(
-                    'EQUIPE_DATA_INI',
-                    valor
-                );
+        profissionalEspecifico() {
+            // Verifica se a lista existe e não está vazia
+            if (!this.profissionais || !Array.isArray(this.profissionais)) {
+                return [];
             }
-        },
 
-        dataFimFormatada: {
-            get() {
-                return this.formatarDataParaInput(
-                    this.equipe &&
-                    this.equipe.EQUIPE_DATA_FIM
-                );
-            },
-
-            set(valor) {
-                this.atualizarData(
-                    'EQUIPE_DATA_FIM',
-                    valor
-                );
-            }
-        },
-
-        horaFimFormatada: {
-            get() {
-                return this.formatarHoraParaInput(
-                    this.equipe &&
-                    this.equipe.EQUIPE_DATA_FIM
-                );
-            },
-
-            set(valor) {
-                this.atualizarHora(
-                    'EQUIPE_DATA_FIM',
-                    valor
-                );
-            }
+            // Transforma a lista antiga no formato que o Vuetify precisa
+            return this.profissionais.map(item => {
+                // Monta o texto unindo Nome + Descrição (se a descrição existir)
+                const descricao = item.tipoProfissional ? ` (${item.tipoProfissional.DESCRICAO})` : '';
+                
+                return {
+                    value: item.PROFISSIONAL_ID,
+                    text: `${item.PROFISSIONAL_NOME}${descricao}`
+                };
+            });
         }
     },
 
@@ -345,22 +333,21 @@ export default {
                 this.msgId
             );
 
-            if (!this.equipe) {
+            // if (!this.equipe) {
+            //     return;
+            // }
+
+            if (!this.profissionaisSelecionados) {
                 return;
             }
 
+            // const equipe = this.equipe
+
+            const profissionaisSelecionados = this.profissionaisSelecionados
+
             const dados = {
-                ...this.equipe,
-
-                EQUIPE_DATA_INI: this.mesclarDataHora(
-                    this.dataInicioFormatada,
-                    this.horaInicioFormatada
-                ),
-
-                EQUIPE_DATA_FIM: this.mesclarDataHora(
-                    this.dataFimFormatada,
-                    this.horaFimFormatada
-                )
+                ...profissionaisSelecionados
+                
             };
 
             const estaEditando =
@@ -378,34 +365,38 @@ export default {
 
                 data: dados
             })
-                .then(() => {
-                    this.clearFormAndClose();
+            .then(() => {
+                this.clearFormAndClose();
 
-                    Swal.fire(
-                        'Sucesso',
-                        'Salvo com sucesso',
-                        'success'
-                    ).then(() => {
-                        this.$store.dispatch(
-                            'EquipeViewModule/search',
-                            this.msgId
-                        );
-                    });
-                })
-                .catch(error => {
-                    console.error(
-                        'ERRO: ',
-                        error
-                    );
-
+                Swal.fire(
+                    'Sucesso',
+                    'Salvo com sucesso',
+                    'success'
+                ).then(() => {
                     this.$store.dispatch(
-                        'TratarErroAjaxModule/tratarErro',
-                        {
-                            id: this.msgId,
-                            response: error.response
-                        }
+                        'EquipeViewModule/search',
+                        this.msgId
+                    );
+                    this.$store.dispatch(
+                        'VeiculoViewModule/search',
+                        this.msgId
                     );
                 });
+            })
+            .catch(error => {
+                console.error(
+                    'ERRO: ',
+                    error
+                );
+
+                this.$store.dispatch(
+                    'TratarErroAjaxModule/tratarErro',
+                    {
+                        id: this.msgId,
+                        response: error.response
+                    }
+                );
+            });
         },
 
         formatarDataParaInput(valor) {
@@ -484,58 +475,6 @@ export default {
             return `${ano}-${mes}-${dia}`;
         },
 
-        formatarHoraParaInput(valor) {
-            if (!valor) {
-                return '';
-            }
-
-            /*
-             * Caso o Laravel retorne:
-             *
-             * 2026-08-12 00:00:00.000
-             */
-            if (
-                /^\d{4}-\d{2}-\d{2} /.test(valor)
-            ) {
-                return valor.substring(11, 16);
-            }
-
-            /*
-             * Caso venha apenas como HH:mm
-             */
-            if (
-                /^\d{2}:\d{2}/.test(valor)
-            ) {
-                return valor.substring(0, 5);
-            }
-
-            /*
-             * Caso o Laravel retorne ISO:
-             *
-             * 2026-08-12T03:00:00.000000Z
-             */
-            const iso = valor.replace(
-                /\.(\d{3})\d+Z$/,
-                '.$1Z'
-            );
-
-            const data = new Date(iso);
-
-            if (isNaN(data.getTime())) {
-                return '';
-            }
-
-            return new Intl.DateTimeFormat(
-                'pt-BR',
-                {
-                    timeZone: 'America/Fortaleza',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }
-            ).format(data);
-        },
-
         atualizarData(campo, data) {
             if (!this.equipe || !data) {
                 return;
@@ -551,51 +490,73 @@ export default {
              *
              * Não faça:
              *
-             * this.dataInicioFormatada = valor;
+             * this.dataFormatada = valor;
              *
              * pois isso chama o setter novamente.
              */
             this.equipe[campo] =
                 `${data} ${horaAtual}:00`;
         },
+        novoProfissional() {
+            
+            const id = this.equipe.PROFISSIONAL_ID;
+            // se o id estiver null
+            if (id == null)
+                return '' 
 
-        atualizarHora(campo, hora) {
-            if (!this.equipe || !hora) {
-                return;
+            const profissional = this.profissionais.find(
+                item => item.PROFISSIONAL_ID === id
+            );
+
+            //verifica se esse profissional já foi adicionado a lista
+            const profissionalExiste = this.profissionaisSelecionados.find(
+                item => item.PROFISSIONAL_ID === id
+            )
+
+            if(profissionalExiste){
+                console.log('Profissional já adicionado a lista')
+                return
             }
 
-            const dataAtual =
-                this.formatarDataParaInput(
-                    this.equipe[campo]
+            if (profissional) {
+                this.profissionaisSelecionados.push(
+                    {
+                        VEICULO_ID: this.equipe.VEICULO_ID,
+                        EQUIPE_DATA: null,
+                        EQUIPE_TURNO: this.equipe.EQUIPE_TURNO, 
+                        EQUIPE_ATIVO: 1,
+                        PROFISSIONAL_ID: profissional.PROFISSIONAL_ID,
+                        profissional: profissional,
+                    }
                 );
-
-            if (!dataAtual) {
-                return;
             }
-
-            /*
-             * Atualiza diretamente o campo original.
-             *
-             * Resultado:
-             * 2026-08-12 14:30:00
-             */
-            this.equipe[campo] =
-                `${dataAtual} ${hora}:00`;
+      
+            // console.log(this.profissionaisSelecionados)
         },
+        deletarProfissional(profissional) {
 
-        mesclarDataHora(data, hora) {
-            if (!data || !hora) {
-                return '';
+            let id = profissional.PROFISSIONAL_ID
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja excluir a o profissional ${profissional.PROFISSIONAL_NOME} ?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            })
+
+            const index = this.profissionaisSelecionados.findIndex(
+            item => item.PROFISSIONAL_ID == id
+            );
+
+            if (index !== -1) {
+                this.profissionaisSelecionados.splice(index, 1);
             }
-
-            /*
-             * Resultado:
-             * 2026-08-12 14:30:00
-             */
-            return `${data} ${hora}:00`;
-        }
+        },
     }
-};
+}
 </script>
 
 <style scoped>

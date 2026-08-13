@@ -22,23 +22,19 @@ class EquipeCreateRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
-    {
-        return [
-            "VEICULO_ID" => ["required"],
-            "PROFISSIONAL_ID" => ["required"],
-            "EQUIPE_DATA_INI" => ["required", "date"],
-            "EQUIPE_DATA_FIM" => ["required", "date"],
-        ];
-    }
+    // public function rules()
+    // {
+    //     return [
+    //         "VEICULO_ID" => ["required"],
+    //         "EQUIPE_TURNO" => ["required"],
+    //     ];
+    // }
 
-    public function attributes()
-    {
-        return [
-            "VEICULO_ID" => "<b>VEICULO_ID</b>",
-            "PROFISSIONAL_ID" => "<b>PROFISSIONAL_ID</b>",
-            "EQUIPE_DATA_INI" => "<b>EQUIPE_DATA_INI</b>",
-            "EQUIPE_DATA_FIM" => "<b>EQUIPE_DATA_FIM</b>",
-        ];
-    }
+    // public function attributes()
+    // {
+    //     return [
+    //         "VEICULO_ID" => "<b>VEICULO_ID</b>",
+    //         "EQUIPE_TURNO" => "<b>EQUIPE_TURNO</b>"
+    //     ];
+    // }
 }

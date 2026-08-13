@@ -11,15 +11,15 @@ class EquipeUpdateRequest extends EquipeCreateRequest
      *
      * @return array
      */
-    public function rules()
-    {
-        $uniqueIgnoreId = Rule::unique('EQUIPE')->ignore($this->request->all()["EQUIPE_ID"], "EQUIPE_ID");
-        return [
-            "VEICULO_ID" => ["required", "integer"],
-            "PROFISSIONAL_ID" => ["required", "integer"],
-            "EQUIPE_ATIVO" => ["required", "integer"],
-            "EQUIPE_DATA_INI" => ["required", "date"],
-            "EQUIPE_DATA_FIM" => ["required", "date"],
-        ];
-    }
+    // public function rules()
+    // {
+    //     $uniqueIgnoreId = Rule::unique('EQUIPE')->ignore($this->request->all()["EQUIPE_ID"], "EQUIPE_ID");
+    //     return [
+    //         "VEICULO_ID" => ["required", "integer"],
+    //         "PROFISSIONAL_ID" => ["required", "integer"],
+    //         // "EQUIPE_DATA" => ["required", "date"],
+    //         "EQUIPE_TURNO" => ["required", "string"],
+    //         "EQUIPE_ATIVO" => ["required", "integer"],
+    //     ];
+    // }
 }

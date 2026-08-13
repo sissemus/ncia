@@ -28,61 +28,31 @@
                     </v-col>
                 </v-row>
             </v-card-text>
-            <v-simple-table dense v-show="equipes.length" class="mb-0">
+            <v-simple-table dense v-show="veiculos.length" class="mb-0">
                 <template v-slot:default>
                     <thead>
                         <tr>
-                            <th rowspan="2" class="text-left">Id</th>
-                            <th rowspan="2" class="text-left">Veículo</th>
-                            <th rowspan="2" class="text-left">Profissional</th>
-                            <th rowspan="2" class="text-left">Tipo de Profissional</th>
-                            <th colspan="4" class="text-center">Datas</th>
-                            <th class="text-left">Ativa</th>
+                            <th class="text-left">Id</th>
+                            <th class="text-left">Veículo</th>
+                            <th class="text-left">Equipe</th>
                             <th>Ações</th>
-                        </tr>
-                        <tr>
-                            <th colspan="2" class="text-center">Início</th>
-                            <th colspan="2" class="text-center">Fim</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="equipe in equipes" :key="equipe['EQUIPE_ID']">
-                            <td>{{ equipe['EQUIPE_ID'] }}</td>
+                        <tr v-for="veiculo in veiculos">
+                            <td>{{ veiculo.VEICULO_ID }}</td>
+                            <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
                             <td>
-                                {{ equipe.veiculo && equipe.veiculo.VEICULO_IDENTIFICACAO
-                                    ? equipe.veiculo.VEICULO_IDENTIFICACAO
-                                    : 'Sem veículo' }}
-                            </td>
-                            <td>
-                                {{ equipe.profissional && equipe.profissional.PROFISSIONAL_NOME
-                                    ? equipe.profissional.PROFISSIONAL_NOME
-                                    : 'Sem profissional' }}
+                                <tr v-for="equipe in veiculo.equipes">
+                                    <td>{{ equipe.profissional ? equipe.profissional.PROFISSIONAL_NOME : '' }} - 
+                                    {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}</td>
+                                </tr>
                             </td>
                             <td>
-                                {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}
-                            </td>                            
-                            <td style="text-align: center;">
-                                {{ formatarData(equipe.EQUIPE_DATA_INI)}}
-                            </td>
-                            <td style="text-align: center;">
-                                {{ formatarHora(equipe.EQUIPE_DATA_INI)}}
-                            </td>
-                            <td style="text-align: center;">
-                                {{ formatarData(equipe.EQUIPE_DATA_FIM)}}
-                            </td>
-                            <td style="text-align: center;">
-                                {{ formatarHora(equipe.EQUIPE_DATA_FIM)}}
-                            </td>
-                            <td>
-                                <v-chip x-small v-if="equipe['EQUIPE_ATIVO'] === 1" color="green" dark>Sim
-                                </v-chip>
-                                <v-chip x-small v-else color="red" dark>Não</v-chip>
-                            </td>
-                            <td>
-                                <v-btn icon @click="selecionar(equipe)" title="Editar">
+                                <!-- <v-btn icon @click="selecionar(veiculo)" title="Editar">
                                     <v-icon>mdi-pencil</v-icon>
-                                </v-btn>
-                                <v-btn icon @click="deletar(equipe)" title="Remover">
+                                </v-btn> -->
+                                <v-btn v-if="veiculo.equipes.length" icon @click="deletar(veiculo)" title="Remover Equipes">
                                     <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                             </td>
@@ -142,17 +112,43 @@ export default {
             set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipes', newValue) }
         },
         pagination: {
-            get() { return this.$store.getters['EquipeViewModule/getPagination'] },
-            set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
+            // get() { return this.$store.getters['EquipeViewModule/getPagination'] },
+            // set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
+            get() { return this.$store.getters['VeiculoViewModule/getVeiculos']},
+            set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
         },
         equipePesquisa: {
             get() { return this.$store.getters['EquipeViewModule/getEquipePesquisa'] },
             set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipePesquisa', newValue) }
         },
+        veiculoPesquisa: {
+            get() { return this.$store.getters['VeiculoViewModule/getVeiculoPesquisa'] },
+            set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
+        },
+        veiculos: {
+            get() {
+                return this.$store.getters['VeiculoViewModule/getVeiculos']
+                    .filter(veiculo =>
+                        veiculo.TG_SITUACAO_VEICULO_ID == 1 &&
+                        veiculo.VEICULO_ATIVO == 1
+                    )
+            },
+            set(newValue) {
+                this.$store.dispatch(
+                    'VeiculoViewModule/setVeiculoPesquisa',
+                    newValue
+                )
+            }
+        }
     },
     methods: {
         search() {
-            this.$store.dispatch('EquipeViewModule/search', this.msgId);
+            // this.$store.dispatch('EquipeViewModule/search', this.msgId);
+            this.$store.dispatch('VeiculoViewModule/search', {
+                msgId: this.msgId,
+                TG_SITUACAO_VEICULO_ID: 1,
+                VEICULO_ATIVO: 1
+            });
         },
 
         onPageChange() {
@@ -165,8 +161,8 @@ export default {
         },
 
         clear() {
-            this.equipePesquisa = {
-                EQUIPE_ID: null,
+            this.veiculoPesquisa = {
+                VEICULO_ID: null,
             };
             this.pagination.current_page = 1;
             this.search();
@@ -181,15 +177,15 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
-        deletar(equipe) {
+        deletar(veiculo) {
             let params = {
-                id: equipe.EQUIPE_ID
+                VEICULO_ID: veiculo.VEICULO_ID
             }
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
-                text: `Deseja excluir a equipe ${equipe.EQUIPE_ID} ?`,
+                text: `Deseja excluir a equipe do veículo ${veiculo.VEICULO_IDENTIFICACAO} ?`,
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
@@ -225,24 +221,7 @@ export default {
             }
 
             return `${partes[2]}-${partes[1]}-${partes[0]}`;
-        },
-        formatarHora(hora) {
-            if (!hora) {
-                return '';
-            }
-
-            // Exemplo:
-            // 2026-08-12T03:00:00.000000Z
-            // Retorno:
-            // 03:00
-            const partes = hora.split('T');
-
-            if (partes.length !== 2) {
-                return '';
-            }
-
-            return partes[1].substring(0, 5);
-        }    
+        },   
     }
 }
 </script>

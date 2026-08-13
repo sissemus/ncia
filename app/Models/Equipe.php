@@ -15,8 +15,8 @@ class Equipe extends Model
     protected $fillable = [
         "VEICULO_ID",
         "PROFISSIONAL_ID",
-        "EQUIPE_DATA_INI",
-        "EQUIPE_DATA_FIM",
+        "EQUIPE_DATA",
+        "EQUIPE_TURNO",
         "EQUIPE_ATIVO",
         "USUARIO_ID_CAD",
     ];
@@ -25,8 +25,8 @@ class Equipe extends Model
         "EQUIPE_ID" => "integer",
         "VEICULO_ID" => "integer",
         "PROFISSIONAL_ID" => "integer",
-        "EQUIPE_DATA_INI" => "datetime",
-        "EQUIPE_DATA_FIM" => "datetime",
+        "EQUIPE_DATA" => "date",
+        "EQUIPE_TURNO" => "string",
         "EQUIPE_ATIVO" => "integer",
         "USUARIO_ID_CAD" => "integer",
     ];
