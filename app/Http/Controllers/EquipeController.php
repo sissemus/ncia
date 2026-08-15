@@ -16,7 +16,6 @@ class EquipeController extends Controller
         return view('equipe.equipe_view');
     }
 
-<<<<<<< HEAD
     public function inserir(Request $request)
     {
         $equipes = [];
@@ -34,15 +33,6 @@ class EquipeController extends Controller
 
         return response($equipes, 201);
 
-=======
-    public function inserir(EquipeCreateRequest $request)
-    {
-        $equipe = new Equipe($request->input());
-        $equipe->EQUIPE_ATIVO = 1;
-        $equipe->save();
-
-        return response($equipe, 201);
->>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
     }
 
     public function listar()
@@ -66,7 +56,6 @@ class EquipeController extends Controller
         return response($equipe);
     }
 
-<<<<<<< HEAD
     public function alterar(Request $request)
     {
     
@@ -77,20 +66,12 @@ class EquipeController extends Controller
         $equipe->EQUIPE_DATA = now();
 
         $equipe->save();
-=======
-    public function alterar(EquipeUpdateRequest $request)
-    {
-        $equipe = Equipe::findOrFail($request->EQUIPE_ID);
-        $equipe->fill($request->post());
-        $equipe->save();;
->>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
 
         return response($equipe);
     }
 
     public function deletar(Request $request)
     {
-<<<<<<< HEAD
         Equipe::where('VEICULO_ID', $request->VEICULO_ID)
             ->where('EQUIPE_DATA', now()->format('Y-m-d'))
             ->delete();
@@ -115,31 +96,6 @@ class EquipeController extends Controller
 
         // Não está vinculada a nenhum chamado:
         // exclui definitivamente
-=======
-        $equipe = Equipe::findOrFail($request->id);
-
-        $estaEmUso = ChamadoEquipe::where(
-            'EQUIPE_ID',
-            $equipe->EQUIPE_ID
-        )->exists();
-
-        if ($estaEmUso) {
-            // A equipe está vinculada a um chamado:
-            // apenas desativa
-            $equipe->EQUIPE_ATIVO = 0;
-            $equipe->save();
-
-            return response()->json([
-                'sucesso' => true,
-                'mensagem' => 'A equipe está em uso e foi desativada.',
-                'dados' => $equipe
-            ]);
-        }
-
-        // Não está vinculada a nenhum chamado:
-        // exclui definitivamente
-        $equipe->delete();
->>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
 
         return response()->json([
             'sucesso' => true,

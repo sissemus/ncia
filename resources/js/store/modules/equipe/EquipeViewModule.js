@@ -12,11 +12,8 @@ export default {
             VEICULO_ID: null,
             PROFISSIONAL_ID: null,
             EQUIPE_ATIVO: null,
-<<<<<<< HEAD
             EQUIPE_DATA_INI: null,
             EQUIPE_DATA_FIM: null,
-=======
->>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
         }
     },
     getters: {
@@ -40,11 +37,8 @@ export default {
                     VEICULO_ID: null,
                     PROFISSIONAL_ID: null,
                     EQUIPE_ATIVO: null,
-<<<<<<< HEAD
                     EQUIPE_DATA_INI: null,
                     EQUIPE_DATA_FIM: null,
-=======
->>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
                 }
             }
         },
