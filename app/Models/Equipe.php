@@ -15,20 +15,28 @@ class Equipe extends Model
     protected $fillable = [
         "VEICULO_ID",
         "PROFISSIONAL_ID",
+<<<<<<< HEAD
         "EQUIPE_DATA",
         "EQUIPE_TURNO",
         "EQUIPE_ATIVO",
         "USUARIO_ID_CAD",
+=======
+        "EQUIPE_ATIVO",
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
     ];
 
     protected $casts = [
         "EQUIPE_ID" => "integer",
         "VEICULO_ID" => "integer",
         "PROFISSIONAL_ID" => "integer",
+<<<<<<< HEAD
         "EQUIPE_DATA" => "date",
         "EQUIPE_TURNO" => "string",
         "EQUIPE_ATIVO" => "integer",
         "USUARIO_ID_CAD" => "integer",
+=======
+        "EQUIPE_ATIVO" => "integer",
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
     ];
 
     public function veiculo(){

@@ -28,17 +28,28 @@
                     </v-col>
                 </v-row>
             </v-card-text>
+<<<<<<< HEAD
             <v-simple-table dense v-show="veiculos.length" class="mb-0">
+=======
+            <v-simple-table dense v-show="equipes.length" class="mb-0">
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
                 <template v-slot:default>
                     <thead>
                         <tr>
                             <th class="text-left">Id</th>
                             <th class="text-left">Veículo</th>
+<<<<<<< HEAD
                             <th class="text-left">Equipe</th>
+=======
+                            <th class="text-left">Profissional</th>
+                            <th class="text-left">Tipo de Profissional</th>
+                            <th class="text-left">Ativo</th>
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
                             <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
+<<<<<<< HEAD
                         <tr v-for="veiculo in veiculos">
                             <td>{{ veiculo.VEICULO_ID }}</td>
                             <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
@@ -53,6 +64,33 @@
                                     <v-icon>mdi-pencil</v-icon>
                                 </v-btn> -->
                                 <v-btn v-if="veiculo.equipes.length" icon @click="deletar(veiculo)" title="Remover Equipes">
+=======
+                        <tr v-for="equipe in equipes" :key="equipe['EQUIPE_ID']">
+                            <td>{{ equipe['EQUIPE_ID'] }}</td>
+                            <td>
+                                {{ equipe.veiculo && equipe.veiculo.VEICULO_IDENTIFICACAO
+                                    ? equipe.veiculo.VEICULO_IDENTIFICACAO
+                                    : 'Sem veículo' }}
+                            </td>
+                            <td>
+                                {{ equipe.profissional && equipe.profissional.PROFISSIONAL_NOME
+                                    ? equipe.profissional.PROFISSIONAL_NOME
+                                    : 'Sem profissional' }}
+                            </td>
+                            <td>
+                                {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}
+                            </td>                            
+                            <td>
+                                <v-chip x-small v-if="equipe['EQUIPE_ATIVO'] === 1" color="green" dark>Sim
+                                </v-chip>
+                                <v-chip x-small v-else color="red" dark>Não</v-chip>
+                            </td>
+                            <td>
+                                <v-btn icon @click="selecionar(equipe)" title="Editar">
+                                    <v-icon>mdi-pencil</v-icon>
+                                </v-btn>
+                                <v-btn icon @click="deletar(equipe)" title="Remover">
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
                                     <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                             </td>
@@ -112,15 +150,21 @@ export default {
             set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipes', newValue) }
         },
         pagination: {
+<<<<<<< HEAD
             // get() { return this.$store.getters['EquipeViewModule/getPagination'] },
             // set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
             get() { return this.$store.getters['VeiculoViewModule/getVeiculos']},
             set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
+=======
+            get() { return this.$store.getters['EquipeViewModule/getPagination'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
         },
         equipePesquisa: {
             get() { return this.$store.getters['EquipeViewModule/getEquipePesquisa'] },
             set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipePesquisa', newValue) }
         },
+<<<<<<< HEAD
         veiculoPesquisa: {
             get() { return this.$store.getters['VeiculoViewModule/getVeiculoPesquisa'] },
             set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
@@ -149,6 +193,12 @@ export default {
                 TG_SITUACAO_VEICULO_ID: 1,
                 VEICULO_ATIVO: 1
             });
+=======
+    },
+    methods: {
+        search() {
+            this.$store.dispatch('EquipeViewModule/search', this.msgId);
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
         },
 
         onPageChange() {
@@ -161,8 +211,13 @@ export default {
         },
 
         clear() {
+<<<<<<< HEAD
             this.veiculoPesquisa = {
                 VEICULO_ID: null,
+=======
+            this.equipePesquisa = {
+                EQUIPE_ID: null,
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
             };
             this.pagination.current_page = 1;
             this.search();
@@ -177,15 +232,25 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
+<<<<<<< HEAD
         deletar(veiculo) {
             let params = {
                 VEICULO_ID: veiculo.VEICULO_ID
+=======
+        deletar(equipe) {
+            let params = {
+                id: equipe.EQUIPE_ID
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
             }
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
+<<<<<<< HEAD
                 text: `Deseja excluir a equipe do veículo ${veiculo.VEICULO_IDENTIFICACAO} ?`,
+=======
+                text: `Deseja excluir a equipe ${equipe.EQUIPE_ID} ?`,
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
@@ -207,6 +272,7 @@ export default {
             if (!text) return '';
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
+<<<<<<< HEAD
         },
         formatarData(data) {
             if (!data) {
@@ -222,6 +288,9 @@ export default {
 
             return `${partes[2]}-${partes[1]}-${partes[0]}`;
         },   
+=======
+        }
+>>>>>>> b5ca06c (implementar abertura de chamado pela unidade)
     }
 }
 </script>
