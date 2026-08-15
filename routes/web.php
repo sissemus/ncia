@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AplicacaoController;
+use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\PacienteController;
@@ -185,6 +186,12 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [PacienteController::class, "pesquisar"]);
         Route::get("buscar/{id}", [PacienteController::class, "buscar"]);
         Route::get("buscar-por-cpf", [PacienteController::class, "buscarPorCpf"]);
+    });
+
+    Route::prefix("chamado")->group(function () {
+        Route::get("/", [ChamadoController::class, "view"]);
+        Route::get("view", [ChamadoController::class, "view"]);
+        Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
     
     Route::prefix("equipe")->group(function () {

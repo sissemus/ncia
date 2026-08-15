@@ -12,6 +12,7 @@ class TabelaGenerica extends Model
     protected $table = "TABELA_GENERICA";
     protected $primaryKey = "TABELA_GENERICA_ID";
     public $timestamps = false;
+
     protected $fillable = [
         "TABELA_ID",
         "COLUNA_ID",
@@ -32,8 +33,7 @@ class TabelaGenerica extends Model
 
     public function tabela()
     {
-        return $this->hasOne(TabelaGenerica::class, "TABELA_ID", "TABELA_ID")
-            ->where("COLUNA_ID", 0);
+        return $this->hasOne(TabelaGenerica::class, "TABELA_ID", "TABELA_ID")->where("COLUNA_ID", 0);
     }
 
     public static function relacionamento()
@@ -70,8 +70,7 @@ class TabelaGenerica extends Model
 
     public static function listar()
     {
-        return self::with(self::relacionamento())
-            ->paginate();
+        return self::with(self::relacionamento())->paginate();
     }
 
     public static function pesquisar($requisicao)
@@ -91,8 +90,7 @@ class TabelaGenerica extends Model
 
     public static function buscar($id)
     {
-        return self::with(self::relacionamento())
-            ->find($id);
+        return self::with(self::relacionamento())->find($id);
     }
 
     public static function obterUltimoIdDeTabela()
@@ -119,48 +117,119 @@ class TabelaGenerica extends Model
     public static function tabelaGenerica($colunaId = null)
     {
         $tabela = RTG::TABELA_GENERICA;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
 
     public static function hierarquia($colunaId = null)
     {
         $tabela = RTG::HIERARQUIA;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
 
     public static function sexo($colunaId = null)
     {
         $tabela = RTG::SEXO;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
 
     public static function tipoProfissional($colunaId = null)
     {
         $tabela = RTG::TIPO_PROFISSIONAL;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela);
     }
 
     public static function tipoVeiculo($colunaId = null)
     {
         $tabela = RTG::TIPO_VEICULO;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela, 1);
     }
 
     public static function situacaoVeiculo($colunaId = null)
     {
         $tabela = RTG::SITUACAO_VEICULO;
-        if ($colunaId)
-            return self::getColunaId($tabela, $colunaId);
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function prioridadePaciente($colunaId = null)
+    {
+        $tabela = RTG::PRIORIDADE_PACIENTE;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function tipoChamado($colunaId = null)
+    {
+        $tabela = RTG::TIPO_CHAMADO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function tipoPrecaucao($colunaId = null)
+    {
+        $tabela = RTG::TIPO_PRECAUCAO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function suporteO2($colunaId = null)
+    {
+        $tabela = RTG::SUPORTE_O2;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function suporteHemodinamico($colunaId = null)
+    {
+        $tabela = RTG::SUPORTE_HEMODINAMICO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function sinaisVitaisTemperatura($colunaId = null)
+    {
+        $tabela = RTG::SINAIS_VITAIS_TEMPERATURA;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function sinaisVitaisFrequenciaCardiaca($colunaId = null)
+    {
+        $tabela = RTG::SINAIS_VITAIS_FREQUENCIA_CARDIACA;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function sinaisVitaisPressaoArterial($colunaId = null)
+    {
+        $tabela = RTG::SINAIS_VITAIS_PRESSAO_ARTERIAL;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function sinaisVitaisSaturacao($colunaId = null)
+    {
+        $tabela = RTG::SINAIS_VITAIS_SATURACAO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function motivoCancelamento($colunaId = null)
+    {
+        $tabela = RTG::MOTIVO_CANCELAMENTO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
+        return self::listarColunasTabela($tabela, 1);
+    }
+
+    public static function situacaoChamado($colunaId = null)
+    {
+        $tabela = RTG::SITUACAO_CHAMADO;
+        if ($colunaId) return self::getColunaId($tabela, $colunaId);
         return self::listarColunasTabela($tabela, 1);
     }
 }

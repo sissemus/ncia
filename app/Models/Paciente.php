@@ -18,6 +18,8 @@ class Paciente extends Model
         "PACIENTE_CPF",
         "PACIENTE_DT_NASCIMENTO",
         "TG_SEXO_ID",
+        "PACIENTE_VULNERABILIDADE_SOCIAL",
+        "PACIENTE_TEMPORARIO",
         "USUARIO_ID",
         "PACIENTE_DT_CAD",
         "PACIENTE_DT_IDENTIFICACAO",
@@ -28,6 +30,8 @@ class Paciente extends Model
         "PACIENTE_CPF" => Cpf::class,
         "PACIENTE_DT_NASCIMENTO" => "date:Y-m-d",
         "TG_SEXO_ID" => "integer",
+        "PACIENTE_VULNERABILIDADE_SOCIAL" => "boolean",
+        "PACIENTE_TEMPORARIO" => "boolean",
         "USUARIO_ID" => "integer",
     ];
 
@@ -39,6 +43,7 @@ class Paciente extends Model
     public static function pesquisar($request)
     {
         return self::query()
+            ->where("PACIENTE_TEMPORARIO", 0)
             ->when($request->PACIENTE_ID, function (Builder $query) use ($request) {
                 return $query->where("PACIENTE_ID", $request->PACIENTE_ID);
             })

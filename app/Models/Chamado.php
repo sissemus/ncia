@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\MyLibs\RTG;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Chamado extends Model
@@ -11,77 +9,94 @@ class Chamado extends Model
     protected $table = "CHAMADO";
     protected $primaryKey = "CHAMADO_ID";
     public $timestamps = false;
+    public static $snakeAttributes = false;
 
     protected $fillable = [
         "PACIENTE_ID",
         "TG_CHAMADO_ID",
         "TG_PRIORIDADE_ID",
         "CHAMADO_DATA",
-        "DIAGNOSTICO_ID",
-        "LOCALIDADE_ID_ORIGEM",
-        "LOCALIDADE_ID_DESTINO",
         "CHAMADO_OBSERVACAO",
-        "CHAMADO_RETORNO_IMEDIATO",
-        "CHAMADO_ID_ORIGEM",
-        "CHAMADO_ID_PAI",
+        "UNIDADE_ID_SOLICITANTE",
+        "UNIDADE_ID_DESTINO",
+        "CHAMADO_HORARIO_ATENDIMENTO",
+        "CHAMADO_SETOR_SOLICITANTE",
+        "CHAMADO_LEITO_SOLICITANTE",
+        "CHAMADO_SETOR_DESTINO",
+        "CHAMADO_LEITO_DESTINO",
+        "CHAMADO_DISPOSITIVOS",
+        "CHAMADO_PESO",
+        "TG_TIPO_PRECAUCAO_ID",
+        "TG_SUPORTE_O2_ID",
+        "TG_SUPORTE_HEMODINAMICO_ID",
+        "TG_TEMPERATURA_ID",
+        "TG_FREQUENCIA_CARDIACA_ID",
+        "TG_PRESSAO_ARTERIAL_ID",
+        "TG_SATURACAO_ID",
+        "PROFISSIONAL_ID_SOLICITANTE",
     ];
 
     protected $casts = [
+        "CHAMADO_ID" => "integer",
         "PACIENTE_ID" => "integer",
         "TG_CHAMADO_ID" => "integer",
         "TG_PRIORIDADE_ID" => "integer",
+        "UNIDADE_ID_SOLICITANTE" => "integer",
+        "UNIDADE_ID_DESTINO" => "integer",
         "CHAMADO_DATA" => "datetime",
-        "DIAGNOSTICO_ID" => "integer",
-        "LOCALIDADE_ID_ORIGEM" => "integer",
-        "LOCALIDADE_ID_DESTINO" => "integer",
-        "CHAMADO_OBSERVACAO" => "string",
-        "CHAMADO_RETORNO_IMEDIATO" => "integer",
-        "CHAMADO_ID_ORIGEM" => "integer",
-        "CHAMADO_ID_PAI" => "integer",
+        "CHAMADO_PESO" => "decimal:2",
+        "TG_TIPO_PRECAUCAO_ID" => "integer",
+        "TG_SUPORTE_O2_ID" => "integer",
+        "TG_SUPORTE_HEMODINAMICO_ID" => "integer",
+        "TG_TEMPERATURA_ID" => "integer",
+        "TG_FREQUENCIA_CARDIACA_ID" => "integer",
+        "TG_PRESSAO_ARTERIAL_ID" => "integer",
+        "TG_SATURACAO_ID" => "integer",
+        "PROFISSIONAL_ID_SOLICITANTE" => "integer",
     ];
 
-    public function paciente(){
-        return $this->hasOne(Paciente::class, 'PACIENTE_ID', 'PACIENTE_ID');
-    }
-
-    public function diagnostico(){
-        return $this->hasOne(Diagnostico::class, 'DIAGNOSTICO_ID', 'DIAGNOSTICO_ID');
-    }
-
-    public function localidadeOrigem(){
-        return $this->hasOne(Unidade::class, 'UNIDADE_ID', 'LOCALIDADE_ID_ORIGEM');
-    }
-
-    public function localidadeDestino(){
-        return $this->hasOne(Unidade::class, 'UNIDADE_ID', 'LOCALIDADE_ID_DESTINO');
-    }
-
-    public static function pesquisar($requisicao)
+    public function paciente()
     {
-        return self::with([
-                'paciente',
-                'diagnostico',
-                'localidadeOrigem',
-                'localidadeDestino',
-            ])
-            ->when($requisicao->CHAMADO_ID, function (Builder $query) use ($requisicao) {
-                return $query->where("CHAMADO_ID", "=", $requisicao->CHAMADO_ID);
-            })
-            ->when($requisicao->PACIENTE_ID, function (Builder $query) use ($requisicao) {
-                return $query->where("PACIENTE_ID", "=", $requisicao->PACIENTE_ID);
-            })
-            ->when($requisicao->LOCALIDADE_ID_ORIGEM, function (Builder $query) use ($requisicao) {
-                return $query->where("LOCALIDADE_ID_ORIGEM", "=", $requisicao->LOCALIDADE_ID_ORIGEM);
-            })
-            ->when($requisicao->LOCALIDADE_ID_DESTINO, function (Builder $query) use ($requisicao) {
-                return $query->where("LOCALIDADE_ID_DESTINO", "=", $requisicao->LOCALIDADE_ID_DESTINO);
-            })
-            ->orderBy('PACIENTE_ID')
-            ->paginate();
+        return $this->belongsTo(Paciente::class, "PACIENTE_ID", "PACIENTE_ID");
     }
 
-    public static function buscar($id)
+    public function unidadeSolicitante()
     {
-        return self::find($id);
+        return $this->belongsTo(Unidade::class, "UNIDADE_ID_SOLICITANTE", "UNIDADE_ID");
+    }
+
+    public function unidadeDestino()
+    {
+        return $this->belongsTo(Unidade::class, "UNIDADE_ID_DESTINO", "UNIDADE_ID");
+    }
+
+    public function profissionalSolicitante()
+    {
+        return $this->belongsTo(Profissional::class, "PROFISSIONAL_ID_SOLICITANTE", "PROFISSIONAL_ID");
+    }
+
+    public function procedimentos()
+    {
+        return $this->belongsToMany(Procedimento::class, "CHAMADO_PROCEDIMENTO", "CHAMADO_ID", "PROCEDIMENTO_ID");
+    }
+
+    public function diagnosticos()
+    {
+        return $this->belongsToMany(Diagnostico::class, "CHAMADO_DIAGNOSTICO", "CHAMADO_ID", "DIAGNOSTICO_ID");
+    }
+
+    public function situacoes()
+    {
+        return $this->hasMany(ChamadoSituacao::class, "CHAMADO_ID", "CHAMADO_ID");
+    }
+
+    public function chamadoProcedimentos()
+    {
+        return $this->hasMany(ChamadoProcedimento::class, "CHAMADO_ID", "CHAMADO_ID");
+    }
+
+    public function chamadoDiagnosticos()
+    {
+        return $this->hasMany(ChamadoDiagnostico::class, "CHAMADO_ID", "CHAMADO_ID");
     }
 }
