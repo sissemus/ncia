@@ -21,30 +21,48 @@
                     <div :id="msgIdDebug"></div>
 
                     <v-card-text class="mt-5">
-                        <v-row>
-                            <v-col cols="12" md="6">
-                                <v-text-field label="Identificação do Veículo*" autocomplete="off"
-                                    v-model="veiculo.VEICULO_IDENTIFICACAO"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6">
-                                <v-text-field label="Placa (Opcional)" autocomplete="off"
-                                    v-model="veiculo.VEICULO_PLACA"></v-text-field>
-                            </v-col>
-                        </v-row>
-                        <v-row>
-                            <v-col cols="12" md="4">
-                                <v-select label="Tipo de Veículo*" :items="tiposVeiculo" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" v-model="veiculo.TG_TIPO_VEICULO_ID"></v-select>
-                            </v-col>
-                            <v-col cols="12" md="4">
-                                <v-select label="Situação para Uso*" :items="situacoesVeiculo" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" v-model="veiculo.TG_SITUACAO_VEICULO_ID"></v-select>
-                            </v-col>
-                            <v-col cols="12" md="4">
-                                <v-select label="Ativo*" :items="ativos" item-value="id" item-text="text"
-                                    v-model="veiculo.VEICULO_ATIVO"></v-select>
-                            </v-col>
-                        </v-row>
+                        <fieldset class="custom-fieldset mb-5">
+                            <legend class="custom-legend">DADOS DO VEÍCULO</legend>
+                            <v-row>
+                                <v-col cols="12" md="6">
+                                    <v-text-field label="Identificação do Veículo*" autocomplete="off" outlined dense
+                                        v-model="veiculo.VEICULO_IDENTIFICACAO"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                    <v-text-field label="Placa (Opcional)" autocomplete="off" outlined dense
+                                        v-model="veiculo.VEICULO_PLACA"></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="12" md="4">
+                                    <v-select label="Tipo de Veículo*" :items="tiposVeiculo" item-value="COLUNA_ID" outlined dense
+                                        item-text="DESCRICAO" v-model="veiculo.TG_TIPO_VEICULO_ID"></v-select>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-select label="Situação para Uso*" :items="situacoesVeiculo" item-value="COLUNA_ID" outlined dense
+                                        item-text="DESCRICAO" v-model="veiculo.TG_SITUACAO_VEICULO_ID"></v-select>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-select label="Ativo*" :items="ativos" item-value="id" item-text="text" outlined dense
+                                        v-model="veiculo.VEICULO_ATIVO"></v-select>
+                                </v-col>
+                            </v-row>
+                        </fieldset>
+
+                        <fieldset class="custom-fieldset">
+                            <legend class="custom-legend">VÍNCULO</legend>
+                            <v-row>
+                                <v-col cols="12" md="6">
+                                    <v-autocomplete label="Unidade de Saúde" :items="unidades" item-value="UNIDADE_ID"
+                                        item-text="UNIDADE_NOME" v-model="veiculo.UNIDADE_ID" clearable outlined dense
+                                        :menu-props="{ offsetY: true }"></v-autocomplete>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                    <v-text-field label="Data inicial do vínculo" type="date" autocomplete="off" outlined dense
+                                        v-model="veiculo.VEICULO_UNIDADE_DT_INI"></v-text-field>
+                                </v-col>
+                            </v-row>
+                        </fieldset>
                     </v-card-text>
 
                     <v-divider class="ma-0"></v-divider>
@@ -74,6 +92,10 @@ export default {
             default: () => []
         },
         situacoesVeiculo: {
+            type: Array,
+            default: () => []
+        },
+        unidades: {
             type: Array,
             default: () => []
         }
@@ -139,4 +161,18 @@ export default {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.custom-fieldset {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 15px 20px 5px 20px;
+}
+.custom-legend {
+    width: auto;
+    padding: 0 10px;
+    font-size: 14px;
+    font-weight: bold;
+    font-style: italic;
+    color: #555;
+}
+</style>

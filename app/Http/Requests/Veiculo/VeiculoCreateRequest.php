@@ -20,6 +20,8 @@ class VeiculoCreateRequest extends FormRequest
             "TG_TIPO_VEICULO_ID" => ["required", "integer"],
             "TG_SITUACAO_VEICULO_ID" => ["required", "integer"],
             "VEICULO_ATIVO" => ["required", "integer", "in:0,1"],
+            "UNIDADE_ID" => ["nullable", "integer", "exists:UNIDADE,UNIDADE_ID"],
+            "VEICULO_UNIDADE_DT_INI" => ["nullable", "date"],
         ];
     }
 

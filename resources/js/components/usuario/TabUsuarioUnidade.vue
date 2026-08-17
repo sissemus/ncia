@@ -7,8 +7,9 @@
 
             <v-row>
                 <v-col cols="12">
-                    <v-select label="Unidade*" :items="unidadesSolicitantes" item-value="UNIDADE_ID"
-                        item-text="UNIDADE_NOME" v-model="usuarioUnidade.UNIDADE_ID"></v-select>
+                    <v-autocomplete label="Unidade*" :items="unidadesSolicitantes" item-value="UNIDADE_ID"
+                        item-text="UNIDADE_NOME" v-model="usuarioUnidade.UNIDADE_ID"
+                        :menu-props="{ offsetY: true }"></v-autocomplete>
                 </v-col>
             </v-row>
 

@@ -23,13 +23,14 @@
                     <v-card-text class="mt-5">
                         <v-row>
                             <v-col cols="12" md="6">
-                                <v-select label="Veículo*" :items="veiculos" item-value="VEICULO_ID"
+                                <v-autocomplete label="Veículo*" :items="veiculos" item-value="VEICULO_ID"
                                     item-text="VEICULO_IDENTIFICACAO" v-model="vinculo.VEICULO_ID"
-                                    :disabled="isEdit"></v-select>
+                                    :disabled="isEdit" :menu-props="{ offsetY: true }"></v-autocomplete>
                             </v-col>
                             <v-col cols="12" md="6">
-                                <v-select label="Unidade de Saúde*" :items="unidades" item-value="UNIDADE_ID"
-                                    item-text="UNIDADE_NOME" v-model="vinculo.UNIDADE_ID"></v-select>
+                                <v-autocomplete label="Unidade de Saúde*" :items="unidades" item-value="UNIDADE_ID"
+                                    item-text="UNIDADE_NOME" v-model="vinculo.UNIDADE_ID"
+                                    :menu-props="{ offsetY: true }"></v-autocomplete>
                             </v-col>
                         </v-row>
                     </v-card-text>

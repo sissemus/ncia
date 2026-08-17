@@ -16,12 +16,14 @@
             <v-card-text>
                 <v-row>
                     <v-col cols="12" md="4">
-                        <v-select label="Veículo" :items="veiculos" item-value="VEICULO_ID" item-text="VEICULO_IDENTIFICACAO"
-                            clearable hide-details v-model="vinculoPesquisa.VEICULO_ID"></v-select>
+                        <v-autocomplete label="Veículo" :items="veiculos" item-value="VEICULO_ID" item-text="VEICULO_IDENTIFICACAO"
+                            clearable hide-details v-model="vinculoPesquisa.VEICULO_ID"
+                            :menu-props="{ offsetY: true }"></v-autocomplete>
                     </v-col>
                     <v-col cols="12" md="4">
-                        <v-select label="Unidade de Saúde" :items="unidades" item-value="UNIDADE_ID" item-text="UNIDADE_NOME"
-                            clearable hide-details v-model="vinculoPesquisa.UNIDADE_ID"></v-select>
+                        <v-autocomplete label="Unidade de Saúde" :items="unidades" item-value="UNIDADE_ID" item-text="UNIDADE_NOME"
+                            clearable hide-details v-model="vinculoPesquisa.UNIDADE_ID"
+                            :menu-props="{ offsetY: true }"></v-autocomplete>
                     </v-col>
                     <v-col cols="12" md="4">
                         <v-select label="Status do Vínculo" :items="statusOptions" item-value="id" item-text="text"

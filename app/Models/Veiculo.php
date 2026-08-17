@@ -48,6 +48,12 @@ class Veiculo extends Model
             ->where('EQUIPE_DATA', now()->format('Y-m-d'));
     }
 
+    public function vinculoAtivo()
+    {
+        return $this->hasOne(VeiculoUnidade::class, "VEICULO_ID", "VEICULO_ID")
+            ->whereNull("VEICULO_UNIDADE_DT_FIM");
+    }
+
     public static function relacionamento()
     {
         return [
@@ -55,7 +61,9 @@ class Veiculo extends Model
             "situacaoVeiculo",
             "equipes",
             "equipes.profissional",
-            "equipes.profissional.tipoProfissional"
+            "equipes.profissional.tipoProfissional",
+            "vinculoAtivo",
+            "vinculoAtivo.unidade",
         ];
     }
 

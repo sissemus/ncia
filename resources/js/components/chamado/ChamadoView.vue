@@ -151,9 +151,10 @@
 
                         <v-row>
                             <v-col cols="12" md="6">
-                                <v-select label="Unidade Solicitante*" :items="unidadesSolicitantes"
+                                <v-autocomplete label="Unidade Solicitante*" :items="unidadesSolicitantes"
                                     item-value="UNIDADE_ID" item-text="UNIDADE_NOME" hide-details
-                                    v-model="chamado.UNIDADE_ID_SOLICITANTE"></v-select>
+                                    v-model="chamado.UNIDADE_ID_SOLICITANTE"
+                                    :menu-props="{ offsetY: true }"></v-autocomplete>
                             </v-col>
 
                             <v-col cols="12" md="3">
@@ -175,9 +176,10 @@
                             </v-col>
 
                             <v-col cols="12" md="6">
-                                <v-select label="Unidade Destino*" :items="unidadesDestino" item-value="UNIDADE_ID"
+                                <v-autocomplete label="Unidade Destino*" :items="unidadesDestino" item-value="UNIDADE_ID"
                                     item-text="UNIDADE_NOME" hide-details
-                                    v-model="chamado.UNIDADE_ID_DESTINO"></v-select>
+                                    v-model="chamado.UNIDADE_ID_DESTINO"
+                                    :menu-props="{ offsetY: true }"></v-autocomplete>
                             </v-col>
                         </v-row>
 

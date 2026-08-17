@@ -50,6 +50,7 @@
                             <th class="text-left">Placa</th>
                             <th class="text-left">Tipo</th>
                             <th class="text-left">Situação</th>
+                            <th class="text-left">Unidade Vinculada</th>
                             <th class="text-left">Ativo</th>
                             <th>Ações</th>
                         </tr>
@@ -64,6 +65,9 @@
                                 <v-chip x-small :color="veiculo.TG_SITUACAO_VEICULO_ID === 1 ? 'green' : 'red'" dark>
                                     {{ veiculo.situacaoVeiculo ? veiculo.situacaoVeiculo.DESCRICAO : '-' }}
                                 </v-chip>
+                            </td>
+                            <td>
+                                {{ veiculo.vinculoAtivo && veiculo.vinculoAtivo.unidade ? veiculo.vinculoAtivo.unidade.UNIDADE_NOME : '-' }}
                             </td>
                             <td>
                                 <v-chip x-small v-if="veiculo.VEICULO_ATIVO === 1" color="green" dark>Sim</v-chip>
@@ -107,7 +111,7 @@
             </v-card-actions>
         </v-card>
 
-        <MdNovoVeiculo :tipos-veiculo="tiposVeiculo" :situacoes-veiculo="situacoesVeiculo" @salvo="search"></MdNovoVeiculo>
+        <MdNovoVeiculo :tipos-veiculo="tiposVeiculo" :situacoes-veiculo="situacoesVeiculo" :unidades="unidades" @salvo="search"></MdNovoVeiculo>
     </div>
 </template>
 
@@ -126,6 +130,10 @@ export default {
             default: () => []
         },
         situacoesVeiculo: {
+            type: Array,
+            default: () => []
+        },
+        unidades: {
             type: Array,
             default: () => []
         }
