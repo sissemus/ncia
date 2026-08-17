@@ -35,6 +35,8 @@
                             <th class="text-left">Id</th>
                             <th class="text-left">Veículo</th>
                             <th class="text-left">Equipe</th>
+                            <th class="text-center">Data</th>
+                            <th class="text-center">Turno</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -48,10 +50,9 @@
                                     {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}</td>
                                 </tr>
                             </td>
+                            <td class="text-center">{{ veiculo.equipes && veiculo.equipes.length ? formatarData(veiculo.equipes[0].EQUIPE_DATA) : '' }}</td>
+                            <td class="text-center">{{ veiculo.equipes && veiculo.equipes.length ? veiculo.equipes[0].EQUIPE_TURNO : '' }}</td>
                             <td>
-                                <!-- <v-btn icon @click="selecionar(veiculo)" title="Editar">
-                                    <v-icon>mdi-pencil</v-icon>
-                                </v-btn> -->
                                 <v-btn v-if="veiculo.equipes.length" icon @click="deletar(veiculo)" title="Remover Equipes">
                                     <v-icon>mdi-delete</v-icon>
                                 </v-btn>
@@ -220,7 +221,7 @@ export default {
                 return '';
             }
 
-            return `${partes[2]}-${partes[1]}-${partes[0]}`;
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
         },   
     }
 }
