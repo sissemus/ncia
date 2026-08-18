@@ -4,17 +4,15 @@ export default {
         showModal: false,
         fullScreen: false,
         equipe: {
+            EQUIPE_PROFISSIONAL_ID: null,
             EQUIPE_ID: null,
-            VEICULO_ID: null,
-            EQUIPE_ATIVO: null,
-            EQUIPE_DATA_INI: null,
-            EQUIPE_DATA_FIM: null,
-
+            PROFISSIONAL_ID: null,
+            EQUIPE_PROFISSIONAL_ATIVO: null
         }
     },
     getters: {
-        getEquipe(state) {
-            return state.equipe
+        getEquipeProfissional(state) {
+            return state.equipeProfissional
         },
         getShowModal(state) {
             return state.showModal
@@ -24,16 +22,15 @@ export default {
         },
     },
     mutations: {
-        setEquipe(state, equipe = null) {
-            if (equipe) {
-                state.equipe = JSON.parse(JSON.stringify(equipe))
+        setEquipeProfissional(state, equipeProfissional = null) {
+            if (equipeProfissional) {
+                state.equipeProfissional = JSON.parse(JSON.stringify(equipeProfissional))
             } else {
-                state.equipe = {
+                state.equipeProfissional = {
+                    EQUIPE_PROFISSIONAL_ID: null,
                     EQUIPE_ID: null,
-                    VEICULO_ID: null,
-                    EQUIPE_ATIVO: null,
-                    EQUIPE_DATA_INI: null,
-                    EQUIPE_DATA_FIM: null,
+                    PROFISSIONAL_ID: null,
+                    EQUIPE_PROFISSIONAL_ATIVO: null
                 }
             }
         },
@@ -45,8 +42,8 @@ export default {
         },
     },
     actions: {
-        setEquipe({ commit }, equipe) {
-            commit('setEquipe', equipe)
+        setEquipeProfissional({ commit }, equipeProfissional) {
+            commit('setEquipeProfissional', equipeProfissional)
         },
         setShowModal({ commit }, showModal) {
             commit('setShowModal', showModal)

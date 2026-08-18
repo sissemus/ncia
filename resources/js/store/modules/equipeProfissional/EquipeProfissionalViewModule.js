@@ -1,42 +1,40 @@
 export default {
     namespaced: true,
     state: {
-        equipes: [],
+        equipeProfissionais: [],
         pagination: {
             current_page: 1,
             total: 0,
             last_page: 0
         },
-        equipePesquisa: {
+        equipeProfissionalPesquisa: {
+            EQUIPE_PROFISSIONAL_ID: null,
             EQUIPE_ID: null,
-            VEICULO_ID: null,
-            EQUIPE_ATIVO: null,
-            EQUIPE_DATA: null,
-            EQUIPE_TURNO: null,
+            PROFISSIONAL_ID: null,
+            EQUIPE_PROFISSIONAL_ATIVO: null,
         }
     },
     getters: {
-        getEquipePesquisa(state) {
-            return state.equipePesquisa
+        getEquipeProfissionalPesquisa(state) {
+            return state.equipeProfissionalPesquisa
         },
         getPagination(state) {
             return state.pagination
         },
-        getEquipes(state) {
-            return state.equipes
+        getEquipeProfissionais(state) {
+            return state.equipeProfissionais
         },
     },
     mutations: {
-        setEquipePesquisa(state, equipePesquisa = null) {
-            if (equipePesquisa) {
-                state.equipePesquisa = JSON.parse(JSON.stringify(equipePesquisa))
+        setEquipeProfissionalPesquisa(state, equipeProfissionalPesquisa = null) {
+            if (equipeProfissionalPesquisa) {
+                state.equipeProfissionalPesquisa = JSON.parse(JSON.stringify(equipeProfissionalPesquisa))
             } else {
-                state.equipePesquisa = {
+                state.equipeProfissionalPesquisa = {
+                    EQUIPE_PROFISSIONAL_ID: null,
                     EQUIPE_ID: null,
-                    VEICULO_ID: null,
-                    EQUIPE_ATIVO: null,
-                    EQUIPE_DATA: null,
-                    EQUIPE_TURNO: null,
+                    PROFISSIONAL_ID: null,
+                    EQUIPE_PROFISSIONAL_ATIVO: null
                 }
             }
         },
@@ -55,32 +53,32 @@ export default {
                 }
             }
         },
-        setEquipes(state, equipes) {
-            state.equipes = JSON.parse(JSON.stringify(equipes))
+        setEquipeProfissionais(state, equipeProfissionais) {
+            state.equipeProfissionais = JSON.parse(JSON.stringify(equipeProfissionais))
         },
     },
     actions: {
-        setEquipePesquisa({ commit }, equipePesquisa) {
-            commit('setEquipePesquisa', equipePesquisa)
+        setEquipeProfissionalPesquisa({ commit }, equipeProfissionalPesquisa) {
+            commit('setEquipeProfissionalPesquisa', equipeProfissionalPesquisa)
         },
         setPagination({ commit }, pagination) {
             commit('setPagination', pagination)
         },
-        setEquipes({ commit }, equipes) {
-            commit('setEquipes', equipes)
+        setEquipeProfissionais({ commit }, equipeProfissionais) {
+            commit('setEquipeProfissionais', equipeProfissionais)
         },
         search(context, msgId) {
             let baseUrl = context.rootGetters['getBaseUrl']
             let page = context.state.pagination.current_page
             axios({
                 method: 'GET',
-                url: `${baseUrl}/equipe/search`,
+                url: `${baseUrl}/equipeProfissional/search`,
                 params: {
                     page: page,
-                    ...context.state.equipePesquisa,
+                    ...context.state.equipeProfissionalPesquisa,
                 }
             }).then(r => {
-                context.dispatch('setEquipes', r.data['data']).then()
+                context.dispatch('setEquipeProfissionais', r.data['data']).then()
                 context.dispatch('setPagination', r.data).then()
             }).catch(e => {
                 console.error('ERRO: ', e)

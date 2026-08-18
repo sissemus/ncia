@@ -44,16 +44,17 @@
                         <tr v-for="veiculo in veiculos">
                             <td>{{ veiculo.VEICULO_ID }}</td>
                             <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td>
-                                <tr v-for="equipe in veiculo.equipes">
-                                    <td>{{ equipe.profissional ? equipe.profissional.PROFISSIONAL_NOME : '' }} - 
-                                    {{ equipe.profissional && equipe.profissional.tipoProfissional ? equipe.profissional.tipoProfissional.DESCRICAO : '' }}</td>
+                            <td v-if="veiculo.equipe">
+                                <tr v-for="prf in veiculo.equipe.equipeProfissional">
+                                    <td>{{ prf ? prf.profissional.PROFISSIONAL_NOME : '' }} - 
+                                    {{ prf && prf.profissional.tipoProfissional ? prf.profissional.tipoProfissional.DESCRICAO : '' }}</td>
                                 </tr>
                             </td>
-                            <td class="text-center">{{ veiculo.equipes && veiculo.equipes.length ? formatarData(veiculo.equipes[0].EQUIPE_DATA) : '' }}</td>
-                            <td class="text-center">{{ veiculo.equipes && veiculo.equipes.length ? veiculo.equipes[0].EQUIPE_TURNO : '' }}</td>
+                            <td v-else></td>
+                            <td class="text-center">{{ veiculo.equipe ? formatarData(veiculo.equipe.EQUIPE_DATA) : '' }}</td>
+                            <td class="text-center">{{ veiculo.equipe ? veiculo.equipe.EQUIPE_TURNO : '' }}</td>
                             <td>
-                                <v-btn v-if="veiculo.equipes.length" icon @click="deletar(veiculo)" title="Remover Equipes">
+                                <v-btn v-if="veiculo.equipe" icon @click="deletar(veiculo)" title="Remover Equipes">
                                     <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                             </td>
@@ -180,7 +181,7 @@ export default {
 
         deletar(veiculo) {
             let params = {
-                VEICULO_ID: veiculo.VEICULO_ID
+                EQUIPE_ID: veiculo.equipe.EQUIPE_ID
             }
 
             Swal.fire({
@@ -191,17 +192,16 @@ export default {
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
                 denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (result.isConfirmed)
+                    axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
+                        .then(res => {
+                            Swal.fire('Excluído com sucesso!', '', 'success')
+                                .then(res => {
+                                    this.search();
+                                })
+                        })
             })
-                .then(result => {
-                    if (result.isConfirmed)
-                        axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
-                            .then(res => {
-                                Swal.fire('Excluído com sucesso!', '', 'success')
-                                    .then(res => {
-                                        this.search();
-                                    })
-                            })
-                })
         },
 
         truncateText(text, maxLength) {

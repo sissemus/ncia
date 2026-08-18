@@ -65,7 +65,7 @@
                                     :items="veiculos"
                                     item-value="VEICULO_ID"
                                     item-text="VEICULO_IDENTIFICACAO"
-                                    v-model="equipe.VEICULO_ID"
+                                    v-model="VEICULO_ID"
                                 ></v-select>
                             </v-col>
                             <v-col cols="4">
@@ -73,7 +73,7 @@
                                     label="Turno*" 
                                     item-value="value" 
                                     item-text="text" 
-                                    v-model="equipe.EQUIPE_TURNO"
+                                    v-model="EQUIPE_TURNO"
                                     :items="opcoesTurno"
                                 ></v-select>
                             </v-col>
@@ -85,7 +85,7 @@
                                     :items="profissionalEspecifico"
                                     item-value="value"
                                     item-text="text"
-                                    v-model="equipe.PROFISSIONAL_ID"
+                                    v-model="PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
                             <v-col cols="1" style="text-align: right;">
@@ -95,7 +95,7 @@
                             </v-col>
                         </v-row>
                     </v-card-text>
-                        <v-simple-table dense v-show="profissionaisSelecionados.length" class="mb-0">
+                        <v-simple-table dense v-show="equipeMontada.length" class="mb-0">
                             <template v-slot:default>
                                 <thead>
                                     <tr>
@@ -106,14 +106,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="row in profissionaisSelecionados" :key="equipe['EQUIPE_ID']">
+                                    <tr v-for="row in equipeMontada" :key="equipe['EQUIPE_ID']">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
                                         <td>
-                                            {{ row.profissional.PROFISSIONAL_NOME }}
+                                            {{ row['PROFISSIONAL_NOME'] }}
                                         </td>
                                         <td>
-                                            {{ row.profissional.tipoProfissional ? row.profissional.tipoProfissional.DESCRICAO : '' }}
+                                            {{ row['PROFISSIONAL_TIPO'] }}
                                         </td>                            
 
                                         <td>
@@ -193,7 +193,10 @@ export default {
                     value: 'SN' 
                 }
             ],
-            profissionaisSelecionados:[]
+            equipeMontada:[],
+            VEICULO_ID: null,
+            EQUIPE_TURNO: null,
+            PROFISSIONAL_ID: null,
         }
     },
     mounted() {
@@ -323,6 +326,7 @@ export default {
             );
 
             this.equipe = null;
+            this.equipeMontada = [];
             this.showModal = false;
         },
 
@@ -336,16 +340,16 @@ export default {
             //     return;
             // }
 
-            if (!this.profissionaisSelecionados) {
+            if (!this.equipeMontada) {
                 return;
             }
 
             // const equipe = this.equipe
 
-            const profissionaisSelecionados = this.profissionaisSelecionados
+            const equipeMontada = this.equipeMontada
 
             const dados = {
-                ...profissionaisSelecionados
+                ...equipeMontada
                 
             };
 
@@ -498,17 +502,18 @@ export default {
         },
         novoProfissional() {
             
-            const id = this.equipe.PROFISSIONAL_ID;
+            const id = this.PROFISSIONAL_ID;
             // se o id estiver null
             if (id == null)
                 return '' 
 
+            // informações desse profissional selecionado
             const profissional = this.profissionais.find(
                 item => item.PROFISSIONAL_ID === id
             );
 
-            //verifica se esse profissional já foi adicionado a lista
-            const profissionalExiste = this.profissionaisSelecionados.find(
+            //verifica se esse profissional já foi adicionado a lista de profissionais selecionados
+            const profissionalExiste = this.equipeMontada.find(
                 item => item.PROFISSIONAL_ID === id
             )
 
@@ -517,41 +522,43 @@ export default {
                 return
             }
 
-            if (profissional) {
-                this.profissionaisSelecionados.push(
-                    {
-                        VEICULO_ID: this.equipe.VEICULO_ID,
-                        EQUIPE_DATA: null,
-                        EQUIPE_TURNO: this.equipe.EQUIPE_TURNO, 
-                        EQUIPE_ATIVO: 1,
-                        PROFISSIONAL_ID: profissional.PROFISSIONAL_ID,
-                        profissional: profissional,
-                    }
-                );
-            }
-      
-            // console.log(this.profissionaisSelecionados)
+            //adiciona à lista, o profissional e suas características
+            this.equipeMontada.push(
+                {
+                    VEICULO_ID: this.VEICULO_ID,
+                    EQUIPE_DATA: null, //pegar a data do servidor
+                    EQUIPE_TURNO: this.EQUIPE_TURNO,
+                    EQUIPE_ATIVO: 1,
+                    PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
+                    PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
+                    PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão
+                }
+            );
+            
         },
-        deletarProfissional(profissional) {
+        async deletarProfissional(profissional) {
 
             let id = profissional.PROFISSIONAL_ID
 
-            Swal.fire({
+            const result = await Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
-                text: `Deseja excluir a o profissional ${profissional.PROFISSIONAL_NOME} ?`,
+                text: `Deseja excluir o profissional ${profissional.PROFISSIONAL_NOME} ?`,
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
-                denyButtonText: `Cancelar`,
+                denyButtonText: 'Cancelar',
             })
 
-            const index = this.profissionaisSelecionados.findIndex(
-            item => item.PROFISSIONAL_ID == id
-            );
+            // Só remove se o usuário clicou em Confirmar
+            if (result.isConfirmed) {
+                const index = this.equipeMontada.findIndex(
+                    item => item.PROFISSIONAL_ID == id
+                )
 
-            if (index !== -1) {
-                this.profissionaisSelecionados.splice(index, 1);
+                if (index !== -1) {
+                    this.equipeMontada.splice(index, 1)
+                }
             }
         },
     }

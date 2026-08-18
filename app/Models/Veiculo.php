@@ -42,9 +42,9 @@ class Veiculo extends Model
             ->where('TABELA_ID', RTG::SITUACAO_VEICULO);
     }
 
-    public function equipes()
+    public function equipe()
     {
-        return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
+        return $this->hasOne(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
             ->where('EQUIPE_DATA', now()->format('Y-m-d'));
     }
 
@@ -59,9 +59,9 @@ class Veiculo extends Model
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
-            "equipes",
-            "equipes.profissional",
-            "equipes.profissional.tipoProfissional",
+            "equipe",
+            "equipe.equipeProfissional.profissional",
+            "equipe.equipeProfissional.profissional.tipoProfissional",
             "vinculoAtivo",
             "vinculoAtivo.unidade",
         ];

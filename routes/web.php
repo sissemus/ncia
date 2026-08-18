@@ -15,6 +15,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
 use App\Http\Controllers\EquipeController;
+use App\Http\Controllers\EquipeProfissionalController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -204,6 +205,18 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [EquipeController::class, "pesquisar"]);
         Route::get("buscar/{id}", [EquipeController::class, "buscar"]);
         Route::get('search', [EquipeController::class, 'search']);
+    });
+    
+    Route::prefix("equipeProfissional")->group(function () {
+        Route::get("/", [EquipeProfissionalController::class, "view"]);
+        Route::get("view", [EquipeProfissionalController::class, "view"]);
+        Route::post("inserir", [EquipeProfissionalController::class, "inserir"]);
+        Route::put("alterar", [EquipeProfissionalController::class, "alterar"]);
+        Route::delete("deletar", [EquipeProfissionalController::class, "deletar"]);
+        Route::get("listar", [EquipeProfissionalController::class, "listar"]);
+        Route::post("pesquisar", [EquipeProfissionalController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [EquipeProfissionalController::class, "buscar"]);
+        Route::get('search', [EquipeProfissionalController::class, 'search']);
     });
     
 });

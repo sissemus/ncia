@@ -36,6 +36,8 @@ import MdNovoPacienteModule from "./modules/paciente/MdNovoPacienteModule";
 import EquipeViewModule from "./modules/equipe/EquipeViewModule";
 import MdNovoEquipeModule from "./modules/equipe/MdNovoEquipeModule";
 import ChamadoViewModule from "./modules/chamado/ChamadoViewModule";
+import EquipeProfissionalViewModule from "./modules/equipeProfissional/EquipeProfissionalViewModule";
+import MdNovoEquipeProfissionalModule from "./modules/equipeProfissional/MdNovoEquipeProfissionalModule";
 
 Vue.use(PerfectScrollbar)
 Vue.use(Vuex)
@@ -94,5 +96,7 @@ export default new Vuex.Store({
         MdNovoEquipeModule,
         EquipeViewModule,
         ChamadoViewModule,
+        MdNovoEquipeProfissionalModule,
+        EquipeProfissionalViewModule,
     }
 });
