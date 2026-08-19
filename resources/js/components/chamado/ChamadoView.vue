@@ -6,7 +6,7 @@
                 <v-toolbar-title class="font-weight-bold">Abertura de Chamado</v-toolbar-title>
                 <v-spacer></v-spacer>
 
-                <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
+                <!-- <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
                     <v-icon left small>mdi-test-tube</v-icon> Teste CPF
                 </v-btn>
 
@@ -16,7 +16,7 @@
 
                 <v-btn color="red" outlined small @click="limpar">
                     <v-icon left small>mdi-broom</v-icon> Limpar
-                </v-btn>
+                </v-btn> -->
             </v-toolbar>
 
             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
@@ -672,35 +672,62 @@ export default {
             return true;
         },
 
-        salvar() {
+        salvar(confirmarCancelamento = false) {
             if (!this.validarFormulario()) return;
 
             this.salvando = true;
             this.$store.dispatch("TratarErroAjaxModule/fecharAlert", this.msgId);
 
             let payload = JSON.parse(JSON.stringify(this.chamado));
+            payload.CONFIRMAR_CANCELAMENTO_ANTERIOR = Boolean(confirmarCancelamento);
 
             if (this.pacienteVulnerabilidadeSocial) {
                 payload.PACIENTE_ID = null;
                 payload.PACIENTE_VULNERABILIDADE_SOCIAL = 1;
-                payload.PACIENTE_NOME = this.pacienteTemporario.PACIENTE_NOME;
-                payload.PACIENTE_DT_NASCIMENTO = this.pacienteTemporario.PACIENTE_DT_NASCIMENTO;
-                payload.TG_SEXO_ID = this.pacienteTemporario.TG_SEXO_ID;
+                payload.PACIENTE_NOME = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_NOME : null;
+                payload.PACIENTE_DT_NASCIMENTO = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_DT_NASCIMENTO : null;
+                payload.TG_SEXO_ID = this.pacienteTemporario ? this.pacienteTemporario.TG_SEXO_ID : null;
             } else {
-                payload.PACIENTE_ID = this.paciente.PACIENTE_ID;
+                // Garante que o PACIENTE_ID venha do objeto paciente localizado
+                payload.PACIENTE_ID = this.paciente ? this.paciente.PACIENTE_ID : this.chamado.PACIENTE_ID;
                 payload.PACIENTE_VULNERABILIDADE_SOCIAL = 0;
             }
 
-            axios.post(`${this.baseUrl}/chamado/abrir`, payload).then(() => {
-                Swal.fire("Sucesso", "Chamado aberto com sucesso.", "success").then(() => {
-                    this.limpar();
+            axios.post(`${this.baseUrl}/chamado/abrir`, payload)
+                .then(r => {
+                    if (r.data.cod === 2) {
+                        this.salvando = false;
+                        Swal.fire({
+                            title: "Chamado Existente",
+                            text: r.data.msg,
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonText: "Sim, cancelar anterior e abrir este",
+                            cancelButtonText: "Não, manter anterior",
+                            confirmButtonColor: "#1976D2",
+                            cancelButtonColor: "#757575"
+                        }).then(result => {
+                            if (result.isConfirmed) {
+                                this.salvar(true);
+                            }
+                        });
+                        return;
+                    }
+
+                    Swal.fire("Sucesso", r.data.msg || "Chamado aberto com sucesso.", "success").then(() => {
+                        this.limpar();
+                    });
+                })
+                .catch(e => {
+                    console.error("ERRO AO ABRIR CHAMADO: ", e);
+                    this.$store.dispatch("TratarErroAjaxModule/tratarErro", {
+                        id: this.msgId,
+                        response: e.response
+                    });
+                })
+                .finally(() => {
+                    this.salvando = false;
                 });
-            }).catch(e => {
-                console.error("ERRO: ", e);
-                this.$store.dispatch("TratarErroAjaxModule/tratarErro", { id: this.msgId, response: e.response });
-            }).finally(() => {
-                this.salvando = false;
-            });
         },
 
         limpar() {
