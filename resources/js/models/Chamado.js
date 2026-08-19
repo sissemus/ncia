@@ -23,5 +23,6 @@ export default class Chamado {
         this.TG_PRESSAO_ARTERIAL_ID = null;
         this.TG_SATURACAO_ID = null;
         this.CHAMADO_OBSERVACAO = null;
+        this.CHAMADO_AMBULANCIA_EXTRA = null;
     }
 }

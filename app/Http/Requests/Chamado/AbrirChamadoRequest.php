@@ -36,6 +36,7 @@ class AbrirChamadoRequest extends FormRequest
 
             "TG_CHAMADO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_CHAMADO)->where("ATIVO", 1)],
             "TG_PRIORIDADE_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::PRIORIDADE_PACIENTE)->where("ATIVO", 1)],
+            "CHAMADO_AMBULANCIA_EXTRA" => ["required", "boolean"],
 
             "UNIDADE_ID_SOLICITANTE" => [
                 "required",
@@ -47,24 +48,24 @@ class AbrirChamadoRequest extends FormRequest
             "PROFISSIONAL_ID_SOLICITANTE" => ["required", "integer", Rule::exists("PROFISSIONAL", "PROFISSIONAL_ID")->where("PROFISSIONAL_ATIVO", 1)],
 
             "CHAMADO_HORARIO_ATENDIMENTO" => ["nullable", "date_format:H:i"],
-            "CHAMADO_SETOR_SOLICITANTE" => ["nullable", "string", "max:150"],
-            "CHAMADO_LEITO_SOLICITANTE" => ["nullable", "string", "max:50"],
-            "CHAMADO_SETOR_DESTINO" => ["nullable", "string", "max:150"],
+            "CHAMADO_SETOR_SOLICITANTE" => ["required", "string", "max:150"],
+            "CHAMADO_LEITO_SOLICITANTE" => ["required", "string", "max:50"],
+            "CHAMADO_SETOR_DESTINO" => ["required", "string", "max:150"],
             "CHAMADO_LEITO_DESTINO" => ["nullable", "string", "max:50"],
 
             "PROCEDIMENTO_ID" => ["required", "integer", Rule::exists("PROCEDIMENTO", "PROCEDIMENTO_ID")->where("PROCEDIMENTO_ATIVO", 1)],
-            "DIAGNOSTICO_ID" => ["nullable", "integer", Rule::exists("DIAGNOSTICO", "DIAGNOSTICO_ID")->where("DIAGNOSTICO_ATIVO", 1)],
+            "DIAGNOSTICO_ID" => ["required", "integer", Rule::exists("DIAGNOSTICO", "DIAGNOSTICO_ID")->where("DIAGNOSTICO_ATIVO", 1)],
 
-            "CHAMADO_DISPOSITIVOS" => ["nullable", "string", "max:500"],
-            "CHAMADO_PESO" => ["nullable", "numeric", "min:0", "max:9999.99"],
+            "CHAMADO_DISPOSITIVOS" => ["required", "string", "max:500"],
+            "CHAMADO_PESO" => ["required", "numeric", "min:0", "max:9999.99"],
 
-            "TG_TIPO_PRECAUCAO_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_PRECAUCAO)->where("ATIVO", 1)],
-            "TG_SUPORTE_O2_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_O2)->where("ATIVO", 1)],
-            "TG_SUPORTE_HEMODINAMICO_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_HEMODINAMICO)->where("ATIVO", 1)],
-            "TG_TEMPERATURA_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_TEMPERATURA)->where("ATIVO", 1)],
-            "TG_FREQUENCIA_CARDIACA_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_FREQUENCIA_CARDIACA)->where("ATIVO", 1)],
-            "TG_PRESSAO_ARTERIAL_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_PRESSAO_ARTERIAL)->where("ATIVO", 1)],
-            "TG_SATURACAO_ID" => ["nullable", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_SATURACAO)->where("ATIVO", 1)],
+            "TG_TIPO_PRECAUCAO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_PRECAUCAO)->where("ATIVO", 1)],
+            "TG_SUPORTE_O2_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_O2)->where("ATIVO", 1)],
+            "TG_SUPORTE_HEMODINAMICO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_HEMODINAMICO)->where("ATIVO", 1)],
+            "TG_TEMPERATURA_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_TEMPERATURA)->where("ATIVO", 1)],
+            "TG_FREQUENCIA_CARDIACA_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_FREQUENCIA_CARDIACA)->where("ATIVO", 1)],
+            "TG_PRESSAO_ARTERIAL_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_PRESSAO_ARTERIAL)->where("ATIVO", 1)],
+            "TG_SATURACAO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SINAIS_VITAIS_SATURACAO)->where("ATIVO", 1)],
 
             "CHAMADO_OBSERVACAO" => ["nullable", "string"],
         ];
@@ -80,6 +81,7 @@ class AbrirChamadoRequest extends FormRequest
             "TG_SEXO_ID" => "<b>SEXO</b>",
             "TG_CHAMADO_ID" => "<b>TIPO DE CHAMADO</b>",
             "TG_PRIORIDADE_ID" => "<b>PRIORIDADE</b>",
+            "CHAMADO_AMBULANCIA_EXTRA" => "<b>AMBULÂNCIA EXTRA</b>",
             "UNIDADE_ID_SOLICITANTE" => "<b>UNIDADE SOLICITANTE</b>",
             "UNIDADE_ID_DESTINO" => "<b>UNIDADE DESTINO</b>",
             "PROFISSIONAL_ID_SOLICITANTE" => "<b>PROFISSIONAL SOLICITANTE</b>",

@@ -34,6 +34,7 @@ class Chamado extends Model
         "TG_PRESSAO_ARTERIAL_ID",
         "TG_SATURACAO_ID",
         "PROFISSIONAL_ID_SOLICITANTE",
+        "CHAMADO_AMBULANCIA_EXTRA",
     ];
 
     protected $casts = [
@@ -53,6 +54,7 @@ class Chamado extends Model
         "TG_PRESSAO_ARTERIAL_ID" => "integer",
         "TG_SATURACAO_ID" => "integer",
         "PROFISSIONAL_ID_SOLICITANTE" => "integer",
+        "CHAMADO_AMBULANCIA_EXTRA" => "boolean",
     ];
 
     public function paciente()
