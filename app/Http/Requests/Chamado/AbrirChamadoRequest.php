@@ -46,7 +46,7 @@ class AbrirChamadoRequest extends FormRequest
                 Rule::exists("USUARIO_UNIDADE", "UNIDADE_ID")->where("USUARIO_ID", Auth::id()),
             ],
             "UNIDADE_ID_DESTINO" => ["required", "integer", Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_ATIVO", 1)],
-            "PROFISSIONAL_ID_SOLICITANTE" => ["required", "integer", Rule::exists("PROFISSIONAL", "PROFISSIONAL_ID")->where("PROFISSIONAL_ATIVO", 1)],
+            "CHAMADO_PROFISSIONAL_SOLICITANTE" => ["required", "string", "max:150"],
 
             "CHAMADO_HORARIO_ATENDIMENTO" => ["nullable", "date_format:H:i"],
             "CHAMADO_SETOR_SOLICITANTE" => ["required", "string", "max:150"],
@@ -85,7 +85,7 @@ class AbrirChamadoRequest extends FormRequest
             "CHAMADO_AMBULANCIA_EXTRA" => "<b>AMBULÂNCIA EXTRA</b>",
             "UNIDADE_ID_SOLICITANTE" => "<b>UNIDADE SOLICITANTE</b>",
             "UNIDADE_ID_DESTINO" => "<b>UNIDADE DESTINO</b>",
-            "PROFISSIONAL_ID_SOLICITANTE" => "<b>PROFISSIONAL SOLICITANTE</b>",
+            "CHAMADO_PROFISSIONAL_SOLICITANTE" => "<b>PROFISSIONAL SOLICITANTE</b>",
             "CHAMADO_HORARIO_ATENDIMENTO" => "<b>HORÁRIO DE ATENDIMENTO</b>",
             "CHAMADO_SETOR_SOLICITANTE" => "<b>SETOR SOLICITANTE</b>",
             "CHAMADO_LEITO_SOLICITANTE" => "<b>LEITO SOLICITANTE</b>",

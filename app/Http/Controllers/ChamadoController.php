@@ -38,7 +38,6 @@ class ChamadoController extends Controller
             ->orderBy("UNIDADE_NOME")
             ->get();
         $unidadesDestino = Unidade::where("UNIDADE_ATIVO", 1)->orderBy("UNIDADE_NOME")->get();
-        $profissionais = Profissional::where("PROFISSIONAL_ATIVO", 1)->orderBy("PROFISSIONAL_NOME")->get();
         $procedimentos = Procedimento::where("PROCEDIMENTO_ATIVO", 1)->orderBy("PROCEDIMENTO_DESCRICAO")->get();
         $diagnosticos = Diagnostico::where("DIAGNOSTICO_ATIVO", 1)->orderBy("DIAGNOSTICO_DESCRICAO")->get();
 
@@ -55,7 +54,6 @@ class ChamadoController extends Controller
             "saturacoes",
             "unidadesSolicitantes",
             "unidadesDestino",
-            "profissionais",
             "procedimentos",
             "diagnosticos"
         ));
@@ -144,7 +142,7 @@ class ChamadoController extends Controller
                 "TG_FREQUENCIA_CARDIACA_ID"    => $request->TG_FREQUENCIA_CARDIACA_ID,
                 "TG_PRESSAO_ARTERIAL_ID"       => $request->TG_PRESSAO_ARTERIAL_ID,
                 "TG_SATURACAO_ID"              => $request->TG_SATURACAO_ID,
-                "PROFISSIONAL_ID_SOLICITANTE"  => $request->PROFISSIONAL_ID_SOLICITANTE,
+                "CHAMADO_PROFISSIONAL_SOLICITANTE" => $request->CHAMADO_PROFISSIONAL_SOLICITANTE,
             ]);
 
             ChamadoProcedimento::create([

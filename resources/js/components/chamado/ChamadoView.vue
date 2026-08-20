@@ -180,9 +180,8 @@
                                             :menu-props="{ offsetY: true }"></v-autocomplete>
                                     </v-col>
                                     <v-col cols="12">
-                                        <v-select label="Profissional Solicitante*" :items="profissionais"
-                                            item-value="PROFISSIONAL_ID" item-text="PROFISSIONAL_NOME" outlined dense
-                                            hide-details v-model="chamado.PROFISSIONAL_ID_SOLICITANTE"></v-select>
+                                        <v-text-field label="Profissional Solicitante*" autocomplete="off" outlined dense 
+                                        hide-details v-model="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="6">
                                         <v-text-field label="Setor Solicitante*" autocomplete="off" outlined dense
@@ -345,7 +344,6 @@ export default {
         saturacoes: { type: Array, default: () => [] },
         unidadesSolicitantes: { type: Array, default: () => [] },
         unidadesDestino: { type: Array, default: () => [] },
-        profissionais: { type: Array, default: () => [] },
         procedimentos: { type: Array, default: () => [] },
         diagnosticos: { type: Array, default: () => [] }
     },
@@ -518,7 +516,7 @@ export default {
             if (this.prioridades.length) this.chamado.TG_PRIORIDADE_ID = this.prioridades[0].COLUNA_ID;
             if (this.unidadesSolicitantes.length) this.chamado.UNIDADE_ID_SOLICITANTE = this.unidadesSolicitantes[0].UNIDADE_ID;
             if (this.unidadesDestino.length) this.chamado.UNIDADE_ID_DESTINO = this.unidadesDestino[0].UNIDADE_ID;
-            if (this.profissionais.length) this.chamado.PROFISSIONAL_ID_SOLICITANTE = this.profissionais[0].PROFISSIONAL_ID;
+            this.chamado.CHAMADO_PROFISSIONAL_SOLICITANTE = "Dr. João da Silva";
             if (this.procedimentos.length) this.chamado.PROCEDIMENTO_ID = this.procedimentos[0].PROCEDIMENTO_ID;
             if (this.diagnosticos.length) this.chamado.DIAGNOSTICO_ID = this.diagnosticos[0].DIAGNOSTICO_ID;
             if (this.tiposPrecaucao.length) this.chamado.TG_TIPO_PRECAUCAO_ID = this.tiposPrecaucao[0].COLUNA_ID;
@@ -599,7 +597,7 @@ export default {
                 return false;
             }
 
-            if (!this.chamado.PROFISSIONAL_ID_SOLICITANTE) {
+            if (!this.chamado.CHAMADO_PROFISSIONAL_SOLICITANTE) {
                 Swal.fire("Atenção", "Informe o profissional solicitante.", "warning");
                 return false;
             }

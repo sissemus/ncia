@@ -33,7 +33,7 @@ class Chamado extends Model
         "TG_FREQUENCIA_CARDIACA_ID",
         "TG_PRESSAO_ARTERIAL_ID",
         "TG_SATURACAO_ID",
-        "PROFISSIONAL_ID_SOLICITANTE",
+        "CHAMADO_PROFISSIONAL_SOLICITANTE",
         "CHAMADO_AMBULANCIA_EXTRA",
     ];
 
@@ -53,7 +53,7 @@ class Chamado extends Model
         "TG_FREQUENCIA_CARDIACA_ID" => "integer",
         "TG_PRESSAO_ARTERIAL_ID" => "integer",
         "TG_SATURACAO_ID" => "integer",
-        "PROFISSIONAL_ID_SOLICITANTE" => "integer",
+        "CHAMADO_PROFISSIONAL_SOLICITANTE" => "string",
         "CHAMADO_AMBULANCIA_EXTRA" => "boolean",
     ];
 
@@ -70,11 +70,6 @@ class Chamado extends Model
     public function unidadeDestino()
     {
         return $this->belongsTo(Unidade::class, "UNIDADE_ID_DESTINO", "UNIDADE_ID");
-    }
-
-    public function profissionalSolicitante()
-    {
-        return $this->belongsTo(Profissional::class, "PROFISSIONAL_ID_SOLICITANTE", "PROFISSIONAL_ID");
     }
 
     public function procedimentos()

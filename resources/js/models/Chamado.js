@@ -5,7 +5,7 @@ export default class Chamado {
         this.TG_PRIORIDADE_ID = null;
         this.UNIDADE_ID_SOLICITANTE = null;
         this.UNIDADE_ID_DESTINO = null;
-        this.PROFISSIONAL_ID_SOLICITANTE = null;
+        this.CHAMADO_PROFISSIONAL_SOLICITANTE = null;
         this.CHAMADO_HORARIO_ATENDIMENTO = null;
         this.CHAMADO_SETOR_SOLICITANTE = null;
         this.CHAMADO_LEITO_SOLICITANTE = null;

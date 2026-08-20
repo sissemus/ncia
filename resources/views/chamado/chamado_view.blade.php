@@ -14,7 +14,6 @@
         :saturacoes='@json($saturacoes)'
         :unidades-solicitantes='@json($unidadesSolicitantes)'
         :unidades-destino='@json($unidadesDestino)'
-        :profissionais='@json($profissionais)'
         :procedimentos='@json($procedimentos)'
         :diagnosticos='@json($diagnosticos)'
     ></chamado-view>
