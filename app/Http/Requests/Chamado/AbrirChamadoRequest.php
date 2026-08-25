@@ -17,7 +17,6 @@ class AbrirChamadoRequest extends FormRequest
     public function rules()
     {
         return [
-            "CONFIRMAR_CANCELAMENTO_ANTERIOR" => ["nullable", "boolean"],
             "PACIENTE_VULNERABILIDADE_SOCIAL" => ["required", "boolean"],
             "PACIENTE_ID" => [
                 "nullable",

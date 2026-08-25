@@ -177,6 +177,7 @@
                                         <v-autocomplete label="Unidade Solicitante*" :items="unidadesSolicitantes"
                                             item-value="UNIDADE_ID" item-text="UNIDADE_NOME" outlined dense hide-details
                                             v-model="chamado.UNIDADE_ID_SOLICITANTE"
+                                            @change="verificarDuplicidade"
                                             :menu-props="{ offsetY: true }"></v-autocomplete>
                                     </v-col>
                                     <v-col cols="12">
@@ -354,6 +355,8 @@ export default {
             msgIdDebug: "msgChamadoViewDebug",
             consultandoPaciente: false,
             salvando: false,
+            duplicidadeConfirmada: false,
+            duplicidadeChave: null,
             dataSolicitacao: moment().format("DD/MM/YYYY"),
             horaSolicitacao: moment().format("HH:mm")
         };
@@ -421,10 +424,57 @@ export default {
         }
     },
 
-    methods: {
+        methods: {
         preencherPadroes() {
             if (this.tiposChamado.length === 1) this.chamado.TG_CHAMADO_ID = this.tiposChamado[0].COLUNA_ID;
             if (this.unidadesSolicitantes.length === 1) this.chamado.UNIDADE_ID_SOLICITANTE = this.unidadesSolicitantes[0].UNIDADE_ID;
+        },
+
+        verificarDuplicidade() {
+            if (this.pacienteVulnerabilidadeSocial || !this.paciente || !this.chamado.UNIDADE_ID_SOLICITANTE) return;
+
+            let chave = `${this.paciente.PACIENTE_ID}:${this.chamado.UNIDADE_ID_SOLICITANTE}`;
+            if (this.duplicidadeChave === chave && this.duplicidadeConfirmada) return;
+
+            axios.get(`${this.baseUrl}/chamado/verificar-duplicidade`, {
+                params: {
+                    PACIENTE_ID: this.paciente.PACIENTE_ID,
+                    UNIDADE_ID_SOLICITANTE: this.chamado.UNIDADE_ID_SOLICITANTE
+                }
+            }).then(r => {
+                if (!r.data.retorno) {
+                    this.duplicidadeChave = chave;
+                    this.duplicidadeConfirmada = false;
+                    return;
+                }
+
+                this.exibirAlertaDuplicidade(r.data.retorno, chave);
+            }).catch(e => {
+                console.error("ERRO AO CONSULTAR DUPLICIDADE: ", e);
+            });
+        },
+
+        exibirAlertaDuplicidade(duplicidade, chave, aoConfirmar = null) {
+            Swal.fire({
+                title: "Possível duplicidade",
+                text: `Já existe o chamado Nº ${duplicidade.CHAMADO_ID} para este paciente hoje nesta unidade, com situação ${duplicidade.SITUACAO_DESCRICAO}. Deseja continuar com a abertura?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sim, continuar",
+                cancelButtonText: "Não, cancelar",
+                confirmButtonColor: "#1976D2",
+                cancelButtonColor: "#757575"
+            }).then(result => {
+                if (result.isConfirmed) {
+                    this.duplicidadeChave = chave;
+                    this.duplicidadeConfirmada = true;
+                    if (aoConfirmar) aoConfirmar();
+                } else {
+                    this.duplicidadeChave = null;
+                    this.duplicidadeConfirmada = false;
+                    this.limpar();
+                }
+            });
         },
 
         alterarTipoPaciente() {
@@ -474,6 +524,9 @@ export default {
                 if (r.data.retorno) {
                     this.paciente = r.data.retorno;
                     this.chamado.PACIENTE_ID = this.paciente.PACIENTE_ID;
+                    this.duplicidadeChave = null;
+                    this.duplicidadeConfirmada = false;
+                    this.verificarDuplicidade();
                     return;
                 }
 
@@ -670,14 +723,14 @@ export default {
             return true;
         },
 
-        salvar(confirmarCancelamento = false) {
+        salvar(confirmarDuplicidade = false) {
             if (!this.validarFormulario()) return;
 
             this.salvando = true;
             this.$store.dispatch("TratarErroAjaxModule/fecharAlert", this.msgId);
 
             let payload = JSON.parse(JSON.stringify(this.chamado));
-            payload.CONFIRMAR_CANCELAMENTO_ANTERIOR = Boolean(confirmarCancelamento);
+            payload.CONFIRMAR_DUPLICIDADE = Boolean(confirmarDuplicidade || this.duplicidadeConfirmada);
 
             if (this.pacienteVulnerabilidadeSocial) {
                 payload.PACIENTE_ID = null;
@@ -695,20 +748,8 @@ export default {
                 .then(r => {
                     if (r.data.cod === 2) {
                         this.salvando = false;
-                        Swal.fire({
-                            title: "Chamado Existente",
-                            text: r.data.msg,
-                            icon: "warning",
-                            showCancelButton: true,
-                            confirmButtonText: "Sim, cancelar anterior e abrir este",
-                            cancelButtonText: "Não, manter anterior",
-                            confirmButtonColor: "#1976D2",
-                            cancelButtonColor: "#757575"
-                        }).then(result => {
-                            if (result.isConfirmed) {
-                                this.salvar(true);
-                            }
-                        });
+                        let chave = `${payload.PACIENTE_ID}:${payload.UNIDADE_ID_SOLICITANTE}`;
+                        this.exibirAlertaDuplicidade(r.data.retorno, chave, () => this.salvar(true));
                         return;
                     }
 
@@ -730,6 +771,8 @@ export default {
 
         limpar() {
             this.$store.dispatch("ChamadoViewModule/clear");
+            this.duplicidadeChave = null;
+            this.duplicidadeConfirmada = false;
             this.dataSolicitacao = moment().format("DD/MM/YYYY");
             this.horaSolicitacao = moment().format("HH:mm");
             this.preencherPadroes();

@@ -192,6 +192,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
     Route::prefix("chamado")->group(function () {
         Route::get("/", [ChamadoController::class, "view"]);
         Route::get("view", [ChamadoController::class, "view"]);
+        Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
         Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
     

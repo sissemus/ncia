@@ -15,6 +15,7 @@ use App\Models\TabelaGenerica;
 use App\Models\Unidade;
 use App\MyLibs\SituacaoChamadoEnum;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -59,44 +60,44 @@ class ChamadoController extends Controller
         ));
     }
 
+    public function verificarDuplicidade(Request $request)
+    {
+        $request->validate([
+            "PACIENTE_ID" => ["required", "integer", "exists:PACIENTE,PACIENTE_ID"],
+            "UNIDADE_ID_SOLICITANTE" => ["required", "integer"],
+        ]);
+
+        $unidadePermitida = Unidade::where("UNIDADE_ID", $request->UNIDADE_ID_SOLICITANTE)
+            ->where("UNIDADE_SOLICITANTE", 1)
+            ->where("UNIDADE_ATIVO", 1)
+            ->whereIn("UNIDADE_ID", DB::table("USUARIO_UNIDADE")
+                ->where("USUARIO_ID", Auth::id())
+                ->pluck("UNIDADE_ID"))
+            ->exists();
+
+        abort_unless($unidadePermitida, 403);
+
+        return response([
+            "cod" => 1,
+            "msg" => "Consulta de duplicidade realizada",
+            "retorno" => $this->duplicidadeDoChamado($request->PACIENTE_ID, $request->UNIDADE_ID_SOLICITANTE),
+        ]);
+    }
+
     public function abrir(AbrirChamadoRequest $request)
     {
         if (!$request->boolean("PACIENTE_VULNERABILIDADE_SOCIAL") && $request->filled("PACIENTE_ID")) {
+            $duplicidade = $this->duplicidadeDoChamado(
+                $request->PACIENTE_ID,
+                $request->UNIDADE_ID_SOLICITANTE
+            );
 
-            $chamadoExistente = Chamado::where("PACIENTE_ID", $request->PACIENTE_ID)
-                ->whereRaw("CAST(CHAMADO_DATA AS DATE) = CAST(GETDATE() AS DATE)")
-                ->orderBy("CHAMADO_ID", "desc")
-                ->first();
-
-            if ($chamadoExistente) {
-                $ultimaSituacao = ChamadoSituacao::where("CHAMADO_ID", $chamadoExistente->CHAMADO_ID)
-                    ->orderBy("CHAMADO_SITUACAO_ID", "desc")
-                    ->first();
-
-                if ($ultimaSituacao && (int)$ultimaSituacao->TG_SITUACAO_ID !== SituacaoChamadoEnum::CANCELADO) {
-
-                    if ((int)$ultimaSituacao->TG_SITUACAO_ID !== SituacaoChamadoEnum::ABERTO) {
-                        return response([
-                            "cod" => 0,
-                            "msg" => "Já existe um chamado em andamento (Nº {$chamadoExistente->CHAMADO_ID}) para este paciente hoje. Para cancelá-lo, entre em contato com a CIA informando o motivo."
-                        ], 422);
-                    }
-
-                    if (!$request->boolean("CONFIRMAR_CANCELAMENTO_ANTERIOR")) {
-                        return response([
-                            "cod" => 2,
-                            "msg" => "Já existe o chamado Nº {$chamadoExistente->CHAMADO_ID} em aberto hoje para este paciente. Deseja cancelar o anterior e abrir este novo?"
-                        ], 200);
-                    }
-
-                    ChamadoSituacao::create([
-                        "TG_SITUACAO_ID" => SituacaoChamadoEnum::CANCELADO,
-                        "CHAMADO_ID" => $chamadoExistente->CHAMADO_ID,
-                        "CHAMADO_SITUACAO_DATA" => Carbon::now(),
-                        "CHAMADO_SITUACAO_OBSERVACAO" => "Cancelado: novo chamado aberto pela unidade.",
-                        "USUARIO_ID" => Auth::id(),
-                    ]);
-                }
+            if ($duplicidade && !$request->boolean("CONFIRMAR_DUPLICIDADE")) {
+                return response([
+                    "cod" => 2,
+                    "msg" => "Já existe um chamado deste paciente hoje nesta unidade solicitante.",
+                    "retorno" => $duplicidade,
+                ]);
             }
         }
 
@@ -173,5 +174,44 @@ class ChamadoController extends Controller
             "msg" => "Chamado aberto com sucesso",
             "retorno" => $chamado
         ], 200);
+    }
+
+    private function duplicidadeDoChamado($pacienteId, $unidadeId)
+    {
+        $inicioHoje = Carbon::today();
+        $inicioAmanha = $inicioHoje->copy()->addDay();
+
+        $chamado = Chamado::where("PACIENTE_ID", $pacienteId)
+            ->where("UNIDADE_ID_SOLICITANTE", $unidadeId)
+            ->where("CHAMADO_DATA", ">=", $inicioHoje)
+            ->where("CHAMADO_DATA", "<", $inicioAmanha)
+            ->orderByDesc("CHAMADO_DATA")
+            ->orderByDesc("CHAMADO_ID")
+            ->first();
+
+        if (!$chamado) return null;
+
+        $ultimaSituacao = ChamadoSituacao::where("CHAMADO_ID", $chamado->CHAMADO_ID)
+            ->orderByDesc("CHAMADO_SITUACAO_DATA")
+            ->orderByDesc("CHAMADO_SITUACAO_ID")
+            ->first();
+
+        if (!$ultimaSituacao || !in_array((int) $ultimaSituacao->TG_SITUACAO_ID, [
+            SituacaoChamadoEnum::ABERTO,
+            SituacaoChamadoEnum::EM_ANALISE,
+            SituacaoChamadoEnum::EM_ATENDIMENTO,
+        ], true)) return null;
+
+        $situacao = TabelaGenerica::situacaoChamado()
+            ->firstWhere("COLUNA_ID", (int) $ultimaSituacao->TG_SITUACAO_ID);
+
+        return [
+            "CHAMADO_ID" => $chamado->CHAMADO_ID,
+            "TG_SITUACAO_ID" => $ultimaSituacao->TG_SITUACAO_ID,
+            "SITUACAO_DESCRICAO" => $situacao ? $situacao->DESCRICAO : "Em andamento",
+            "CHAMADO_DATA" => $chamado->CHAMADO_DATA,
+            "UNIDADE_ID_SOLICITANTE" => $chamado->UNIDADE_ID_SOLICITANTE,
+        ];
+
     }
 }
