@@ -122,7 +122,7 @@ export default {
                     this.usuario = r.data.retorno;
                     this.clearForm();
                     Swal.fire("Sucesso", "Unidade vinculada com sucesso", "success");
-                    this.listar();
+                    if (typeof this.listar === 'function') this.listar();
                 })
                 .catch(e => {
                     console.error("ERRO: ", e);
@@ -141,7 +141,7 @@ export default {
                     this.usuario = r.data.retorno;
                     this.clearForm();
                     Swal.fire("Sucesso", "Unidade desvinculada com sucesso", "success");
-                    this.listar();
+                    if (typeof this.listar === 'function') this.listar();
                 })
                 .catch(e => {
                     console.error("ERRO: ", e);

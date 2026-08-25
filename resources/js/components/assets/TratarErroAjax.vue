@@ -37,12 +37,12 @@ export default {
             //let talerts = this.$store.state['TratarErroAjaxModule'].show[this.id];
             let alerts = this.getAlert;
             let i = alerts.findIndex(r => r.id === this.id);
-            return alerts[i].show;
+            return i >= 0 ? alerts[i].show : false;
         },
         message() {
             let alerts = this.getAlert;
             let i = alerts.findIndex(r => r.id === this.id);
-            return alerts[i].message;
+            return i >= 0 ? alerts[i].message : "";
         }
     },
     methods: {

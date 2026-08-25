@@ -31,7 +31,7 @@ export default {
             return state.usuarios
         },
         getListar(state){
-            return state.listar.bind(this);
+            return typeof state.listar === 'function' ? state.listar : null;
         }
     },
     mutations: {

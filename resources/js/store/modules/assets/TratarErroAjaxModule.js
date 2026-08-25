@@ -11,39 +11,44 @@ export default {
 
     mutations: {
         tratarErro(state, payload) {
-            let mensagem = '';
+            payload = payload || {};
+            const response = payload.response || {};
+            let mensagem = 'Ocorreu um erro inesperado.';
 
-            if (payload.response.status) {
-                if (payload.response.status === 422) {
+            if (response.status) {
+                if (response.status === 422) {
+                    const errors = response.data && response.data.errors
+                        ? response.data.errors
+                        : {};
                     let erros = [];
-                    for (let key in payload.response.data.errors) {
-                        if (payload.response.data.errors.hasOwnProperty(key)) {
-                            payload.response.data.errors[key].forEach(r => {
-                                erros.push(r);
-                            });
+                    for (let key in errors) {
+                        if (Object.prototype.hasOwnProperty.call(errors, key)) {
+                            const mensagens = Array.isArray(errors[key]) ? errors[key] : [errors[key]];
+                            mensagens.forEach(r => erros.push(r));
                         }
                     }
-                    let errosUl = '<ul>';
-                    erros.forEach((e)=>{
-                        errosUl += `<li>${e}</li>`;
-                    });
-                    errosUl+='</ul>';
-                    mensagem = errosUl;
-                }else if(payload.response.status === 419){
-                    mensagem = payload.response.data.message;
+                    if (erros.length) {
+                        let errosUl = '<ul>';
+                        erros.forEach((e)=>{
+                            errosUl += `<li>${e}</li>`;
+                        });
+                        mensagem = errosUl + '</ul>';
+                    } else {
+                        mensagem = (response.data && response.data.message) || 'Existem dados inválidos.';
+                    }
+                } else if (response.status === 419) {
+                    mensagem = (response.data && response.data.message) || 'A sessão expirou.';
+                } else {
+                    mensagem = response.status + ' - ' + (response.statusText || 'Erro na requisição');
                 }
-                else {
-                    mensagem = payload.response.status + ' - ' + payload.response.statusText
-                }
-                let i = state.alert.findIndex(r => r.id === payload.id);
-                state.alert[i].message = mensagem;
-                state.alert[i].show = true;
+            } else if (response.stack || response.message) {
+                mensagem = response.stack || response.message;
             }
-            else {
-                let i = state.alert.findIndex(r => r.id === payload.id);
-                state.alert[i].message = payload.response.stack;
-                state.alert[i].show = true;
-            }
+
+            let i = state.alert.findIndex(r => r.id === payload.id);
+            if (i < 0) return;
+            state.alert[i].message = mensagem;
+            state.alert[i].show = true;
 
         },
         setAlert(state, payload) {
@@ -51,6 +56,7 @@ export default {
         },
         fecharAlert(state, id) {
             let i = state.alert.findIndex(r => r.id === id);
+            if (i < 0) return;
             state.alert[i].show = false;
         }
     },

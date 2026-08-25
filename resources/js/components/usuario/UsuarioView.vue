@@ -138,6 +138,7 @@
                 </v-row>
             </v-card-actions>
         </v-card>
+        <MdSelecionarPerfil></MdSelecionarPerfil>
 
         <MdNovoUsuario></MdNovoUsuario>
     </div>
@@ -147,11 +148,12 @@
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import MdNovoUsuario from "./MdNovoUsuario";
+import MdSelecionarPerfil from "../perfil/MdSelecionarPerfil";
 import UtilsMixins from "../../mixins/UtilsMixins";
 
 export default {
     name: "UsuarioView",
-    components: { TratarErroAjax, MdNovoUsuario },
+    components: { TratarErroAjax, MdNovoUsuario, MdSelecionarPerfil },
     mixins: [UtilsMixins],
 
     data() {
@@ -180,6 +182,7 @@ export default {
     },
 
     mounted() {
+        this.$store.dispatch("UsuarioViewModule/setListar", this.listar);
         this.listar();
     },
 

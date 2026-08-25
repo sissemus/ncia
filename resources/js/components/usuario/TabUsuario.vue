@@ -174,7 +174,7 @@ export default {
                 data: this.usuario
             })
                 .then(r => {
-                    this.listar();
+                    if (typeof this.listar === 'function') this.listar();
                     this.usuario = r.data['retorno'];
                     Swal.fire('Sucesso', 'Salvo com sucesso', 'success')
                 })

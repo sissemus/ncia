@@ -137,6 +137,15 @@
                 },
             },
         },
+        watch: {
+            showModal(value) {
+                if (!value) return;
+
+                this.valorPesquisa = "";
+                this.perfis = [];
+                this.$nextTick(() => this.pesquisar());
+            },
+        },
         methods: {
             clearFormAndClose() {
                 this.$store.dispatch("TratarErroAjaxModule/fecharAlert", this.msgId);
