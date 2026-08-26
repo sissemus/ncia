@@ -27,8 +27,6 @@ import UnidadeViewModule from "./modules/unidade/UnidadeViewModule";
 import MdNovoUnidadeModule from "./modules/unidade/MdNovoUnidadeModule";
 import VeiculoViewModule from "./modules/veiculo/VeiculoViewModule";
 import MdNovoVeiculoModule from "./modules/veiculo/MdNovoVeiculoModule";
-import VeiculoUnidadeViewModule from "./modules/veiculo_unidade/VeiculoUnidadeViewModule";
-import MdNovoVeiculoUnidadeModule from "./modules/veiculo_unidade/MdNovoVeiculoUnidadeModule";
 import ProfissionalViewModule from "./modules/profissional/ProfissionalViewModule";
 import MdNovoProfissionalModule from "./modules/profissional/MdNovoProfissionalModule";
 import PacienteViewModule from "./modules/paciente/PacienteViewModule";
@@ -36,6 +34,7 @@ import MdNovoPacienteModule from "./modules/paciente/MdNovoPacienteModule";
 import EquipeViewModule from "./modules/equipe/EquipeViewModule";
 import MdNovoEquipeModule from "./modules/equipe/MdNovoEquipeModule";
 import ChamadoViewModule from "./modules/chamado/ChamadoViewModule";
+import ChamadoAcompanhamentoViewModule from "./modules/chamado_acompanhamento/ChamadoAcompanhamentoViewModule";
 import EquipeProfissionalViewModule from "./modules/equipeProfissional/EquipeProfissionalViewModule";
 import MdNovoEquipeProfissionalModule from "./modules/equipeProfissional/MdNovoEquipeProfissionalModule";
 
@@ -87,8 +86,6 @@ export default new Vuex.Store({
         MdNovoUnidadeModule,
         VeiculoViewModule,
         MdNovoVeiculoModule,
-        VeiculoUnidadeViewModule,
-        MdNovoVeiculoUnidadeModule,
         ProfissionalViewModule,
         MdNovoProfissionalModule,
         PacienteViewModule,
@@ -96,6 +93,7 @@ export default new Vuex.Store({
         MdNovoEquipeModule,
         EquipeViewModule,
         ChamadoViewModule,
+        ChamadoAcompanhamentoViewModule,
         MdNovoEquipeProfissionalModule,
         EquipeProfissionalViewModule,
     }

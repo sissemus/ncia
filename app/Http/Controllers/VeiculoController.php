@@ -74,6 +74,23 @@ class VeiculoController extends Controller
             $novaUnidadeId = (int) $request->UNIDADE_ID;
             $dtIni = $request->VEICULO_UNIDADE_DT_INI ? Carbon::parse($request->VEICULO_UNIDADE_DT_INI) : Carbon::now();
 
+            if ($vinculoAtivo && $vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
+                $novaData = $dtIni->format('Y-m-d');
+                $dataAntiga = $vinculoAtivo->VEICULO_UNIDADE_DT_INI->format('Y-m-d');
+
+                if ($novaData === $dataAntiga) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'VEICULO_UNIDADE_DT_INI' => ['A data do vínculo deve ser alterada quando a unidade vinculada ao veículo for alterada.']
+                    ]);
+                }
+
+                if ($novaData < $dataAntiga) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'VEICULO_UNIDADE_DT_INI' => ['A data do novo vínculo não pode ser anterior à data do vínculo anterior.']
+                    ]);
+                }
+            }
+
             if (!$vinculoAtivo) {
                 // No active mapping: create a new one
                 VeiculoUnidade::create([
@@ -84,7 +101,7 @@ class VeiculoController extends Controller
                 ]);
             } else if ($vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
                 // Unit changed: close old mapping and create a new one
-                $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = Carbon::now();
+                $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = $dtIni->copy()->subDay();
                 $vinculoAtivo->save();
 
                 VeiculoUnidade::create([

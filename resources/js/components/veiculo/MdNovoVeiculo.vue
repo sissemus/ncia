@@ -2,7 +2,7 @@
     <div>
         <v-row justify="center">
             <v-dialog v-model="showModal" persistent width="800" scrollable :fullscreen="fullScreen">
-                <v-card>
+                <v-card v-if="showModal">
                     <v-toolbar color="primary" elevation="1" class="flex-grow-0" dark>
                         <v-toolbar-title>Detalhes do Veículo</v-toolbar-title>
                         <v-spacer></v-spacer>
@@ -53,12 +53,12 @@
                             <legend class="custom-legend">VÍNCULO</legend>
                             <v-row>
                                 <v-col cols="12" md="6">
-                                    <v-autocomplete label="Unidade de Saúde" :items="unidades" item-value="UNIDADE_ID"
+                                    <v-autocomplete label="Unidade de Saúde*" :items="unidades" item-value="UNIDADE_ID"
                                         item-text="UNIDADE_NOME" v-model="veiculo.UNIDADE_ID" clearable outlined dense
                                         :menu-props="{ offsetY: true }"></v-autocomplete>
                                 </v-col>
                                 <v-col cols="12" md="6">
-                                    <v-text-field label="Data inicial do vínculo" type="date" autocomplete="off" outlined dense
+                                    <v-text-field label="Data inicial do vínculo*" type="date" autocomplete="off" outlined dense
                                         v-model="veiculo.VEICULO_UNIDADE_DT_INI"></v-text-field>
                                 </v-col>
                             </v-row>

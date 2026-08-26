@@ -20,8 +20,8 @@ class VeiculoCreateRequest extends FormRequest
             "TG_TIPO_VEICULO_ID" => ["required", "integer"],
             "TG_SITUACAO_VEICULO_ID" => ["required", "integer"],
             "VEICULO_ATIVO" => ["required", "integer", "in:0,1"],
-            "UNIDADE_ID" => ["nullable", "integer", "exists:UNIDADE,UNIDADE_ID"],
-            "VEICULO_UNIDADE_DT_INI" => ["nullable", "date"],
+            "UNIDADE_ID" => ["required", "integer", "exists:UNIDADE,UNIDADE_ID"],
+            "VEICULO_UNIDADE_DT_INI" => ["required", "date"],
         ];
     }
 
@@ -34,6 +34,8 @@ class VeiculoCreateRequest extends FormRequest
             "TG_TIPO_VEICULO_ID" => "<b>TIPO DE VEÍCULO</b>",
             "TG_SITUACAO_VEICULO_ID" => "<b>SITUAÇÃO DO VEÍCULO</b>",
             "VEICULO_ATIVO" => "<b>ATIVO</b>",
+            "UNIDADE_ID" => "<b>UNIDADE DE SAÚDE</b>",
+            "VEICULO_UNIDADE_DT_INI" => "<b>DATA INICIAL DO VÍNCULO</b>",
         ];
     }
 }

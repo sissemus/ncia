@@ -150,8 +150,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
     });
 
     Route::prefix('veiculo_unidade')->group(function () {
-        Route::get('/', [VeiculoUnidadeController::class, 'view']);
-        Route::get('view', [VeiculoUnidadeController::class, 'view']);
+        // Route::get('/', [VeiculoUnidadeController::class, 'view']);
+        // Route::get('view', [VeiculoUnidadeController::class, 'view']);
         Route::post('inserir', [VeiculoUnidadeController::class, 'inserir']);
         Route::put('alterar', [VeiculoUnidadeController::class, 'alterar']);
         Route::delete('deletar', [VeiculoUnidadeController::class, 'deletar']);
@@ -194,6 +194,13 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("view", [ChamadoController::class, "view"]);
         Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
         Route::post("abrir", [ChamadoController::class, "abrir"]);
+    });
+
+    Route::prefix("chamado_acompanhamento")->group(function () {
+        Route::get("/", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
+        Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
     });
     
     Route::prefix("equipe")->group(function () {
