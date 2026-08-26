@@ -218,6 +218,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [EquipeProfissionalController::class, "pesquisar"]);
         Route::get("buscar/{id}", [EquipeProfissionalController::class, "buscar"]);
         Route::get('search', [EquipeProfissionalController::class, 'search']);
+        Route::get('searchNUsado', [EquipeProfissionalController::class, 'searchNUsado']);
     });
     
 });

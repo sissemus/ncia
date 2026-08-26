@@ -87,6 +87,27 @@ export default {
                     response: e.response
                 })
             })
+        },
+        searchNUsado(context, msgId) {
+            let baseUrl = context.rootGetters['getBaseUrl']
+            let page = context.state.pagination.current_page
+            axios({
+                method: 'GET',
+                url: `${baseUrl}/equipeProfissional/searchNUsado`,
+                params: {
+                    page: page,
+                    ...context.state.equipeProfissionalPesquisa,
+                }
+            }).then(r => {
+                context.dispatch('setEquipeProfissionais', r.data['data']).then()
+                context.dispatch('setPagination', r.data).then()
+            }).catch(e => {
+                console.error('ERRO: ', e)
+                this.dispatch('TratarErroAjaxModule/tratarErro', {
+                    id: msgId,
+                    response: e.response
+                })
+            })
         }
     }
 }

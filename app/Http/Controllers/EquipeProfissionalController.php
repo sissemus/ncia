@@ -40,6 +40,12 @@ class EquipeProfissionalController extends Controller
         return response($equipeProfissionais);
     }
 
+    public function searchNUsado(Request $request)
+    {
+        $equipeProfissionais = EquipeProfissional::pesquisarNUsados($request);
+        return response($equipeProfissionais);
+    }
+
     public function buscar(Request $request)
     {
         $equipeProfissional = EquipeProfissional::findOrFail($request->id);

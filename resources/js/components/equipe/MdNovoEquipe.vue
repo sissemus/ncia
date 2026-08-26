@@ -320,16 +320,11 @@ export default {
 
     methods: {
         clearFormAndClose() {
-            this.$store.dispatch(
-                'TratarErroAjaxModule/fecharAlert',
-                this.msgId
-            );
 
-            this.equipe = null;
-            this.equipeMontada = [];
+            this.resetarFormulario();
+
             this.showModal = false;
         },
-
         salvar() {
             this.$store.dispatch(
                 'TratarErroAjaxModule/fecharAlert',
@@ -560,6 +555,23 @@ export default {
                     this.equipeMontada.splice(index, 1)
                 }
             }
+        },
+        resetarFormulario() {
+
+            this.equipeMontada = [];
+
+            this.VEICULO_ID = null;
+            this.EQUIPE_TURNO = null;
+            this.PROFISSIONAL_ID = null;
+
+            this.equipe = null;
+
+            this.fullScreen = false;
+
+            this.$store.dispatch(
+                'TratarErroAjaxModule/fecharAlert',
+                this.msgId
+            );
         },
     }
 }

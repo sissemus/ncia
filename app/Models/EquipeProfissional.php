@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\MyLibs\RTG;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class EquipeProfissional extends Model
 {
@@ -43,6 +45,32 @@ class EquipeProfissional extends Model
             })
             ->orderBy('PROFISSIONAL_ID')
             ->paginate();
+    }
+
+    public static function pesquisarNUsados($requisicao)
+    {
+        $hoje = Carbon::today();
+
+        return self::with([
+                'profissional',
+                'profissional.tipoProfissional'
+            ])
+            ->when($requisicao->EQUIPE_ID, function (Builder $query) use ($requisicao) {
+                return $query->where("EQUIPE_ID", "=", $requisicao->EQUIPE_ID);
+            })
+            ->when($requisicao->PROFISSIONAL_ID, function (Builder $query) use ($requisicao) {
+                return $query->where("PROFISSIONAL_ID", "=", $requisicao->PROFISSIONAL_ID);
+            })
+            ->whereNotExists(function($q) use ($hoje){
+                return $q->select(DB::raw(1))
+                ->from('EQUIPE_PROFISSIONAL as ep')
+                ->join('EQUIPE as e', 'e.EQUIPE_ID', '=', 'ep.EQUIPE_ID')
+                ->whereColumn('ep.PROFISSIONAL_ID', 'PROFISSIONAL.PROFISSIONAL_ID')
+                ->whereDate('e.EQUIPE_DATA', $hoje)
+                ->where('e.EQUIPE_ATIVO', 1);
+            })
+            ->orderBy('PROFISSIONAL_ID')
+            ->get();
     }
 
     public static function buscar($id)

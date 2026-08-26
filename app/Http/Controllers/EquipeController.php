@@ -43,7 +43,9 @@ class EquipeController extends Controller
 
                     $EQUIPE_ID = $equipe->EQUIPE_ID;
                 }
-                
+
+                // verificar se o profissional não está em outra equipe para esse mesmo dia
+
                 $equipeProfissional->EQUIPE_ID = $EQUIPE_ID;
 
                 $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
