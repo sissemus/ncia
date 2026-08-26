@@ -96,4 +96,60 @@ class Chamado extends Model
     {
         return $this->hasMany(ChamadoDiagnostico::class, "CHAMADO_ID", "CHAMADO_ID");
     }
+
+    public function situacaoAtual()
+    {
+        return $this->hasOne(ChamadoSituacao::class, "CHAMADO_ID", "CHAMADO_ID")
+            ->orderByDesc("CHAMADO_SITUACAO_DATA")
+            ->orderByDesc("CHAMADO_SITUACAO_ID");
+    }
+
+    public static function pesquisarAcompanhamento($requisicao, $unidadeIds)
+    {
+        $latestSituacaoSub = \Illuminate\Support\Facades\DB::table('CHAMADO_SITUACAO')
+            ->select('CHAMADO_ID', \Illuminate\Support\Facades\DB::raw('MAX(CHAMADO_SITUACAO_ID) as max_id'))
+            ->groupBy('CHAMADO_ID');
+
+        $query = self::with([
+            'paciente',
+            'unidadeSolicitante',
+            'unidadeDestino',
+            'situacaoAtual'
+        ])
+        ->joinSub($latestSituacaoSub, 'latest_sit', function ($join) {
+            $join->on('CHAMADO.CHAMADO_ID', '=', 'latest_sit.CHAMADO_ID');
+        })
+        ->join('CHAMADO_SITUACAO as cs', 'latest_sit.max_id', '=', 'cs.CHAMADO_SITUACAO_ID')
+        ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID');
+
+        $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+
+        if ($requisicao->PACIENTE_NOME) {
+            $query->whereHas('paciente', function ($q) use ($requisicao) {
+                $q->where('PACIENTE_NOME', 'like', '%' . $requisicao->PACIENTE_NOME . '%');
+            });
+        }
+
+        if ($requisicao->CHAMADO_ID) {
+            $query->where('CHAMADO.CHAMADO_ID', $requisicao->CHAMADO_ID);
+        }
+
+        if ($requisicao->TG_SITUACAO_ID) {
+            $query->where('cs.TG_SITUACAO_ID', $requisicao->TG_SITUACAO_ID);
+        }
+
+        if ($requisicao->CHAMADO_DATA) {
+            $query->whereDate('CHAMADO.CHAMADO_DATA', $requisicao->CHAMADO_DATA);
+        }
+
+        if ($requisicao->TG_PRIORIDADE_ID) {
+            $query->where('CHAMADO.TG_PRIORIDADE_ID', $requisicao->TG_PRIORIDADE_ID);
+        }
+
+        $query->orderBy('cs.TG_SITUACAO_ID')
+              ->orderBy('CHAMADO.TG_PRIORIDADE_ID')
+              ->orderByDesc('CHAMADO.CHAMADO_DATA');
+
+        return $query->paginate();
+    }
 }

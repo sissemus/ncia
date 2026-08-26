@@ -34,6 +34,7 @@ import MdNovoPacienteModule from "./modules/paciente/MdNovoPacienteModule";
 import EquipeViewModule from "./modules/equipe/EquipeViewModule";
 import MdNovoEquipeModule from "./modules/equipe/MdNovoEquipeModule";
 import ChamadoViewModule from "./modules/chamado/ChamadoViewModule";
+import ChamadoAcompanhamentoViewModule from "./modules/chamado_acompanhamento/ChamadoAcompanhamentoViewModule";
 import EquipeProfissionalViewModule from "./modules/equipeProfissional/EquipeProfissionalViewModule";
 import MdNovoEquipeProfissionalModule from "./modules/equipeProfissional/MdNovoEquipeProfissionalModule";
 
@@ -92,6 +93,7 @@ export default new Vuex.Store({
         MdNovoEquipeModule,
         EquipeViewModule,
         ChamadoViewModule,
+        ChamadoAcompanhamentoViewModule,
         MdNovoEquipeProfissionalModule,
         EquipeProfissionalViewModule,
     }

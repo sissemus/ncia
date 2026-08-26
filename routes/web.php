@@ -195,6 +195,13 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
         Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
+
+    Route::prefix("chamado_acompanhamento")->group(function () {
+        Route::get("/", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
+        Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
+    });
     
     Route::prefix("equipe")->group(function () {
         Route::get("/", [EquipeController::class, "view"]);

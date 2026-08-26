@@ -60,12 +60,15 @@ class Acesso extends Model
         }
         $aplicacoesPai = Aplicacao::with([])
             ->whereIn("APLICACAO_ID", $aplicacaoIdsArray)
-            ->where('APLICACAO_URL', '!=', 'veiculo_unidade')
             ->orderBy("APLICACAO_ORDEM")
             ->get();
         if ($aplicacoesPai) {
-            $aplicacoesPaiArray = $aplicacoesPai->toArray();
-            for ($i = 0; $i < count($aplicacoesPaiArray); $i++) {
+            $aplicacoesPaiFiltered = $aplicacoesPai->filter(function ($app) {
+                return $app->APLICACAO_URL !== 'veiculo_unidade';
+            });
+            $aplicacoesPaiArray = [];
+            foreach ($aplicacoesPaiFiltered as $appPai) {
+                $appPaiArray = $appPai->toArray();
                 $children = DB::select(
                     "SELECT ACS.APLICACAO_ID,
                     A.APLICACAO_PAI_ID
@@ -74,7 +77,7 @@ class Acesso extends Model
                     WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = ? AND UP.USUARIO_PERFIL_ATIVO = 1)
                     AND A.APLICACAO_PAI_ID = ?
                     GROUP BY ACS.APLICACAO_ID, A.APLICACAO_PAI_ID",
-                    [$usuarioId, $aplicacoesPaiArray[$i]['APLICACAO_ID']]
+                    [$usuarioId, $appPaiArray['APLICACAO_ID']]
                 );
                 $childrenArray = [];
                 if ($children) {
@@ -82,14 +85,18 @@ class Acesso extends Model
                         $childrenArray[] = $child->APLICACAO_ID;
                     }
                 }
-                $aplicacoesPaiArray[$i]['children'] = Aplicacao::with([])
+                $childrenApps = Aplicacao::with([])
                     ->whereIn("APLICACAO_ID", $childrenArray)
                     ->where("APLICACAO_ATIVA", 1)
-                    ->where('APLICACAO_URL', '!=', 'veiculo_unidade')
                     ->orderBy("APLICACAO_ORDEM")
-                    ->get()
-                    ->toArray();
-                $aplicacoesPaiArray[$i]['model'] = false;
+                    ->get();
+                
+                $appPaiArray['children'] = $childrenApps->filter(function ($app) {
+                    return $app->APLICACAO_URL !== 'veiculo_unidade';
+                })->values()->toArray();
+                
+                $appPaiArray['model'] = false;
+                $aplicacoesPaiArray[] = $appPaiArray;
             }
             return $aplicacoesPaiArray;
         }
