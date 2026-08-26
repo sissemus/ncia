@@ -60,6 +60,7 @@ class Acesso extends Model
         }
         $aplicacoesPai = Aplicacao::with([])
             ->whereIn("APLICACAO_ID", $aplicacaoIdsArray)
+            ->where('APLICACAO_URL', '!=', 'veiculo_unidade')
             ->orderBy("APLICACAO_ORDEM")
             ->get();
         if ($aplicacoesPai) {
@@ -84,6 +85,7 @@ class Acesso extends Model
                 $aplicacoesPaiArray[$i]['children'] = Aplicacao::with([])
                     ->whereIn("APLICACAO_ID", $childrenArray)
                     ->where("APLICACAO_ATIVA", 1)
+                    ->where('APLICACAO_URL', '!=', 'veiculo_unidade')
                     ->orderBy("APLICACAO_ORDEM")
                     ->get()
                     ->toArray();

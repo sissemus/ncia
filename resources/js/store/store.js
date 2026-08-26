@@ -27,8 +27,6 @@ import UnidadeViewModule from "./modules/unidade/UnidadeViewModule";
 import MdNovoUnidadeModule from "./modules/unidade/MdNovoUnidadeModule";
 import VeiculoViewModule from "./modules/veiculo/VeiculoViewModule";
 import MdNovoVeiculoModule from "./modules/veiculo/MdNovoVeiculoModule";
-import VeiculoUnidadeViewModule from "./modules/veiculo_unidade/VeiculoUnidadeViewModule";
-import MdNovoVeiculoUnidadeModule from "./modules/veiculo_unidade/MdNovoVeiculoUnidadeModule";
 import ProfissionalViewModule from "./modules/profissional/ProfissionalViewModule";
 import MdNovoProfissionalModule from "./modules/profissional/MdNovoProfissionalModule";
 import PacienteViewModule from "./modules/paciente/PacienteViewModule";
@@ -87,8 +85,6 @@ export default new Vuex.Store({
         MdNovoUnidadeModule,
         VeiculoViewModule,
         MdNovoVeiculoModule,
-        VeiculoUnidadeViewModule,
-        MdNovoVeiculoUnidadeModule,
         ProfissionalViewModule,
         MdNovoProfissionalModule,
         PacienteViewModule,
