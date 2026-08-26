@@ -216,6 +216,15 @@ export default {
             }
             
         );
+
+        this.$store.dispatch(
+            'EquipeProfissionalViewModule/searchNUsado',
+            {
+                msgId: this.msgId,
+                PROFISSIONAL_ATIVO: 1
+            }
+            
+        );
     },
 
     computed: {
