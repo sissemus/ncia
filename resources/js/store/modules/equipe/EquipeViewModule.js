@@ -13,7 +13,7 @@ export default {
             EQUIPE_ATIVO: null,
             EQUIPE_DATA: null,
             EQUIPE_TURNO: null,
-        }
+        },
     },
     getters: {
         getEquipePesquisa(state) {
@@ -24,7 +24,7 @@ export default {
         },
         getEquipes(state) {
             return state.equipes
-        },
+        }
     },
     mutations: {
         setEquipePesquisa(state, equipePesquisa = null) {
@@ -57,7 +57,7 @@ export default {
         },
         setEquipes(state, equipes) {
             state.equipes = JSON.parse(JSON.stringify(equipes))
-        },
+        }
     },
     actions: {
         setEquipePesquisa({ commit }, equipePesquisa) {
