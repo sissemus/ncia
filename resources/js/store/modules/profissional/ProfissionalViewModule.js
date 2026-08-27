@@ -88,6 +88,26 @@ export default {
                         response: e.response
                     })
                 })
+        },
+        searchNEquipe({ state, commit, rootGetters }, msgId) {
+            let profissionalPesquisa = JSON.parse(JSON.stringify(state.profissionalPesquisa))
+            profissionalPesquisa.page = state.pagination.current_page
+
+            if (profissionalPesquisa.PROFISSIONAL_CPF)
+                profissionalPesquisa.PROFISSIONAL_CPF = profissionalPesquisa.PROFISSIONAL_CPF.replace(/\D/g, '')
+
+            axios.post(`${rootGetters.getBaseUrl}/profissional/pesquisarNEquipe`, profissionalPesquisa)
+                .then(r => {
+                    commit('setProfissionais', r.data.retorno.data)
+                    commit('setPagination', r.data)
+                })
+                .catch(e => {
+                    console.error('ERRO: ', e)
+                    this.dispatch('TratarErroAjaxModule/tratarErro', {
+                        id: msgId,
+                        response: e.response
+                    })
+                })
         }
     }
 }

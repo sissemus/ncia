@@ -79,6 +79,17 @@
                             </v-col>
                         </v-row>
                         <v-row>
+                            <v-col cols="12">
+                                <v-select
+                                    label="Tipo de profissional*"
+                                    :items="tipoProfissionais"
+                                    item-value="COLUNA_ID"
+                                    item-text="DESCRICAO"
+                                    v-model="COLUNA_ID"
+                                ></v-select>
+                            </v-col>
+                        </v-row>
+                        <v-row>
                             <v-col cols="11">
                                 <v-select
                                     label="Profissional*"
@@ -167,7 +178,9 @@ export default {
     components: {
         TratarErroAjax
     },
-
+    props:{
+        tipoProfissionais: {type: Array, default: () => []},
+    },
     data() {
         return {
             msgId: 'msgMdNovoEquipe',
@@ -197,8 +210,10 @@ export default {
             VEICULO_ID: null,
             EQUIPE_TURNO: null,
             PROFISSIONAL_ID: null,
+            COLUNA_ID: null,
         }
     },
+    
     mounted() {
         this.$store.dispatch(
             'VeiculoViewModule/search',
@@ -217,21 +232,16 @@ export default {
             
         );
 
-        this.$store.dispatch(
-            'EquipeProfissionalViewModule/searchNUsado',
-            {
-                msgId: this.msgId,
-                PROFISSIONAL_ATIVO: 1
-            }
-            
-        );
+        this.$store.dispatch("DominioModule/setTipoProfissionais", {
+            TABELA_ID: 7, 
+            lista: this.tipoProfissionais
+        });
     },
 
     computed: {
         ...mapGetters({
             baseUrl: 'getBaseUrl'
         }),
-
         showModal: {
             get() {
                 return this.$store.getters[
@@ -289,7 +299,8 @@ export default {
             return this.$store.getters[
                 'ProfissionalViewModule/getProfissionais']
                 .filter(profissional => 
-                profissional.PROFISSIONAL_ATIVO == 1
+                profissional.PROFISSIONAL_ATIVO == 1 &&
+                profissional.COLUNA_ID == this.COLUNA_ID
             );
         },
 
@@ -324,7 +335,7 @@ export default {
                     text: `${item.PROFISSIONAL_NOME}${descricao}`
                 };
             });
-        }
+        },
     },
 
     methods: {

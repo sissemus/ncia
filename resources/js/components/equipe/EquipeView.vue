@@ -102,8 +102,7 @@ export default {
         }
     },
     mounted() {
-        // Carga inicial
-        // this.search();
+
     },
     computed: {
         ...mapGetters({

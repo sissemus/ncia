@@ -6,6 +6,7 @@ use App\Casts\Cpf;
 use App\MyLibs\RTG;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Profissional extends Model
 {
@@ -81,6 +82,49 @@ class Profissional extends Model
             })
             ->when($request->PROFISSIONAL_ATIVO !== null, function (Builder $query) use ($request) {
                 return $query->where("PROFISSIONAL_ATIVO", $request->PROFISSIONAL_ATIVO);
+            })
+            ->orderBy("PROFISSIONAL_NOME");
+    }
+
+    public static function listarNPesquisa($request)
+    {
+        return self::with(self::relacionamento())
+            ->when($request->PROFISSIONAL_NOME, function (Builder $query) use ($request) {
+                return $query->where(
+                    "PROFISSIONAL_NOME",
+                    "like",
+                    "%{$request->PROFISSIONAL_NOME}%"
+                );
+            })
+            ->when($request->PROFISSIONAL_CPF, function (Builder $query) use ($request) {
+                return $query->where(
+                    "PROFISSIONAL_CPF",
+                    "like",
+                    "%{$request->PROFISSIONAL_CPF}%"
+                );
+            })
+            ->when($request->TG_SEXO_ID, function (Builder $query) use ($request) {
+                return $query->where("TG_SEXO_ID", $request->TG_SEXO_ID);
+            })
+            ->when($request->TG_TIPO_PROFISSIONAL_ID, function (Builder $query) use ($request) {
+                return $query->where(
+                    "TG_TIPO_PROFISSIONAL_ID",
+                    $request->TG_TIPO_PROFISSIONAL_ID
+                );
+            })
+            ->when($request->PROFISSIONAL_ATIVO !== null, function (Builder $query) use ($request) {
+                return $query->where("PROFISSIONAL_ATIVO", $request->PROFISSIONAL_ATIVO);
+            })
+            ->where(function($q){
+                return $q->whereNotExists(function($sub){
+                    $sub->select(DB::raw(1))
+                    ->from('EQUIPE_PROFISSIONAL as ep')
+                    ->join('EQUIPE as e', 'ep.EQUIPE_ID', 'e.EQUIPE_ID')
+                    ->whereColumn(
+                        'ep.PROFISSIONAL_ID', 'PROFISSIONAL.PROFISSIONAL_ID'
+                    )
+                    ->whereDate('e.EQUIPA_DATA', today());
+                });
             })
             ->orderBy("PROFISSIONAL_NOME");
     }

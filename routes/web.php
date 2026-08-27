@@ -175,6 +175,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete("deletar", [ProfissionalController::class, "deletar"]);
         Route::get("listar", [ProfissionalController::class, "listar"]);
         Route::post("pesquisar", [ProfissionalController::class, "pesquisar"]);
+        Route::post("pesquisarNEquipe", [ProfissionalController::class, "pesquisarNEquipe"]);
         Route::get("buscar/{id}", [ProfissionalController::class, "buscar"]);
         });
 
