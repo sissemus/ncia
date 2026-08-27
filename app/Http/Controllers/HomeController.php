@@ -34,7 +34,10 @@ class HomeController extends Controller
 
         $query = Chamado::with(['paciente', 'unidadeSolicitante', 'unidadeDestino', 'procedimentos', 'situacaoAtual'])
             ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
-            ->where('cs.TG_SITUACAO_ID', SituacaoChamadoEnum::ABERTO)
+            ->whereIn('cs.TG_SITUACAO_ID', [
+                SituacaoChamadoEnum::ABERTO,
+                SituacaoChamadoEnum::EM_ANALISE,
+            ])
             ->whereNotExists(function ($sub) {
                 $sub->select(DB::raw(1))->from('CHAMADO_SITUACAO as cs2')
                     ->whereColumn('cs2.CHAMADO_ID', 'cs.CHAMADO_ID')

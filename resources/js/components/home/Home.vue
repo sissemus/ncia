@@ -75,9 +75,18 @@ export default {
                 .finally(() => { this.carregando = false })
         },
         recepcionar(id) {
+            const chamado = this.chamados.find(item => Number(item.CHAMADO_ID) === Number(id));
+
+            if (chamado && Number(chamado.TG_SITUACAO_ID) === 2) {
+                window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${id}`;
+                return;
+            }
+
             axios.post(`${this.baseUrl}/chamado_analisar/recepcionar`, { CHAMADO_ID: id })
-                .then(() => { window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${id}` })
-                .catch(e => this.erro(e))
+                .then(() => {
+                    window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${id}`;
+                })
+                .catch(e => this.erro(e));
         },
         descricao(lista, id) { const item = (lista || []).find(x => Number(x.COLUNA_ID) === Number(id)); return item ? item.DESCRICAO : '-' },
         corPrioridade(id) { const d = this.descricao(this.prioridades, id).toUpperCase(); return d.indexOf('VERMELHO') >= 0 ? 'red' : d.indexOf('LARANJA') >= 0 ? 'orange' : d.indexOf('AMARELO') >= 0 ? 'yellow darken-2' : 'green' },

@@ -6,6 +6,7 @@ use App\Models\Chamado;
 use App\Models\ChamadoEquipe;
 use App\Models\ChamadoSituacao;
 use App\Models\Equipe;
+use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Veiculo;
 use App\MyLibs\PerfilEnum;
@@ -144,7 +145,17 @@ class ChamadoAnalisarController extends Controller
 
     private function carregarChamado($id)
     {
-        return Chamado::with(['paciente', 'unidadeSolicitante', 'unidadeDestino', 'procedimentos', 'diagnosticos', 'situacoes.usuario', 'situacaoAtual'])->findOrFail($id);
+        $chamado = Chamado::with(['paciente', 'unidadeSolicitante', 'unidadeDestino', 'procedimentos', 'diagnosticos', 'situacoes.usuario', 'situacaoAtual'])->findOrFail($id);
+        $profissional = trim((string) $chamado->CHAMADO_PROFISSIONAL_SOLICITANTE);
+
+        if (ctype_digit($profissional)) {
+            $profissionalModel = Profissional::find((int) $profissional);
+            $profissional = $profissionalModel ? $profissionalModel->PROFISSIONAL_NOME : $profissional;
+        }
+
+        $chamado->setAttribute('profissionalSolicitanteNome', $profissional ?: '-');
+
+        return $chamado;
     }
 
     private function liberarRecursos($chamado)

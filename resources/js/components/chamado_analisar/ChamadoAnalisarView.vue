@@ -6,40 +6,71 @@
                     Chamado</v-toolbar-title><v-spacer></v-spacer><v-btn icon
                     @click="buscar"><v-icon>mdi-refresh</v-icon></v-btn></v-toolbar>
             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
-            <v-card-text v-if="chamado">
-                <v-alert prominent outlined :type="tipoSituacao">Chamado Nº {{ chamado.CHAMADO_ID }} — {{ situacaoAtual
-                    }}</v-alert>
+            <v-card-text v-if="chamado" class="analysis-content">
+                <v-alert prominent outlined :type="tipoSituacao" class="status-alert">
+                    <div class="status-content">
+                        <span>Chamado Nº {{ chamado.CHAMADO_ID }}</span>
+                        <v-chip small dark :color="corSituacao">{{ situacaoAtual }}</v-chip>
+                    </div>
+                </v-alert>
+
                 <v-row dense>
-                    <v-col cols="12" md="6"><v-text-field label="Paciente" readonly filled
-                            :value="valor(chamado.paciente, 'PACIENTE_NOME')"></v-text-field></v-col>
-                    <v-col cols="12" md="3"><v-text-field label="CPF" readonly filled
-                            :value="valor(chamado.paciente, 'PACIENTE_CPF')"></v-text-field></v-col>
-                    <v-col cols="12" md="3"><v-text-field label="Prioridade" readonly filled
-                            :value="descricao(prioridades, chamado.TG_PRIORIDADE_ID)"></v-text-field></v-col>
-                    <v-col cols="12" md="6"><v-text-field label="Origem" readonly filled
-                            :value="valor(chamado.unidadeSolicitante, 'UNIDADE_NOME')"></v-text-field></v-col>
-                    <v-col cols="12" md="6"><v-text-field label="Destino" readonly filled
-                            :value="valor(chamado.unidadeDestino, 'UNIDADE_NOME')"></v-text-field></v-col>
-                    <v-col cols="12" md="6"><v-text-field label="Profissional solicitante" readonly filled
-                            :value="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-'" /></v-col>
-                    <v-col cols="12" md="3"><v-text-field label="Setor origem" readonly filled
-                            :value="chamado.CHAMADO_SETOR_SOLICITANTE || '-'" /></v-col>
-                    <v-col cols="12" md="3"><v-text-field label="Leito origem" readonly filled
-                            :value="chamado.CHAMADO_LEITO_SOLICITANTE || '-'" /></v-col>
-                    <v-col cols="12" md="6"><v-text-field label="Procedimento" readonly filled
-                            :value="chamado.procedimentos && chamado.procedimentos.length ? chamado.procedimentos[0].PROCEDIMENTO_DESCRICAO : '-'" /></v-col>
-                    <v-col cols="12" md="6"><v-text-field label="Diagnóstico" readonly filled
-                            :value="chamado.diagnosticos && chamado.diagnosticos.length ? chamado.diagnosticos[0].DIAGNOSTICO_DESCRICAO : '-'" /></v-col>
-                    <v-col cols="12"><v-textarea label="Dispositivos / observações" readonly filled
-                            :value="[chamado.CHAMADO_DISPOSITIVOS, chamado.CHAMADO_OBSERVACAO].filter(Boolean).join(' — ') || '-'" /></v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Paciente" readonly filled
+                            :value="valor(chamado.paciente, 'PACIENTE_NOME')"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="3">
+                        <v-text-field label="CPF" readonly filled
+                            :value="valor(chamado.paciente, 'PACIENTE_CPF')"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="3">
+                        <v-text-field label="Prioridade" readonly filled
+                            :color="corPrioridade" :value="descricao(prioridades, chamado.TG_PRIORIDADE_ID)"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Origem" readonly filled color="green"
+                            :value="valor(chamado.unidadeSolicitante, 'UNIDADE_NOME')"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Destino" readonly filled color="deep-orange"
+                            :value="valor(chamado.unidadeDestino, 'UNIDADE_NOME')"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Profissional solicitante" readonly filled
+                            :value="chamado.profissionalSolicitanteNome || chamado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-'" />
+                    </v-col>
+                    <v-col cols="12" md="3">
+                        <v-text-field label="Setor origem" readonly filled
+                            :value="chamado.CHAMADO_SETOR_SOLICITANTE || '-'" />
+                    </v-col>
+                    <v-col cols="12" md="3">
+                        <v-text-field label="Leito origem" readonly filled
+                            :value="chamado.CHAMADO_LEITO_SOLICITANTE || '-'" />
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Procedimento" readonly filled
+                            :value="procedimentoNome" />
+                    </v-col>
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Diagnóstico" readonly filled
+                            :value="diagnosticoNome" />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-textarea label="Dispositivos" readonly filled
+                            rows="2" :value="chamado.CHAMADO_DISPOSITIVOS || '-'" />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-textarea label="Observações" readonly filled
+                            rows="2" :value="chamado.CHAMADO_OBSERVACAO || '-'" />
+                    </v-col>
                 </v-row>
                 <v-divider class="my-3"></v-divider>
-                <v-btn v-if="statusId === 2" color="primary" tile :disabled="!veiculos.length"
+                <v-btn v-if="statusId === 1 || statusId === 2" color="primary" tile :disabled="!veiculos.length"
                     @click="abrirEncaminhar">Encaminhar</v-btn>
                 <v-btn v-if="statusId === 2 || statusId === 3" color="error" dark tile class="ml-2"
                     @click="abrirCancelar">Cancelar</v-btn>
                 <v-btn v-if="statusId === 3" color="success" tile class="ml-2" @click="concluir">Concluir</v-btn>
-                <v-alert v-if="statusId === 2 && !veiculos.length" class="mt-3" type="warning" outlined>Não há
+                <v-alert v-if="(statusId === 1 || statusId === 2) && !veiculos.length" class="mt-3" type="warning" outlined>Não há
                     veículo/equipe disponível para encaminhamento.</v-alert>
             </v-card-text>
             <v-card-text v-else><v-alert type="info" outlined>Informe um chamado na URL ou selecione um chamado na
@@ -133,6 +164,39 @@ export default {
                     : 'info';
         },
 
+        corSituacao() {
+            return this.statusId === 5
+                ? 'red'
+                : this.statusId === 4
+                    ? 'green'
+                    : 'primary';
+        },
+
+        corPrioridade() {
+            const prioridade = this.descricao(
+                this.prioridades,
+                this.chamado && this.chamado.TG_PRIORIDADE_ID
+            ).toUpperCase();
+
+            if (prioridade.indexOf('VERMELHO') >= 0) return 'red';
+            if (prioridade.indexOf('LARANJA') >= 0) return 'orange';
+            if (prioridade.indexOf('AMARELO') >= 0) return 'amber darken-2';
+
+            return 'green';
+        },
+
+        procedimentoNome() {
+            return this.chamado && this.chamado.procedimentos && this.chamado.procedimentos.length
+                ? this.chamado.procedimentos[0].PROCEDIMENTO_DESCRICAO
+                : '-';
+        },
+
+        diagnosticoNome() {
+            return this.chamado && this.chamado.diagnosticos && this.chamado.diagnosticos.length
+                ? this.chamado.diagnosticos[0].DIAGNOSTICO_DESCRICAO
+                : '-';
+        },
+
         podeConfirmar() {
             return this.acao === 'encaminhar'
                 ? !!this.equipeSelecionada
@@ -156,7 +220,7 @@ export default {
                 .then(response => {
                     this.chamado = response.data;
 
-                    if (this.statusId === 2) {
+                    if (this.statusId === 1 || this.statusId === 2) {
                         this.carregarVeiculos();
                     }
                 })
@@ -266,6 +330,25 @@ export default {
     font-size: 14px;
     font-style: italic;
     font-weight: 700;
+}
+
+.analysis-content {
+    padding: 18px 16px 22px;
+}
+
+.status-alert {
+    margin-bottom: 18px;
+}
+
+.status-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.status-content span {
+    font-weight: 600;
 }
 
 .btn-confirmar.v-btn--disabled {
