@@ -82,7 +82,7 @@
                             <v-col cols="12">
                                 <v-select
                                     label="Tipo de profissional*"
-                                    :items="tipoProfissionais"
+                                    :items="tiposProfissional"
                                     item-value="COLUNA_ID"
                                     item-text="DESCRICAO"
                                     v-model="COLUNA_ID"
@@ -178,9 +178,6 @@ export default {
     components: {
         TratarErroAjax
     },
-    props:{
-        tipoProfissionais: {type: Array, default: () => []},
-    },
     data() {
         return {
             msgId: 'msgMdNovoEquipe',
@@ -210,7 +207,9 @@ export default {
             VEICULO_ID: null,
             EQUIPE_TURNO: null,
             PROFISSIONAL_ID: null,
+            TABELA_ID: 7,
             COLUNA_ID: null,
+            // tiposProfissional:[],
         }
     },
     
@@ -232,15 +231,12 @@ export default {
             
         );
 
-        this.$store.dispatch("DominioModule/setTipoProfissionais", {
-            TABELA_ID: 7, 
-            lista: this.tipoProfissionais
-        });
     },
 
     computed: {
         ...mapGetters({
-            baseUrl: 'getBaseUrl'
+            baseUrl: 'getBaseUrl',
+            tiposProfissional: 'getTipoProfissionais' // Vincula o getter ao nome usado no template
         }),
         showModal: {
             get() {
@@ -303,7 +299,14 @@ export default {
                 profissional.COLUNA_ID == this.COLUNA_ID
             );
         },
-
+        // tiposProfissional(){
+        //     return this.$store.getters[
+        //         'DominioModule/getTipoProfissionais']
+        //         .filter(tipoProfissional => 
+        //         tipoProfissional.TABELA_ID == 7 &&
+        //         tipoProfissional.ATIVO == 1
+        //     );
+        // },
         dataFormatada: {
             get() {
                 return this.formatarDataParaInput(

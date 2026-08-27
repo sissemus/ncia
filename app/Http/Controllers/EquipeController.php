@@ -7,6 +7,7 @@ use App\Http\Requests\Equipe\EquipeUpdateRequest;
 use App\Models\ChamadoEquipe;
 use App\Models\Equipe;
 use App\Models\EquipeProfissional;
+use App\Models\TabelaGenerica;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,9 @@ class EquipeController extends Controller
 {
     public function view()
     {
-        return view('equipe.equipe_view');
+        $tiposProfissional = TabelaGenerica::tipoProfissional();
+
+        return view('equipe.equipe_view', compact('tiposProfissional'));
     }
 
     public function inserir(Request $request)

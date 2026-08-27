@@ -1,5 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    <equipe-view></equipe-view>
+    <equipe-view :tipos-profissional='@json($tiposProfissional)'></equipe-view>
+    
 @endsection

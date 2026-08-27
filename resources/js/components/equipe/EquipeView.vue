@@ -95,6 +95,10 @@ import MdNovoEquipe from "./MdNovoEquipe";
 export default {
     name: "EquipeView",
     components: { MdNovoEquipe, TratarErroAjax },
+    props:{
+
+        tiposProfissional: {type: Array, default: () => []},
+    },
     data() {
         return {
             msgId: 'msgEquipeView',
@@ -102,7 +106,9 @@ export default {
         }
     },
     mounted() {
-
+        this.$store.dispatch('DominioModule/setTipoProfissionais', 
+            this.tiposProfissional
+        );
     },
     computed: {
         ...mapGetters({
