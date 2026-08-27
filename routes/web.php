@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AplicacaoController;
+use App\Http\Controllers\ChamadoAnalisarController;
 use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
@@ -38,6 +39,7 @@ Auth::routes();
 
 Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home/chamados-abertos', [App\Http\Controllers\HomeController::class, 'chamadosAbertos']);
 
     Route::prefix('perfil')->group(function () {
         Route::get('/', [PerfilController::class, "view"]);
@@ -201,6 +203,18 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
         Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
+    });
+
+    Route::prefix("chamado_analisar")->group(function () {
+        Route::get("/", [ChamadoAnalisarController::class, "view"]);
+        Route::get("view", [ChamadoAnalisarController::class, "view"]);
+        Route::get("search", [ChamadoAnalisarController::class, "search"]);
+        Route::get("buscar/{id}", [ChamadoAnalisarController::class, "buscar"]);
+        Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
+        Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
+        Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
+        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
+        Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
     });
     
     Route::prefix("equipe")->group(function () {

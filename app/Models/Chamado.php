@@ -104,25 +104,32 @@ class Chamado extends Model
             ->orderByDesc("CHAMADO_SITUACAO_ID");
     }
 
-    public static function pesquisarAcompanhamento($requisicao, $unidadeIds)
+    public static function pesquisarParaAnalise($requisicao, $unidadeIds = null)
     {
-        $latestSituacaoSub = \Illuminate\Support\Facades\DB::table('CHAMADO_SITUACAO')
-            ->select('CHAMADO_ID', \Illuminate\Support\Facades\DB::raw('MAX(CHAMADO_SITUACAO_ID) as max_id'))
-            ->groupBy('CHAMADO_ID');
-
         $query = self::with([
             'paciente',
             'unidadeSolicitante',
             'unidadeDestino',
             'situacaoAtual'
         ])
-        ->joinSub($latestSituacaoSub, 'latest_sit', function ($join) {
-            $join->on('CHAMADO.CHAMADO_ID', '=', 'latest_sit.CHAMADO_ID');
+        ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
+        ->whereNotExists(function ($subquery) {
+            $subquery->select(\Illuminate\Support\Facades\DB::raw(1))
+                ->from('CHAMADO_SITUACAO as cs2')
+                ->whereColumn('cs2.CHAMADO_ID', 'cs.CHAMADO_ID')
+                ->where(function ($query) {
+                    $query->whereColumn('cs2.CHAMADO_SITUACAO_DATA', '>', 'cs.CHAMADO_SITUACAO_DATA')
+                        ->orWhere(function ($query) {
+                            $query->whereColumn('cs2.CHAMADO_SITUACAO_DATA', '=', 'cs.CHAMADO_SITUACAO_DATA')
+                                ->whereColumn('cs2.CHAMADO_SITUACAO_ID', '>', 'cs.CHAMADO_SITUACAO_ID');
+                        });
+                });
         })
-        ->join('CHAMADO_SITUACAO as cs', 'latest_sit.max_id', '=', 'cs.CHAMADO_SITUACAO_ID')
         ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID');
 
-        $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+        if ($unidadeIds !== null) {
+            $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+        }
 
         if ($requisicao->PACIENTE_NOME) {
             $query->whereHas('paciente', function ($q) use ($requisicao) {
@@ -136,6 +143,8 @@ class Chamado extends Model
 
         if ($requisicao->TG_SITUACAO_ID) {
             $query->where('cs.TG_SITUACAO_ID', $requisicao->TG_SITUACAO_ID);
+        } elseif ($requisicao->analise) {
+            $query->whereIn('cs.TG_SITUACAO_ID', [1, 2, 3]);
         }
 
         if ($requisicao->CHAMADO_DATA) {
@@ -151,5 +160,10 @@ class Chamado extends Model
               ->orderByDesc('CHAMADO.CHAMADO_DATA');
 
         return $query->paginate();
+    }
+
+    public static function pesquisarAcompanhamento($requisicao, $unidadeIds)
+    {
+        return self::pesquisarParaAnalise($requisicao, $unidadeIds);
     }
 }
