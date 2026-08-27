@@ -85,7 +85,7 @@
                                     :items="tiposProfissional"
                                     item-value="COLUNA_ID"
                                     item-text="DESCRICAO"
-                                    v-model="COLUNA_ID"
+                                    v-model="TG_TIPO_PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
                         </v-row>
@@ -208,6 +208,7 @@ export default {
             EQUIPE_TURNO: null,
             PROFISSIONAL_ID: null,
             TABELA_ID: 7,
+            TG_TIPO_PROFISSIONAL_ID: null,
             COLUNA_ID: null,
             // tiposProfissional:[],
         }
@@ -296,7 +297,7 @@ export default {
                 'ProfissionalViewModule/getProfissionais']
                 .filter(profissional => 
                 profissional.PROFISSIONAL_ATIVO == 1 &&
-                profissional.COLUNA_ID == this.COLUNA_ID
+                profissional.TG_TIPO_PROFISSIONAL_ID == this.TG_TIPO_PROFISSIONAL_ID
             );
         },
         dataFormatada: {
