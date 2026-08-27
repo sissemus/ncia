@@ -236,7 +236,7 @@ export default {
     computed: {
         ...mapGetters({
             baseUrl: 'getBaseUrl',
-            tiposProfissional: 'getTipoProfissionais' // Vincula o getter ao nome usado no template
+            tiposProfissional: 'DominioModule/getTipoProfissionais'
         }),
         showModal: {
             get() {
@@ -299,14 +299,6 @@ export default {
                 profissional.COLUNA_ID == this.COLUNA_ID
             );
         },
-        // tiposProfissional(){
-        //     return this.$store.getters[
-        //         'DominioModule/getTipoProfissionais']
-        //         .filter(tipoProfissional => 
-        //         tipoProfissional.TABELA_ID == 7 &&
-        //         tipoProfissional.ATIVO == 1
-        //     );
-        // },
         dataFormatada: {
             get() {
                 return this.formatarDataParaInput(
