@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <home :prioridades='@json($prioridades)'></home>
+    <home
+        :usuario_logado='@json($usuarioLogado)'
+        :prioridades='@json($prioridades)'
+    ></home>
 @endsection

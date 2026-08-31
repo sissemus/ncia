@@ -97,7 +97,7 @@
                                 <span v-else>-</span>
                             </td>
 
-                            <td>{{ usuario.USUARIO_VIGENCIA ? formatarDataBR(usuario.USUARIO_VIGENCIA) : "Não expira" }}</td>
+                            <td>{{ usuario.USUARIO_VIGENCIA ? formatarData(usuario.USUARIO_VIGENCIA, 'DD/MM/YYYY') : "Não expira" }}</td>
 
                             <td>
                                 <v-chip x-small v-if="usuario.USUARIO_ATIVO === 1" color="green" dark>Sim</v-chip>

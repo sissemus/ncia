@@ -19,7 +19,7 @@ class HomeController extends Controller
 
     public function index()
     {
-        $usuarioLogado = Usuario::with('usuarioPerfis')->find(Auth::id());
+        $usuarioLogado = Usuario::with(['usuarioPerfis.perfil', 'usuarioUnidades.unidade'])->find(Auth::id());
         $prioridades = \App\Models\TabelaGenerica::prioridadePaciente();
 
         return view('home', compact('usuarioLogado', 'prioridades'));
@@ -27,10 +27,18 @@ class HomeController extends Controller
 
     public function chamadosAbertos(Request $request)
     {
-        $permitido = DB::table('USUARIO_PERFIL')->where('USUARIO_ID', Auth::id())
+        $perfisAtivos = DB::table('USUARIO_PERFIL')->where('USUARIO_ID', Auth::id())
             ->where('USUARIO_PERFIL_ATIVO', 1)
-            ->whereIn('PERFIL_ID', [PerfilEnum::DESENVOLVEDOR, PerfilEnum::ADMINISTRADOR, PerfilEnum::REGULADOR_CIA])->exists();
-        abort_unless($permitido, 403);
+            ->pluck('PERFIL_ID');
+
+        $podeVisualizarTodos = $perfisAtivos->intersect([
+            PerfilEnum::DESENVOLVEDOR,
+            PerfilEnum::ADMINISTRADOR,
+            PerfilEnum::REGULADOR_CIA,
+        ])->isNotEmpty();
+        $podeVisualizarPorUnidade = $perfisAtivos->contains(PerfilEnum::UNIDADE);
+
+        abort_unless($podeVisualizarTodos || $podeVisualizarPorUnidade, 403);
 
         $query = Chamado::with(['paciente', 'unidadeSolicitante', 'unidadeDestino', 'procedimentos', 'situacaoAtual'])
             ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
@@ -50,9 +58,18 @@ class HomeController extends Controller
                     });
             })
             ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID')
-            ->orderByDesc('CHAMADO.CHAMADO_DATA')
-            ->orderByRaw('(SELECT MIN(p.PROCEDIMENTO_DESCRICAO) FROM CHAMADO_PROCEDIMENTO cp JOIN PROCEDIMENTO p ON p.PROCEDIMENTO_ID = cp.PROCEDIMENTO_ID WHERE cp.CHAMADO_ID = CHAMADO.CHAMADO_ID)')
-            ->orderBy('CHAMADO.TG_PRIORIDADE_ID');
+            ->orderBy('CHAMADO.CHAMADO_DATA')
+            ->orderBy('CHAMADO.TG_PRIORIDADE_ID')
+            ->orderByRaw('(SELECT PACIENTE_NOME FROM PACIENTE WHERE PACIENTE.PACIENTE_ID = CHAMADO.PACIENTE_ID)')
+            ->orderBy('CHAMADO.CHAMADO_ID');
+
+        if (!$podeVisualizarTodos) {
+            $unidadeIds = DB::table('USUARIO_UNIDADE')
+                ->where('USUARIO_ID', Auth::id())
+                ->pluck('UNIDADE_ID');
+
+            $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+        }
 
         return response($query->paginate($request->get('per_page', 15)));
     }

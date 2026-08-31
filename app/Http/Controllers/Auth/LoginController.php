@@ -8,6 +8,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class LoginController extends Controller {
     /*
@@ -55,7 +56,7 @@ class LoginController extends Controller {
         ])->first();
 
         if($user) {
-            if($user->USUARIO_VIGENCIA >= date('Y-m-d') || $user->USUARIO_VIGENCIA == null){
+            if ($user->USUARIO_VIGENCIA === null || Carbon::parse($user->USUARIO_VIGENCIA)->greaterThanOrEqualTo(Carbon::now())) {
                 //$this->guard()->login($user, false);
                 Auth::login($user, false);
                 $user->USUARIO_ULTIMO_ACESSO = date("Y-m-d H:i:s");

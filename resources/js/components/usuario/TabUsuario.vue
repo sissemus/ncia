@@ -69,7 +69,7 @@
                         label="Vigência"
                         type="date"
                         autocomplete="off"
-                        v-model="usuario.USUARIO_VIGENCIA"
+                        v-model="vigenciaInput"
                     ></v-text-field>
                 </v-col>
                 <v-col cols="md-6">
@@ -143,6 +143,16 @@ export default {
                 this.$store.dispatch('MdNovoUsuarioModule/setUsuario', newValue)
             }
         },
+        vigenciaInput: {
+            get() {
+                return this.usuario && this.usuario.USUARIO_VIGENCIA
+                    ? this.formatarDataSQL(this.usuario.USUARIO_VIGENCIA)
+                    : '';
+            },
+            set(value) {
+                this.usuario.USUARIO_VIGENCIA = value || null;
+            }
+        },
     },
     methods: {
 
@@ -162,6 +172,7 @@ export default {
             this.confirmarSenha = null;
         },
         salvar() {
+            this.usuario.USUARIO_VIGENCIA = this.vigenciaInput || null;
             this.usuario.USUARIO_SENHA = this.senha;
             this.usuario.USUARIO_SENHA_CONFIRMATION = this.confirmarSenha;
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);

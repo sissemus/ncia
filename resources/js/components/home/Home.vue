@@ -19,7 +19,12 @@
                             <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
                             <td>{{ chamado.procedimentos && chamado.procedimentos.length ? chamado.procedimentos[0].PROCEDIMENTO_DESCRICAO : '-' }}</td>
                             <td><v-chip x-small dark :color="corPrioridade(chamado.TG_PRIORIDADE_ID)">{{ descricao(prioridades, chamado.TG_PRIORIDADE_ID) }}</v-chip></td>
-                            <td class="text-center"><v-btn icon color="primary" title="Analisar chamado" @click="recepcionar(chamado.CHAMADO_ID)"><v-icon>mdi-clipboard-search-outline</v-icon></v-btn></td>
+                            <td class="text-center" v-if="podeAnalisar">
+                                <v-btn icon color="primary" title="Analisar chamado" @click="recepcionar(chamado.CHAMADO_ID)">
+                                    <v-icon>mdi-clipboard-search-outline</v-icon>
+                                </v-btn>
+                            </td>
+                            <td v-else class="text-center">-</td>
                         </tr>
                     </tbody>
                 </v-simple-table>
@@ -61,6 +66,13 @@ export default {
         ...mapGetters({
             baseUrl: 'getBaseUrl',
         }),
+        podeAnalisar() {
+            const perfis = this.usuario_logado && this.usuario_logado.usuarioPerfis
+                ? this.usuario_logado.usuarioPerfis
+                : [];
+            const ids = perfis.map(item => Number(item.PERFIL_ID || (item.perfil && item.perfil.PERFIL_ID)));
+            return [1, 2, 3].some(id => ids.includes(id));
+        },
     },
     mounted() {
         this.$store.dispatch('AuthModule/setUsuario', this.usuario_logado)
