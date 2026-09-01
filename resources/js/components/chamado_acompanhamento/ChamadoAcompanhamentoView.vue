@@ -30,6 +30,7 @@
                             <v-col cols="12" md="3">
                                 <v-select label="Situação do Chamado" :items="situacoesChamado" item-value="COLUNA_ID"
                                     item-text="DESCRICAO" clearable hide-details outlined dense
+                                    :disabled="somenteEmAtendimento"
                                     v-model="chamadoPesquisa.TG_SITUACAO_ID"></v-select>
                             </v-col>
                             <v-col cols="12" md="2">
@@ -163,6 +164,14 @@
                                     <v-text-field label="Sexo" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(sexos, chamadoSelecionado.paciente ? chamadoSelecionado.paciente.TG_SEXO_ID : null)"></v-text-field>
                                 </v-col>
+                                <v-col cols="6" md="3">
+                                    <v-text-field label="Vulnerabilidade Social" readonly filled dense hide-details
+                                        :value="simNao(chamadoSelecionado.paciente ? chamadoSelecionado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL : null)"></v-text-field>
+                                </v-col>
+                                <v-col cols="6" md="3">
+                                    <v-text-field label="Paciente Temporário" readonly filled dense hide-details
+                                        :value="simNao(chamadoSelecionado.paciente ? chamadoSelecionado.paciente.PACIENTE_TEMPORARIO : null)"></v-text-field>
+                                </v-col>
                             </v-row>
                         </v-card-text>
                     </v-card>
@@ -201,7 +210,7 @@
                                         <div class="caption font-weight-bold green--text mb-1">ORIGEM</div>
                                         <div class="body-2 font-weight-bold">{{ chamadoSelecionado.unidade_solicitante ? chamadoSelecionado.unidade_solicitante.UNIDADE_NOME : '-' }}</div>
                                         <div class="caption grey--text">
-                                            Profissional: {{ chamadoSelecionado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-' }} | 
+                                            Profissional: {{ chamadoSelecionado.profissionalSolicitanteNome || chamadoSelecionado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-' }} |
                                             Setor: {{ chamadoSelecionado.CHAMADO_SETOR_SOLICITANTE || '-' }} | 
                                             Leito: {{ chamadoSelecionado.CHAMADO_LEITO_SOLICITANTE || '-' }}
                                         </div>
@@ -223,20 +232,24 @@
 
                             <v-row dense>
                                 <v-col cols="12" md="6">
-                                    <v-text-field label="Procedimento" readonly filled dense hide-details
-                                        :value="chamadoSelecionado.procedimentos && chamadoSelecionado.procedimentos.length ? chamadoSelecionado.procedimentos[0].PROCEDIMENTO_DESCRICAO : '-'"></v-text-field>
+                                    <v-textarea label="Procedimentos" readonly filled dense hide-details rows="2"
+                                        :value="procedimentosSelecionados"></v-textarea>
                                 </v-col>
                                 <v-col cols="12" md="6">
-                                    <v-text-field label="Diagnóstico" readonly filled dense hide-details
-                                        :value="chamadoSelecionado.diagnosticos && chamadoSelecionado.diagnosticos.length ? chamadoSelecionado.diagnosticos[0].DIAGNOSTICO_DESCRICAO : '-'"></v-text-field>
+                                    <v-textarea label="Diagnósticos" readonly filled dense hide-details rows="2"
+                                        :value="diagnosticosSelecionados"></v-textarea>
                                 </v-col>
-                                <v-col cols="12" md="9">
+                                <v-col cols="12" md="6">
                                     <v-text-field label="Dispositivos" readonly filled dense hide-details
                                         :value="chamadoSelecionado.CHAMADO_DISPOSITIVOS || '-'"></v-text-field>
                                 </v-col>
-                                <v-col cols="12" md="3">
+                                <v-col cols="6" md="3">
                                     <v-text-field label="Peso (kg)" readonly filled dense hide-details
                                         :value="chamadoSelecionado.CHAMADO_PESO ? chamadoSelecionado.CHAMADO_PESO + ' kg' : '-'"></v-text-field>
+                                </v-col>
+                                <v-col cols="6" md="3">
+                                    <v-text-field label="Ambulância Extra" readonly filled dense hide-details
+                                        :value="simNao(chamadoSelecionado.CHAMADO_AMBULANCIA_EXTRA)"></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -277,6 +290,30 @@
                                 <v-col cols="6" md="3">
                                     <v-text-field label="Saturação O2" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"></v-text-field>
+                                </v-col>
+                            </v-row>
+                        </v-card-text>
+                    </v-card>
+
+                    <!-- Veículo, Equipe e Profissionais -->
+                    <v-card outlined class="mb-4" v-if="equipeVinculada">
+                        <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
+                            <v-icon small left color="primary">mdi-ambulance</v-icon>
+                            Veículo e Equipe Vinculados
+                        </v-card-title>
+                        <v-card-text class="pt-3">
+                            <v-row dense>
+                                <v-col cols="12" md="4">
+                                    <v-text-field label="Veículo" readonly filled dense hide-details
+                                        :value="veiculoVinculado ? veiculoVinculado.VEICULO_IDENTIFICACAO : '-'"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" md="3">
+                                    <v-text-field label="Equipe" readonly filled dense hide-details
+                                        :value="descricaoEquipe(equipeVinculada)"></v-text-field>
+                                </v-col>
+                                <v-col cols="12" md="5">
+                                    <v-text-field label="Profissionais" readonly filled dense hide-details
+                                        :value="profissionaisVinculados"></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -325,8 +362,66 @@
 
                 <v-divider></v-divider>
                 <v-card-actions>
+                    <v-btn v-if="podeEncerrarSelecionado" color="success" tile
+                        :disabled="processandoEncerramento" @click="abrirEncerramento('concluir')">
+                        Concluir Atendimento
+                    </v-btn>
+                    <v-btn v-if="podeEncerrarSelecionado" color="error" dark tile
+                        :disabled="processandoEncerramento" @click="abrirEncerramento('cancelar')">
+                        Cancelar Atendimento
+                    </v-btn>
                     <v-spacer></v-spacer>
                     <v-btn color="primary" outlined tile @click="showDetailsModal = false">
+                        Fechar
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Dialog de Encerramento -->
+        <v-dialog v-model="showEncerramentoModal" persistent width="800" scrollable
+            :fullscreen="fullScreen">
+            <v-card v-if="showEncerramentoModal">
+                <v-toolbar color="primary" dark>
+                    <v-toolbar-title>
+                        {{ acaoEncerramento === 'concluir' ? 'Concluir Atendimento' : 'Cancelar Atendimento' }}
+                    </v-toolbar-title>
+                    <v-spacer></v-spacer>
+                    <v-btn icon v-if="!fullScreen" @click="fullScreen = true">
+                        <v-icon>mdi-window-maximize</v-icon>
+                    </v-btn>
+                    <v-btn icon v-else @click="fullScreen = false">
+                        <v-icon>mdi-window-restore</v-icon>
+                    </v-btn>
+                    <v-btn icon :disabled="processandoEncerramento" @click="fecharEncerramento">
+                        <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                </v-toolbar>
+
+                <tratar-erro-ajax :id="msgEncerramentoId"></tratar-erro-ajax>
+
+                <v-card-text class="pt-5">
+                    <v-alert v-if="acaoEncerramento === 'concluir'" type="warning" outlined>
+                        Confirma que o transporte, somente ida ou ida e volta, foi concluído sem intercorrência?
+                    </v-alert>
+                    <template v-else>
+                        <v-select label="Motivo*" :items="motivosCancelamento" item-text="DESCRICAO"
+                            item-value="COLUNA_ID" v-model="motivoCancelamento" outlined dense></v-select>
+                        <v-textarea label="Motivação*" v-model="motivacaoCancelamento"
+                            outlined rows="4"></v-textarea>
+                    </template>
+                </v-card-text>
+
+                <v-divider></v-divider>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="primary" dark tile :loading="processandoEncerramento"
+                        :disabled="!podeConfirmarEncerramento"
+                        @click="confirmarEncerramento">
+                        Confirmar
+                    </v-btn>
+                    <v-btn color="red" dark outlined tile :disabled="processandoEncerramento"
+                        @click="fecharEncerramento">
                         Fechar
                     </v-btn>
                 </v-card-actions>
@@ -357,19 +452,43 @@ export default {
         temperaturas: { type: Array, default: () => [] },
         frequenciasCardiacas: { type: Array, default: () => [] },
         pressoesArteriais: { type: Array, default: () => [] },
-        saturacoes: { type: Array, default: () => [] }
+        saturacoes: { type: Array, default: () => [] },
+        motivosCancelamento: { type: Array, default: () => [] },
+        podeEncerrar: { type: Boolean, default: false },
+        somenteEmAtendimento: { type: Boolean, default: false }
     },
 
     data() {
         return {
             msgId: "msgChamadoAcompanhamentoView",
             msgIdDebug: "msgChamadoAcompanhamentoViewDebug",
-            showDetailsModal: false
+            msgEncerramentoId: "msgChamadoAcompanhamentoEncerramento",
+            showDetailsModal: false,
+            showEncerramentoModal: false,
+            fullScreen: false,
+            acaoEncerramento: null,
+            motivoCancelamento: null,
+            motivacaoCancelamento: "",
+            processandoEncerramento: false
         };
     },
 
     mounted() {
-        this.pesquisar();
+        if (this.somenteEmAtendimento) {
+            this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+        }
+
+        const chamadoId = new URLSearchParams(window.location.search).get("chamado");
+
+        if (chamadoId) {
+            this.chamadoPesquisa.CHAMADO_ID = chamadoId;
+        }
+
+        this.pesquisar().then(() => {
+            if (chamadoId) {
+                this.verDetalhes(chamadoId);
+            }
+        });
     },
 
     computed: {
@@ -401,18 +520,108 @@ export default {
 
         chamadoSelecionado() {
             return this.$store.getters["ChamadoAcompanhamentoViewModule/getChamadoSelecionado"];
+        },
+
+        statusSelecionado() {
+            let situacao = this.chamadoSelecionado
+                ? this.chamadoSelecionado.situacao_atual || this.chamadoSelecionado.situacaoAtual
+                : null;
+
+            return situacao ? Number(situacao.TG_SITUACAO_ID) : null;
+        },
+
+        podeEncerrarSelecionado() {
+            return this.podeEncerrar && this.statusSelecionado === 3;
+        },
+
+        procedimentosSelecionados() {
+            let procedimentos = this.chamadoSelecionado && this.chamadoSelecionado.procedimentos
+                ? this.chamadoSelecionado.procedimentos
+                : [];
+
+            return procedimentos
+                .map(item => item.PROCEDIMENTO_DESCRICAO)
+                .filter(Boolean)
+                .join(", ") || "-";
+        },
+
+        diagnosticosSelecionados() {
+            let diagnosticos = this.chamadoSelecionado && this.chamadoSelecionado.diagnosticos
+                ? this.chamadoSelecionado.diagnosticos
+                : [];
+
+            return diagnosticos
+                .map(item => item.DIAGNOSTICO_DESCRICAO)
+                .filter(Boolean)
+                .join(", ") || "-";
+        },
+
+        vinculoEquipe() {
+            let vinculos = [];
+
+            if (this.chamadoSelecionado) {
+                vinculos = this.chamadoSelecionado.vinculos_equipe
+                    || this.chamadoSelecionado.vinculosEquipe
+                    || [];
+            }
+
+            return vinculos.find(item => Number(item.CHAMADO_EQUIPE_ATIVO) === 1)
+                || vinculos[0]
+                || null;
+        },
+
+        equipeVinculada() {
+            return this.vinculoEquipe ? this.vinculoEquipe.equipe : null;
+        },
+
+        veiculoVinculado() {
+            return this.equipeVinculada ? this.equipeVinculada.veiculo : null;
+        },
+
+        profissionaisVinculados() {
+            let profissionais = [];
+
+            if (this.equipeVinculada) {
+                profissionais = this.equipeVinculada.equipe_profissional
+                    || this.equipeVinculada.equipeProfissional
+                    || [];
+            }
+
+            return profissionais
+                .map(item => item.profissional ? item.profissional.PROFISSIONAL_NOME : null)
+                .filter(Boolean)
+                .join(", ") || "-";
+        },
+
+        podeConfirmarEncerramento() {
+            if (this.processandoEncerramento) {
+                return false;
+            }
+
+            if (this.acaoEncerramento === "concluir") {
+                return true;
+            }
+
+            return !!this.motivoCancelamento
+                && !!String(this.motivacaoCancelamento || "").trim();
         }
     },
 
     methods: {
         pesquisar() {
             this.pagination.current_page = 1;
-            this.$store.dispatch("ChamadoAcompanhamentoViewModule/search", this.msgId);
+            return this.$store.dispatch("ChamadoAcompanhamentoViewModule/search", this.msgId);
         },
 
         clear() {
-            this.$store.dispatch("ChamadoAcompanhamentoViewModule/setChamadoPesquisa", null);
-            this.pesquisar();
+            this.$store.dispatch("ChamadoAcompanhamentoViewModule/setChamadoPesquisa", null)
+                .then(() => {
+                    if (this.somenteEmAtendimento) {
+                        this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+                    }
+
+                    this.pesquisar();
+                });
         },
 
         onPageChange() {
@@ -424,6 +633,89 @@ export default {
                 .then(() => {
                     this.showDetailsModal = true;
                 });
+        },
+
+        abrirEncerramento(acao) {
+            this.acaoEncerramento = acao;
+            this.motivoCancelamento = null;
+            this.motivacaoCancelamento = "";
+            this.fullScreen = false;
+            this.showEncerramentoModal = true;
+        },
+
+        fecharEncerramento() {
+            if (this.processandoEncerramento) {
+                return;
+            }
+
+            this.showEncerramentoModal = false;
+            this.fullScreen = false;
+        },
+
+        confirmarEncerramento() {
+            if (!this.podeConfirmarEncerramento || this.processandoEncerramento) {
+                return;
+            }
+
+            this.processandoEncerramento = true;
+            let acao = this.acaoEncerramento;
+
+            let dados = {
+                CHAMADO_ID: this.chamadoSelecionado.CHAMADO_ID
+            };
+
+            if (this.acaoEncerramento === "cancelar") {
+                dados.MOTIVO_CANCELAMENTO_ID = this.motivoCancelamento;
+                dados.CHAMADO_SITUACAO_OBSERVACAO = this.motivacaoCancelamento;
+            }
+
+            axios.post(
+                `${this.baseUrl}/chamado_acompanhamento/${acao}`,
+                dados
+            ).then(response => {
+                return this.$store.dispatch(
+                    "ChamadoAcompanhamentoViewModule/setChamadoSelecionado",
+                    response.data.retorno
+                ).then(() => {
+                    this.showEncerramentoModal = false;
+                    this.fullScreen = false;
+
+                    return this.$store.dispatch("ChamadoAcompanhamentoViewModule/search", this.msgId);
+                }).then(() => {
+                    Swal.fire(
+                        "Sucesso",
+                        acao === "concluir"
+                            ? "Atendimento concluído com sucesso."
+                            : "Atendimento cancelado com sucesso.",
+                        "success"
+                    );
+                });
+            }).catch(this.erro).finally(() => {
+                this.processandoEncerramento = false;
+            });
+        },
+
+        descricaoEquipe(equipe) {
+            if (!equipe) {
+                return "-";
+            }
+
+            return `Equipe Nº ${equipe.EQUIPE_ID}${equipe.EQUIPE_TURNO ? ` - ${equipe.EQUIPE_TURNO}` : ""}`;
+        },
+
+        simNao(valor) {
+            if (valor === null || valor === undefined) {
+                return "-";
+            }
+
+            return Number(valor) === 1 ? "Sim" : "Não";
+        },
+
+        erro(error) {
+            this.$store.dispatch("TratarErroAjaxModule/tratarErro", {
+                id: this.msgEncerramentoId,
+                response: error && error.response
+            }, { root: true });
         },
 
         getSituacaoColor(situacaoId) {

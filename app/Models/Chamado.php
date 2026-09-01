@@ -104,6 +104,12 @@ class Chamado extends Model
             ->orderByDesc("CHAMADO_SITUACAO_ID");
     }
 
+    public function vinculosEquipe()
+    {
+        return $this->hasMany(ChamadoEquipe::class, "CHAMADO_ID", "CHAMADO_ID")
+            ->orderByDesc("CHAMADO_EQUIPE_ID");
+    }
+
     public static function pesquisarParaAnalise($requisicao, $unidadeIds = null)
     {
         $query = self::with([
@@ -162,7 +168,7 @@ class Chamado extends Model
         return $query->paginate();
     }
 
-    public static function pesquisarAcompanhamento($requisicao, $unidadeIds)
+    public static function pesquisarAcompanhamento($requisicao, $unidadeIds = null)
     {
         return self::pesquisarParaAnalise($requisicao, $unidadeIds);
     }

@@ -9,6 +9,7 @@ use App\MyLibs\SituacaoChamadoEnum;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class HomeController extends Controller
 {
@@ -27,6 +28,7 @@ class HomeController extends Controller
 
     public function chamadosAbertos(Request $request)
     {
+        $hoje = Carbon::now('America/Sao_Paulo')->toDateString();
         $perfisAtivos = DB::table('USUARIO_PERFIL')->where('USUARIO_ID', Auth::id())
             ->where('USUARIO_PERFIL_ATIVO', 1)
             ->pluck('PERFIL_ID');
@@ -42,10 +44,8 @@ class HomeController extends Controller
 
         $query = Chamado::with(['paciente', 'unidadeSolicitante', 'unidadeDestino', 'procedimentos', 'situacaoAtual'])
             ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
-            ->whereIn('cs.TG_SITUACAO_ID', [
-                SituacaoChamadoEnum::ABERTO,
-                SituacaoChamadoEnum::EM_ANALISE,
-            ])
+            ->where('cs.TG_SITUACAO_ID', SituacaoChamadoEnum::ABERTO)
+            ->whereDate('CHAMADO.CHAMADO_DATA', $hoje)
             ->whereNotExists(function ($sub) {
                 $sub->select(DB::raw(1))->from('CHAMADO_SITUACAO as cs2')
                     ->whereColumn('cs2.CHAMADO_ID', 'cs.CHAMADO_ID')

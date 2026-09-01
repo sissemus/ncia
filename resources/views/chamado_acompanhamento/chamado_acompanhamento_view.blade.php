@@ -13,5 +13,8 @@
         :frequencias-cardiacas='@json($frequenciasCardiacas)'
         :pressoes-arteriais='@json($pressoesArteriais)'
         :saturacoes='@json($saturacoes)'
+        :motivos-cancelamento='@json($motivosCancelamento)'
+        :pode-encerrar='@json($podeEncerrar)'
+        :somente-em-atendimento='@json($somenteEmAtendimento)'
     ></chamado-acompanhamento-view>
 @endsection
