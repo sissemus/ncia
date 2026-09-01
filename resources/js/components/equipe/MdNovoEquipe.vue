@@ -210,7 +210,6 @@ export default {
             TABELA_ID: 7,
             TG_TIPO_PROFISSIONAL_ID: null,
             COLUNA_ID: null,
-            // tiposProfissional:[],
         }
     },
     
@@ -223,21 +222,13 @@ export default {
             }
         );
 
-        this.$store.dispatch(
-            'ProfissionalViewModule/search',
-            {
-                msgId: this.msgId,
-                PROFISSIONAL_ATIVO: 1
-            }
-            
-        );
-
     },
 
     computed: {
         ...mapGetters({
             baseUrl: 'getBaseUrl',
-            tiposProfissional: 'DominioModule/getTipoProfissionais'
+            tiposProfissional: 'DominioModule/getTipoProfissionais',
+            profissionais: 'ProfissionalViewModule/getProfissionais',
         }),
         showModal: {
             get() {
@@ -540,6 +531,7 @@ export default {
                     EQUIPE_DATA: null, //pegar a data do servidor
                     EQUIPE_TURNO: this.EQUIPE_TURNO,
                     EQUIPE_ATIVO: 1,
+                    TG_TIPO_PROFISSIONAL_ID: this.TG_TIPO_PROFISSIONAL_ID,
                     PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
                     PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
                     PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão

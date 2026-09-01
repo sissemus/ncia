@@ -7,6 +7,7 @@ use App\Http\Requests\Equipe\EquipeUpdateRequest;
 use App\Models\ChamadoEquipe;
 use App\Models\Equipe;
 use App\Models\EquipeProfissional;
+use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,17 +19,19 @@ class EquipeController extends Controller
     public function view()
     {
         $tiposProfissional = TabelaGenerica::tipoProfissional();
+        
+        $profissionais = Profissional::listarNPesquisa();
 
-        return view('equipe.equipe_view', compact('tiposProfissional'));
+        return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais'));
     }
 
-    public function inserir(Request $request)
+    public function inserir(EquipeCreateRequest $request)
     {
+
         $equipes = [];
-        $retorno = [];
 
         $EQUIPE_ID = null;
-
+        
         DB::beginTransaction();
 
         try{
@@ -64,13 +67,10 @@ class EquipeController extends Controller
 
             DB::rollBack();
 
-            $retorno[]=[
+            return response()->json([
                 'erro' => 1,
                 'mensagem' => 'Erro ao inserir/atualizar Equipe!'
-
-            ];
-
-            return $retorno;
+            ], 500);
 
         }       
         
@@ -104,6 +104,7 @@ class EquipeController extends Controller
     public function alterar(Request $request)
     {
     
+    dd("alterando");
         $equipe = Equipe::findOrFail($request->EQUIPE_ID);
 
         $equipe->fill($request->post());

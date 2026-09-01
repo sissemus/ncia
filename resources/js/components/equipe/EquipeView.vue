@@ -96,8 +96,8 @@ export default {
     name: "EquipeView",
     components: { MdNovoEquipe, TratarErroAjax },
     props:{
-
         tiposProfissional: {type: Array, default: () => []},
+        profissionais: {type: Array, default: () => []}
     },
     data() {
         return {
@@ -109,6 +109,10 @@ export default {
         this.$store.dispatch('DominioModule/setTipoProfissionais', 
             this.tiposProfissional
         );
+
+        this.$store.dispatch('ProfissionalViewModule/setProfissionais',
+            this.profissionais
+        )
     },
     computed: {
         ...mapGetters({

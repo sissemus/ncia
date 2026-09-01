@@ -86,34 +86,41 @@ class Profissional extends Model
             ->orderBy("PROFISSIONAL_NOME");
     }
 
-    public static function listarNPesquisa($request)
+    public static function listarNPesquisa($request = null)
     {
+        $profissional_id = isset($request['PROFISSIONAL_ID']) ? $request['PROFISSIONAL_ID'] : null;
+        $profissional_nome = isset($request['PROFISSIONAL_NOME']) ? $request['PROFISSIONAL_NOME'] : null;
+        $profissional_cpf = isset($request['PROFISSIONAL_CPF']) ? $request['PROFISSIONAL_CPF'] : null;
+        $tg_sexo_id = isset($request['TG_SEXO_ID']) ? $request['TG_SEXO_ID'] : null;
+        $tg_tipo_profissional_id = isset($request['TG_TIPO_PROFISSIONAL_ID']) ? $request['TG_TIPO_PROFISSIONAL_ID'] : null;
+        $profissional_ativo = isset($request['PROFISSIONAL_ATIVO']) ? $request['PROFISSIONAL_ATIVO'] : 1;
+
         return self::with(self::relacionamento())
-            ->when($request->PROFISSIONAL_NOME, function (Builder $query) use ($request) {
+            ->when($profissional_nome, function (Builder $query) use ($profissional_nome) {
                 return $query->where(
                     "PROFISSIONAL_NOME",
                     "like",
-                    "%{$request->PROFISSIONAL_NOME}%"
+                    "%{$profissional_nome}%"
                 );
             })
-            ->when($request->PROFISSIONAL_CPF, function (Builder $query) use ($request) {
+            ->when($profissional_cpf, function (Builder $query) use ($profissional_cpf) {
                 return $query->where(
                     "PROFISSIONAL_CPF",
                     "like",
-                    "%{$request->PROFISSIONAL_CPF}%"
+                    "%{$profissional_cpf}%"
                 );
             })
-            ->when($request->TG_SEXO_ID, function (Builder $query) use ($request) {
-                return $query->where("TG_SEXO_ID", $request->TG_SEXO_ID);
+            ->when($tg_sexo_id, function (Builder $query) use ($tg_sexo_id) {
+                return $query->where("TG_SEXO_ID", $tg_sexo_id);
             })
-            ->when($request->TG_TIPO_PROFISSIONAL_ID, function (Builder $query) use ($request) {
+            ->when($tg_tipo_profissional_id, function (Builder $query) use ($tg_tipo_profissional_id) {
                 return $query->where(
                     "TG_TIPO_PROFISSIONAL_ID",
-                    $request->TG_TIPO_PROFISSIONAL_ID
+                    $tg_tipo_profissional_id
                 );
             })
-            ->when($request->PROFISSIONAL_ATIVO !== null, function (Builder $query) use ($request) {
-                return $query->where("PROFISSIONAL_ATIVO", $request->PROFISSIONAL_ATIVO);
+            ->when($profissional_ativo, function (Builder $query) use ($profissional_ativo) {
+                return $query->where("PROFISSIONAL_ATIVO", $profissional_ativo);
             })
             ->where(function($q){
                 return $q->whereNotExists(function($sub){
@@ -123,10 +130,11 @@ class Profissional extends Model
                     ->whereColumn(
                         'ep.PROFISSIONAL_ID', 'PROFISSIONAL.PROFISSIONAL_ID'
                     )
-                    ->whereDate('e.EQUIPA_DATA', today());
+                    ->whereDate('e.EQUIPE_DATA', today());
                 });
             })
-            ->orderBy("PROFISSIONAL_NOME");
+            ->orderBy("PROFISSIONAL_NOME")
+            ->get();
     }
 
     public static function buscar($id)
