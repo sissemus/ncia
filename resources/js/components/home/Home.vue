@@ -11,7 +11,7 @@
             <v-card-text>
                 <v-alert v-if="!carregando && !chamados.length" type="info" outlined>Nenhum chamado aberto.</v-alert>
                 <v-simple-table v-else dense>
-                    <thead><tr><th>Nº Chamado</th><th>Paciente</th><th>Data/Hora</th><th>Procedimento</th><th>Prioridade</th><th>Ação</th></tr></thead>
+                    <thead><tr><th>Nº Chamado</th><th>Paciente</th><th>Data/Hora</th><th>Procedimento</th><th>Prioridade</th><th v-if="podeAnalisar">Ação</th></tr></thead>
                     <tbody>
                         <tr v-for="chamado in chamados" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
@@ -24,7 +24,6 @@
                                     <v-icon>mdi-clipboard-search-outline</v-icon>
                                 </v-btn>
                             </td>
-                            <td v-else class="text-center">-</td>
                         </tr>
                     </tbody>
                 </v-simple-table>
@@ -87,13 +86,6 @@ export default {
                 .finally(() => { this.carregando = false })
         },
         recepcionar(id) {
-            const chamado = this.chamados.find(item => Number(item.CHAMADO_ID) === Number(id));
-
-            if (chamado && Number(chamado.TG_SITUACAO_ID) === 2) {
-                window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${id}`;
-                return;
-            }
-
             axios.post(`${this.baseUrl}/chamado_analisar/recepcionar`, { CHAMADO_ID: id })
                 .then(() => {
                     window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${id}`;

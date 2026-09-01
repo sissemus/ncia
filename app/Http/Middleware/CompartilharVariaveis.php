@@ -29,22 +29,47 @@ class CompartilharVariaveis {
         }
         unset($aplicacao);
         $aplicacoes = array_values($aplicacoes);
-        $permitido = DB::table('USUARIO_PERFIL')->where('USUARIO_ID', $usuarioId)
+        $perfis = DB::table('USUARIO_PERFIL')->where('USUARIO_ID', $usuarioId)
             ->where('USUARIO_PERFIL_ATIVO', 1)
-            ->whereIn('PERFIL_ID', [PerfilEnum::DESENVOLVEDOR, PerfilEnum::ADMINISTRADOR, PerfilEnum::REGULADOR_CIA])
-            ->exists();
-
-        if (!$permitido) return $aplicacoes;
+            ->pluck('PERFIL_ID');
+        $podeAnalisar = $perfis->intersect([
+            PerfilEnum::DESENVOLVEDOR,
+            PerfilEnum::ADMINISTRADOR,
+            PerfilEnum::REGULADOR_CIA,
+        ])->isNotEmpty();
+        $podeAcompanhar = $perfis->intersect([
+            PerfilEnum::DESENVOLVEDOR,
+            PerfilEnum::ADMINISTRADOR,
+            PerfilEnum::REGULADOR_CIA,
+            PerfilEnum::UNIDADE,
+            PerfilEnum::EQUIPE_ASSISTENCIAL,
+        ])->isNotEmpty();
 
         foreach ($aplicacoes as &$aplicacao) {
             if ($aplicacao['APLICACAO_URL'] === 'chamado') {
-                $jaExiste = collect($aplicacao['children'])->contains('APLICACAO_URL', 'chamado_analisar');
-                if (!$jaExiste) {
+                $aplicacao['children'] = array_values(array_filter(
+                    $aplicacao['children'],
+                    function ($child) use ($podeAnalisar, $podeAcompanhar) {
+                        if ($child['APLICACAO_URL'] === 'chamado_analisar') return $podeAnalisar;
+                        if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') return $podeAcompanhar;
+                        return true;
+                    }
+                ));
+                $children = collect($aplicacao['children']);
+                if ($podeAnalisar && !$children->contains('APLICACAO_URL', 'chamado_analisar')) {
                     $aplicacao['children'][] = [
                         'APLICACAO_ID' => -1,
                         'APLICACAO_NOME' => 'Analisar Chamados',
                         'APLICACAO_URL' => 'chamado_analisar',
                         'APLICACAO_ICONE' => 'mdi-clipboard-check-outline',
+                    ];
+                }
+                if ($podeAcompanhar && !$children->contains('APLICACAO_URL', 'chamado_acompanhamento')) {
+                    $aplicacao['children'][] = [
+                        'APLICACAO_ID' => -2,
+                        'APLICACAO_NOME' => 'Acompanhamento de Chamados',
+                        'APLICACAO_URL' => 'chamado_acompanhamento',
+                        'APLICACAO_ICONE' => 'mdi-clipboard-list-outline',
                     ];
                 }
             }

@@ -6,7 +6,7 @@
                 <v-toolbar-title class="font-weight-bold">Abertura de Chamado</v-toolbar-title>
                 <v-spacer></v-spacer>
 
-                <!-- <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
+                <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
                     <v-icon left small>mdi-test-tube</v-icon> Teste CPF
                 </v-btn>
 
@@ -16,7 +16,7 @@
 
                 <v-btn color="red" outlined small @click="limpar">
                     <v-icon left small>mdi-broom</v-icon> Limpar
-                </v-btn> -->
+                </v-btn>
             </v-toolbar>
 
             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
