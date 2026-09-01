@@ -6,7 +6,7 @@
                 <v-toolbar-title class="font-weight-bold">Abertura de Chamado</v-toolbar-title>
                 <v-spacer></v-spacer>
 
-                <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
+                <!-- <v-btn color="blue-grey darken-1" outlined small class="mr-2" @click="preencherTesteComCpf">
                     <v-icon left small>mdi-test-tube</v-icon> Teste CPF
                 </v-btn>
 
@@ -16,7 +16,7 @@
 
                 <v-btn color="red" outlined small @click="limpar">
                     <v-icon left small>mdi-broom</v-icon> Limpar
-                </v-btn>
+                </v-btn> -->
             </v-toolbar>
 
             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
@@ -116,7 +116,7 @@
                 </v-card>
 
                 <!-- ================= SEÇÃO 2: DADOS DO CHAMADO ================= -->
-                <v-card outlined :disabled="!pacienteDisponivel" class="mb-2">
+                <v-card outlined :disabled="!formularioChamadoDisponivel" class="mb-2">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
                         <v-icon small left color="primary">mdi-file-document-edit</v-icon>
                         2. Dados do Atendimento e Regulação
@@ -305,7 +305,7 @@
                     <v-card-actions class="pa-3 bg-light">
                         <v-spacer></v-spacer>
                         <v-btn color="grey lighten-1" text tile @click="limpar" class="mr-2">
-                            Cancelar / Limpar
+                            Cancelar
                         </v-btn>
                         <v-btn color="primary" tile min-width="150" :loading="salvando" @click="salvar">
                             <v-icon left>mdi-check</v-icon> Abrir Chamado
@@ -421,6 +421,10 @@ export default {
         pacienteDisponivel() {
             if (this.pacienteVulnerabilidadeSocial) return !!this.pacienteTemporario.TG_SEXO_ID;
             return !!this.paciente;
+        },
+
+        formularioChamadoDisponivel() {
+            return this.pacienteVulnerabilidadeSocial || !!this.paciente;
         }
     },
 
