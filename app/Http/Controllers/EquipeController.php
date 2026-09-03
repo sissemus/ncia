@@ -11,6 +11,7 @@ use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Util\Exception;
 
@@ -19,10 +20,10 @@ class EquipeController extends Controller
     public function view()
     {
         $tiposProfissional = TabelaGenerica::tipoProfissional();
-        
+        $tiposVeiculo = TabelaGenerica::tipoVeiculo();
         $profissionais = Profissional::listarNPesquisa();
 
-        return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais'));
+        return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais', 'tiposVeiculo'));
     }
 
     public function inserir(EquipeCreateRequest $request)
@@ -45,6 +46,7 @@ class EquipeController extends Controller
                     $equipe = new Equipe($dados);
                     $equipe->EQUIPE_ATIVO = 1;
                     $equipe->EQUIPE_DATA = now()->format('Y-m-d');
+                    $equipe->USUARIO_ID_CAD = Auth::id();
                     $equipe->save();
 
                     $EQUIPE_ID = $equipe->EQUIPE_ID;
@@ -55,6 +57,8 @@ class EquipeController extends Controller
                 $equipeProfissional->EQUIPE_ID = $EQUIPE_ID;
 
                 $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
+
+                $equipeProfissional->USUARIO_ID_CAD = Auth::id();
                 
                 $equipeProfissional->save();
                 

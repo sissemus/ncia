@@ -5,6 +5,7 @@ export default {
         hierarquias: [],
         sexos: [],
         tipoProfissionais: [],
+        tipoVeiculos: [],
     },
     getters: {
         getAplicacoes(state) {
@@ -18,6 +19,9 @@ export default {
         },
         getTipoProfissionais(state) {
             return state.tipoProfissionais
+        },
+        getTipoVeiculos(state) {
+            return state.tipoVeiculos
         },
     },
     mutations: {
@@ -33,6 +37,9 @@ export default {
         setTipoProfissionais(state, tipoProfissionais) {
             state.tipoProfissionais = JSON.parse(JSON.stringify(tipoProfissionais))
         },
+        setTipoVeiculos(state, tipoVeiculos) {
+            state.tipoVeiculos = JSON.parse(JSON.stringify(tipoVeiculos))
+        },
     },
     actions: {
         setAplicacoes({commit}, aplicacoes) {
@@ -46,6 +53,9 @@ export default {
         },
         setTipoProfissionais({commit}, tipoProfissionais) {
             commit('setTipoProfissionais', tipoProfissionais)
+        },
+        setTipoVeiculos({commit}, tipoVeiculos) {
+            commit('setTipoVeiculos', tipoVeiculos)
         },
     }
 }

@@ -97,7 +97,8 @@ export default {
     components: { MdNovoEquipe, TratarErroAjax },
     props:{
         tiposProfissional: {type: Array, default: () => []},
-        profissionais: {type: Array, default: () => []}
+        profissionais: {type: Array, default: () => []},
+        tiposVeiculo: {type: Array, default: () => []},
     },
     data() {
         return {

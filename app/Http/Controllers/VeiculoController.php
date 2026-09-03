@@ -29,6 +29,7 @@ class VeiculoController extends Controller
             VeiculoUnidade::create([
                 'VEICULO_ID' => $veiculo->VEICULO_ID,
                 'UNIDADE_ID' => $request->UNIDADE_ID,
+                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
                 'VEICULO_UNIDADE_DT_INI' => $dtIni,
                 'VEICULO_UNIDADE_DT_FIM' => null
             ]);
@@ -65,6 +66,8 @@ class VeiculoController extends Controller
     {
         $veiculo = Veiculo::findOrFail($request->VEICULO_ID);
         $veiculo->fill($request->validated());
+        $veiculo->VEICULO_IDENTIFICACAO = mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8');
+        
         $veiculo->save();
 
         // Handle unit mapping

@@ -80,6 +80,17 @@
                         </v-row>
                         <v-row>
                             <v-col cols="12">
+                                <v-checkbox
+                                    v-for="tipo in tiposVeiculo"
+                                    :key="tipo.COLUNA_ID"
+                                    :label="tipo.DESCRICAO"
+                                    v-model="TG_TIPO_VEICULO_ID"
+                                    :value="tipo.COLUNA_ID"
+                                ></v-checkbox>
+                            </v-col>
+                        </v-row>
+                        <v-row>
+                            <v-col cols="12">
                                 <v-select
                                     label="Tipo de profissional*"
                                     :items="tiposProfissional"
@@ -209,6 +220,7 @@ export default {
             PROFISSIONAL_ID: null,
             TABELA_ID: 7,
             TG_TIPO_PROFISSIONAL_ID: null,
+            TG_TIPO_VEICULO_ID: null,
             COLUNA_ID: null,
         }
     },
@@ -229,6 +241,7 @@ export default {
             baseUrl: 'getBaseUrl',
             tiposProfissional: 'DominioModule/getTipoProfissionais',
             profissionais: 'ProfissionalViewModule/getProfissionais',
+            tiposVeiculo: 'DominioModule/getTipoVeiculos',
         }),
         showModal: {
             get() {

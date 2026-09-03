@@ -18,13 +18,16 @@ class EquipeProfissional extends Model
         "EQUIPE_ID",
         "PROFISSIONAL_ID",
         "EQUIPE_PROFISSIONAL_ATIVO",
+        "USUARIO_ID_CAD",
     ];
 
     protected $casts = [
         "EQUIPE_PROFISSIONAL_ID" => "integer",
         "EQUIPE_ID" => "integer",
         "PROFISSIONAL_ID" => "integer",
-        "EQUIPE_PROFISSIONAL_ATIVO" => "integer"
+        "EQUIPE_PROFISSIONAL_ATIVO" => "integer",
+        "USUARIO_ID_CAD" => "integer",
+
     ];
 
     public function profissional(){
