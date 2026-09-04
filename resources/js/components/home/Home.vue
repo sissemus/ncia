@@ -20,14 +20,6 @@
             </v-tabs>
 
             <v-card-text>
-                <v-alert v-if="abaAtiva === 'analise'" type="info" dense outlined>
-                    Para continuar o fluxo, acesse <strong>Analisar Chamados</strong> no menu.
-                </v-alert>
-                <v-alert v-if="abaAtiva === 'atendimento'" type="info" dense outlined>
-                    A conclusão ou o cancelamento do atendimento é realizado em
-                    <strong>Acompanhamento de Chamados</strong>.
-                </v-alert>
-
                 <v-progress-linear v-if="carregandoFilaAtual" indeterminate color="primary"
                     class="mb-3"></v-progress-linear>
 
@@ -43,13 +35,17 @@
                             <th>Data/Hora</th>
                             <th>Procedimento</th>
                             <th>Prioridade</th>
-                            <th v-if="abaAtiva === 'abertos' && podeAnalisar">Ação</th>
+                            <th v-if="exibeAcaoFila">Ação</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="chamado in chamadosAtuais" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
-                            <td>{{ nomePaciente(chamado) }}</td>
+                            <td>
+                                <span :class="{ 'font-weight-bold': pacienteVulneravelSemNome(chamado) }">
+                                    {{ nomePaciente(chamado) }}
+                                </span>
+                            </td>
                             <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
                             <td>{{ procedimento(chamado) }}</td>
                             <td>
@@ -57,12 +53,12 @@
                                     {{ descricao(prioridades, chamado.TG_PRIORIDADE_ID) }}
                                 </v-chip>
                             </td>
-                            <td class="text-center" v-if="abaAtiva === 'abertos' && podeAnalisar">
-                                <v-btn icon color="primary" title="Analisar chamado"
+                            <td class="text-center" v-if="exibeAcaoFila">
+                                <v-btn icon color="primary" :title="tituloAcaoFila"
                                     :loading="recepcionandoId === chamado.CHAMADO_ID"
                                     :disabled="recepcionandoId !== null"
-                                    @click="recepcionar(chamado.CHAMADO_ID)">
-                                    <v-icon>mdi-clipboard-search-outline</v-icon>
+                                    @click="abrirAcaoChamado(chamado)">
+                                    <v-icon>{{ iconeAcaoFila }}</v-icon>
                                 </v-btn>
                             </td>
                         </tr>
@@ -113,7 +109,11 @@
                     <tbody>
                         <tr v-for="chamado in chamadosExpirados" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
-                            <td>{{ nomePaciente(chamado) }}</td>
+                            <td>
+                                <span :class="{ 'font-weight-bold primary--text': pacienteVulneravelSemNome(chamado) }">
+                                    {{ nomePaciente(chamado) }}
+                                </span>
+                            </td>
                             <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
                             <td>{{ tempoEmAberto(chamado.CHAMADO_DATA) }}</td>
                             <td>
@@ -235,6 +235,19 @@ export default {
             if (this.abaAtiva === "atendimento") return "em atendimento";
             return "aberto hoje";
         },
+        exibeAcaoFila() {
+            return (this.abaAtiva === "abertos" && this.podeAnalisar)
+                || (this.abaAtiva === "analise" && this.podeVisualizarAnalise)
+                || (this.abaAtiva === "atendimento" && this.podeVisualizarAtendimento);
+        },
+        iconeAcaoFila() {
+            return this.abaAtiva === "atendimento"
+                ? "mdi-clipboard-list-outline" : "mdi-clipboard-search-outline";
+        },
+        tituloAcaoFila() {
+            return this.abaAtiva === "atendimento"
+                ? "Visualizar atendimento" : "Analisar chamado";
+        },
     },
     watch: {
         abaAtiva(novaAba, abaAnterior) {
@@ -299,6 +312,17 @@ export default {
                     this.recepcionandoId = null;
                 });
         },
+        abrirAcaoChamado(chamado) {
+            if (this.abaAtiva === "analise") {
+                window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${chamado.CHAMADO_ID}`;
+                return;
+            }
+            if (this.abaAtiva === "atendimento") {
+                window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${chamado.CHAMADO_ID}`;
+                return;
+            }
+            this.recepcionar(chamado.CHAMADO_ID);
+        },
         cancelarExpirado(chamado) {
             if (this.cancelandoId !== null) return;
             Swal.fire({
@@ -330,7 +354,19 @@ export default {
             };
         },
         nomePaciente(chamado) {
-            return chamado.paciente ? chamado.paciente.PACIENTE_NOME : "-";
+            if (!chamado.paciente) return "-";
+
+            const nome = String(chamado.paciente.PACIENTE_NOME || "").trim();
+            if (nome) return nome;
+
+            return Number(chamado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1
+                ? "PACIENTE EM VULNERABILIDADE SOCIAL"
+                : "-";
+        },
+        pacienteVulneravelSemNome(chamado) {
+            return !!chamado.paciente
+                && !String(chamado.paciente.PACIENTE_NOME || "").trim()
+                && Number(chamado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1;
         },
         procedimento(chamado) {
             return chamado.procedimentos && chamado.procedimentos.length

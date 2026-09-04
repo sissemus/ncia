@@ -224,6 +224,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
         Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
         Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
+        Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
     });
     
     Route::prefix("equipe")->group(function () {

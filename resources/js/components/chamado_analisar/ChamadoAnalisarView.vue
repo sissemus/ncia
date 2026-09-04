@@ -20,7 +20,7 @@
 
                 <v-alert v-if="statusId === 3" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
                     <strong>{{ encaminhadoAgora ? 'Encaminhamento realizado.' : 'Chamado em atendimento.' }}</strong>
-                    O chamado está vinculado ao veículo e à equipe informados abaixo. O encerramento deve ser feito no Acompanhamento de Chamados.
+                    O chamado está vinculado ao veículo e à equipe informados abaixo.
                 </v-alert>
 
                 <v-card outlined class="mb-4">
@@ -95,8 +95,8 @@
                 <v-divider class="my-3"></v-divider>
                 <v-btn v-if="statusId === 2" color="primary" tile :disabled="!veiculos.length" @click="abrirEncaminhar">Encaminhar para atendimento</v-btn>
                 <v-btn v-if="statusId === 2" color="error" dark tile class="ml-2" @click="abrirCancelar">Cancelar análise</v-btn>
-                <v-btn v-if="statusId === 3" color="primary" tile @click="irAcompanhamento">Ir para Acompanhamento</v-btn>
-                <v-btn v-if="statusId === 3" outlined tile class="ml-2" @click="voltarHome">Voltar para Home</v-btn>
+                <v-btn v-if="statusId === 3" color="success" tile :disabled="processando" @click="abrirConcluir">Concluir Atendimento</v-btn>
+                <v-btn v-if="statusId === 3" color="error" dark tile class="ml-2" :disabled="processando" @click="abrirCancelarAtendimento">Cancelar Atendimento</v-btn>
                 <v-alert v-if="statusId === 2 && !veiculos.length" class="mt-3" type="warning" outlined>Não há veículo/equipe disponível para encaminhamento.</v-alert>
             </v-card-text>
 
@@ -108,11 +108,11 @@
         <v-dialog v-model="dialog" persistent width="800" scrollable :fullscreen="fullScreen">
             <v-card v-if="dialog">
                 <v-toolbar color="primary" elevation="1" class="flex-grow-0" dark>
-                    <v-toolbar-title>{{ acao === 'cancelar' ? 'Cancelar análise' : 'Encaminhar para atendimento' }}</v-toolbar-title>
+                    <v-toolbar-title>{{ tituloDialog }}</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn icon @click="fullScreen = true" v-show="!fullScreen"><v-icon>mdi-window-maximize</v-icon></v-btn>
                     <v-btn icon @click="fullScreen = false" v-show="fullScreen"><v-icon>mdi-window-restore</v-icon></v-btn>
-                    <v-btn icon @click="fecharDialog"><v-icon>mdi-close</v-icon></v-btn>
+                    <v-btn icon :disabled="processando" @click="fecharDialog"><v-icon>mdi-close</v-icon></v-btn>
                 </v-toolbar>
                 <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
                 <v-card-text class="mt-5">
@@ -120,6 +120,9 @@
                         <legend class="custom-legend">VEÍCULO E EQUIPE</legend>
                         <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" return-object v-model="equipeSelecionada" outlined dense />
                     </fieldset>
+                    <v-alert v-else-if="acao === 'concluir'" type="warning" outlined>
+                        Confirma que o transporte, somente ida ou ida e volta, foi concluído sem intercorrência?
+                    </v-alert>
                     <fieldset v-else class="custom-fieldset">
                         <legend class="custom-legend">MOTIVAÇÃO DO CANCELAMENTO</legend>
                         <v-select label="Motivo*" :items="motivosCancelamento" item-text="DESCRICAO" item-value="COLUNA_ID" v-model="motivo" outlined dense />
@@ -129,8 +132,8 @@
                 <v-divider class="ma-0"></v-divider>
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" dark tile :disabled="!podeConfirmar" @click="confirmar">Confirmar</v-btn>
-                    <v-btn color="red" dark outlined tile @click="fecharDialog">Fechar</v-btn>
+                    <v-btn color="primary" dark tile :loading="processando" :disabled="!podeConfirmar" @click="confirmar">Confirmar</v-btn>
+                    <v-btn color="red" dark outlined tile :disabled="processando" @click="fecharDialog">Fechar</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
@@ -140,6 +143,7 @@
 <script>
 import moment from 'moment';
 import TratarErroAjax from '../assets/TratarErroAjax';
+import Swal from 'sweetalert2';
 
 export default {
     name: 'ChamadoAnalisarView',
@@ -160,7 +164,8 @@ export default {
     },
     data: () => ({
         msgId: 'msgChamadoAnalisar', chamado: null, veiculos: [], equipeSelecionada: null,
-        dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false
+        dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false,
+        processando: false
     }),
     computed: {
         baseUrl() { return this.$store.getters.getBaseUrl; },
@@ -206,7 +211,15 @@ export default {
                 .map(item => item.profissional && item.profissional.PROFISSIONAL_NOME).filter(Boolean).join(', ') || '-';
         },
         podeConfirmar() {
-            return this.acao === 'encaminhar' ? !!this.equipeSelecionada : !!this.motivo && !!String(this.observacao || '').trim();
+            if (this.processando) return false;
+            if (this.acao === 'encaminhar') return !!this.equipeSelecionada;
+            if (this.acao === 'concluir') return true;
+            return !!this.motivo && !!String(this.observacao || '').trim();
+        },
+        tituloDialog() {
+            if (this.acao === 'encaminhar') return 'Encaminhar para atendimento';
+            if (this.acao === 'concluir') return 'Concluir Atendimento';
+            return this.acao === 'cancelar-atendimento' ? 'Cancelar Atendimento' : 'Cancelar análise';
         }
     },
     mounted() { this.buscar(); },
@@ -225,6 +238,8 @@ export default {
         },
         abrirEncaminhar() { this.carregarVeiculos(); this.acao = 'encaminhar'; this.equipeSelecionada = null; this.dialog = true; this.fullScreen = false; },
         abrirCancelar() { this.acao = 'cancelar'; this.motivo = null; this.observacao = ''; this.dialog = true; this.fullScreen = false; },
+        abrirConcluir() { this.acao = 'concluir'; this.dialog = true; this.fullScreen = false; },
+        abrirCancelarAtendimento() { this.acao = 'cancelar-atendimento'; this.motivo = null; this.observacao = ''; this.dialog = true; this.fullScreen = false; },
         confirmar() {
             if (!this.podeConfirmar) return;
             if (this.acao === 'encaminhar') {
@@ -232,20 +247,28 @@ export default {
                 this.executar('encaminhar', { EQUIPE_ID: equipe ? equipe.EQUIPE_ID : null });
                 return;
             }
-            this.executar('cancelar', { MOTIVO_CANCELAMENTO_ID: this.motivo, CHAMADO_SITUACAO_OBSERVACAO: this.observacao });
+            if (this.acao === 'concluir') {
+                this.executar('concluir');
+                return;
+            }
+            this.executar(this.acao, { MOTIVO_CANCELAMENTO_ID: this.motivo, CHAMADO_SITUACAO_OBSERVACAO: this.observacao });
         },
-        fecharDialog() { this.dialog = false; this.fullScreen = false; },
+        fecharDialog() { if (!this.processando) { this.dialog = false; this.fullScreen = false; } },
         executar(acao, dados) {
+            if (this.processando) return;
+            this.processando = true;
             axios.post(`${this.baseUrl}/chamado_analisar/${acao}`, { CHAMADO_ID: this.chamado.CHAMADO_ID, ...(dados || {}) })
                 .then(response => {
-                    this.fecharDialog();
+                    this.dialog = false;
+                    this.fullScreen = false;
                     this.chamado = response.data.retorno;
                     this.encaminhadoAgora = acao === 'encaminhar';
                     if (this.encaminhadoAgora) this.veiculos = [];
-                }).catch(this.erro);
+                    if (acao === 'concluir' || acao === 'cancelar-atendimento') {
+                        Swal.fire('Sucesso', acao === 'concluir' ? 'Atendimento concluído com sucesso.' : 'Atendimento cancelado com sucesso.', 'success');
+                    }
+                }).catch(this.erro).finally(() => { this.processando = false; });
         },
-        voltarHome() { window.location.href = `${this.baseUrl}/home`; },
-        irAcompanhamento() { window.location.href = `${this.baseUrl}/chamado_acompanhamento?chamado=${this.chamado.CHAMADO_ID}`; },
         descricaoVeiculoEquipe(veiculo) {
             if (!veiculo) return '-';
             return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)}`;
