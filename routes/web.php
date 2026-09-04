@@ -17,6 +17,7 @@ use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\EquipeProfissionalController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -38,8 +39,13 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-    Route::get('/home/chamados-abertos', [App\Http\Controllers\HomeController::class, 'chamadosAbertos']);
+    Route::prefix('home')->group(function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
+        Route::get('chamados-abertos', [HomeController::class, 'chamadosAbertos']);
+        Route::get('chamados-operacionais', [HomeController::class, 'chamadosOperacionais']);
+        Route::get('chamados-expirados', [HomeController::class, 'chamadosExpirados']);
+        Route::post('chamados-expirados/cancelar', [HomeController::class, 'cancelarChamadoExpirado']);
+    });
 
     Route::prefix('perfil')->group(function () {
         Route::get('/', [PerfilController::class, "view"]);
