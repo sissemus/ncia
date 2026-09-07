@@ -9,11 +9,13 @@ use App\Models\Equipe;
 use App\Models\EquipeProfissional;
 use App\Models\Profissional;
 use App\Models\TabelaGenerica;
+use App\Models\Veiculo;
 use Carbon\Carbon;
+use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use PHPUnit\Util\Exception;
+use Illuminate\Validation\ValidationException;
 
 class EquipeController extends Controller
 {
@@ -26,57 +28,138 @@ class EquipeController extends Controller
         return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais', 'tiposVeiculo'));
     }
 
-    public function inserir(EquipeCreateRequest $request)
+    public function inserir(Request $request)
     {
 
         $equipes = [];
 
         $EQUIPE_ID = null;
+
+        $USUARIO_ID_CAD = Auth::id();
         
+        $int = 0;
+
+        $veiculoTipo = [];
+        
+        
+        //para o tipo de veículo == 1
+        $tiposProfissional_1 = [1, 2, 4];
+        $tiposProfissional_1_compare = [];
+        
+        //para o tipo de veículo == 2
+        $tiposProfissional_2 = [1, 2, 3, 4];
+        $tiposProfissional_2_compare = [];
+
         DB::beginTransaction();
+        
+        foreach ($request->input() as $dados) {
 
-        try{
-
-            foreach ($request->input() as $dados) {
-
-                $equipeProfissional = new EquipeProfissional($dados);
-
-                if($EQUIPE_ID == null){
-                    
-                    $equipe = new Equipe($dados);
-                    $equipe->EQUIPE_ATIVO = 1;
-                    $equipe->EQUIPE_DATA = now()->format('Y-m-d');
-                    $equipe->USUARIO_ID_CAD = Auth::id();
-                    $equipe->save();
-
-                    $EQUIPE_ID = $equipe->EQUIPE_ID;
-                }
-
-                // verificar se o profissional não está em outra equipe para esse mesmo dia
-
-                $equipeProfissional->EQUIPE_ID = $EQUIPE_ID;
-
-                $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
-
-                $equipeProfissional->USUARIO_ID_CAD = Auth::id();
-                
-                $equipeProfissional->save();
-                
+            if($dados['VEICULO_ID'] == null){
+                DB::rollBack();
+                throw ValidationException::withMessages([
+                    'VEICULO_ID' =>
+                        'Veículo não selecionado!'
+                ]);
             }
 
-            DB::commit();
+            if($dados['EQUIPE_TURNO'] == null){
+                DB::rollBack();
+                throw ValidationException::withMessages([
+                    'EQUIPE_TURNO' =>
+                        'Turno não selecionado!'
+                ]);
+            }
 
+            if($dados['TG_TIPO_PROFISSIONAL_ID'] == null){
+                DB::rollBack();
+                throw ValidationException::withMessages([
+                    'TG_TIPO_PROFISSIONAL_ID' =>
+                        'Tipo de profissional não informado!'
+                ]);
+            }
+
+            if($dados['PROFISSIONAL_ID'] == null){
+                DB::rollBack();
+                throw ValidationException::withMessages([
+                    'PROFISSIONAL_ID' =>
+                        'Profissional não informado!'
+                ]);
+            }
+
+            $PROFISSIONAL_ID = $dados['PROFISSIONAL_ID'];
+
+            $VEICULO_ID = $dados['VEICULO_ID'];
+
+            $profissional = Profissional::findOrFail($PROFISSIONAL_ID);
+
+            $tipoProfissional  = $profissional->TG_TIPO_PROFISSIONAL_ID;
+
+            $veiculo = Veiculo::findOrFail($VEICULO_ID);
+
+            $tipoVeiculo = $veiculo->TG_TIPO_VEICULO_ID;
+
+            if($tipoVeiculo == 1){
+                array_push($tiposProfissional_1_compare, $tipoProfissional);
+            }
+            else{
+                array_push($tiposProfissional_2_compare, $tipoProfissional);
+            }
+
+            if($int == 0){
+                    
+                $equipe = new Equipe($dados);
+                $equipe->EQUIPE_ATIVO = 1;
+                $equipe->EQUIPE_DATA = now()->format('Y-m-d');
+                $equipe->USUARIO_ID_CAD = $USUARIO_ID_CAD;
+                
+                $equipe->save();
+
+                $EQUIPE_ID = $equipe->EQUIPE_ID;
+
+            }
+
+            $int++;
+
+            $equipeProfissional = new EquipeProfissional($dados);
+
+            // para cada profissional
+            $equipeProfissional->EQUIPE_ID = $EQUIPE_ID;
+
+            $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
+
+            $equipeProfissional->USUARIO_ID_CAD = $USUARIO_ID_CAD;
+            
+            $equipeProfissional->save();
+    
         }
-        catch(Exception $e){
 
-            DB::rollBack();
+        //validando
+        if($tipoVeiculo == 1){
 
-            return response()->json([
-                'erro' => 1,
-                'mensagem' => 'Erro ao inserir/atualizar Equipe!'
-            ], 500);
+            sort($tiposProfissional_1);
+            sort($tiposProfissional_1_compare);
 
-        }       
+            if($tiposProfissional_1 != $tiposProfissional_1_compare){
+                throw ValidationException::withMessages([
+                    'TG_TIPO_PROFISSIONAL_ID' =>
+                        'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
+                ]);
+            }
+        }
+        else{
+
+            sort($tiposProfissional_2);
+            sort($tiposProfissional_2_compare);
+
+            if($tiposProfissional_2 != $tiposProfissional_2_compare){
+                throw ValidationException::withMessages([
+                    'TG_TIPO_PROFISSIONAL_ID' =>
+                        'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
+                ]);
+            }
+        }
+
+        DB::commit();
         
         $equipes = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->get();
 
@@ -108,12 +191,14 @@ class EquipeController extends Controller
     public function alterar(Request $request)
     {
     
-    dd("alterando");
+    
         $equipe = Equipe::findOrFail($request->EQUIPE_ID);
 
         $equipe->fill($request->post());
 
         $equipe->EQUIPE_DATA = now();
+
+        $equipe->USUARIO_ID_CAD = Auth::id();
 
         $equipe->save();
 
