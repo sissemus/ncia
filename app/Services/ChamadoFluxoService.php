@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 
 class ChamadoFluxoService
 {
+    private const MOTIVO_PRAZO_EXCEDIDO = 'PRAZO DE 24 HORAS EXCEDIDO';
+
     public function recepcionar(Chamado $chamado)
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::ABERTO]);
@@ -74,6 +76,33 @@ class ChamadoFluxoService
         $vinculos = $this->bloquearRecursosAtivos($chamado);
         $this->registrarCancelamento($chamado, $motivoId, $motivacao);
         $this->liberarRecursos($vinculos);
+    }
+
+    public function cancelarPorPrazoExcedido(Chamado $chamado)
+    {
+        $this->validarSituacao($chamado, [SituacaoChamadoEnum::ABERTO]);
+
+        $abertura = Carbon::parse(
+            $chamado->getRawOriginal('CHAMADO_DATA'),
+            'America/Sao_Paulo'
+        );
+        $limite = Carbon::now('America/Sao_Paulo')->subHours(24);
+
+        abort_if($abertura->gt($limite), 422, 'O chamado ainda não completou 24 horas em aberto.');
+
+        $motivoId = DB::table('TABELA_GENERICA')
+            ->where('TABELA_ID', RTG::MOTIVO_CANCELAMENTO)
+            ->where('DESCRICAO', self::MOTIVO_PRAZO_EXCEDIDO)
+            ->where('ATIVO', 1)
+            ->value('COLUNA_ID');
+
+        abort_unless($motivoId, 422, 'Motivo de cancelamento por prazo excedido não cadastrado.');
+
+        $this->registrarCancelamento(
+            $chamado,
+            $motivoId,
+            'Chamado cancelado manualmente por permanecer aberto por mais de 24 horas.'
+        );
     }
 
     public function concluirAtendimento(Chamado $chamado)

@@ -26,7 +26,7 @@ class ChamadoAnalisarController extends Controller
 
     public function view()
     {
-        $this->autorizar();
+        $this->autorizarVisualizacao();
 
         return view('chamado_analisar.chamado_analisar_view', [
             'prioridades' => TabelaGenerica::prioridadePaciente(),
@@ -46,7 +46,7 @@ class ChamadoAnalisarController extends Controller
 
     public function search(Request $request)
     {
-        $this->autorizar();
+        $this->autorizarAnalise();
         $request->merge(['TG_SITUACAO_ID' => SituacaoChamadoEnum::EM_ANALISE]);
 
         return response(Chamado::pesquisarParaAnalise($request));
@@ -54,14 +54,16 @@ class ChamadoAnalisarController extends Controller
 
     public function buscar($id)
     {
-        $this->autorizar();
+        $this->autorizarVisualizacao();
+        $chamado = $this->carregarChamado($id);
+        $this->autorizarConsultaChamado($chamado);
 
-        return response($this->carregarChamado($id));
+        return response($chamado);
     }
 
     public function veiculosDisponiveis()
     {
-        $this->autorizar();
+        $this->autorizarAnalise();
         $data = Carbon::now('America/Sao_Paulo')->toDateString();
 
         $veiculos = Veiculo::with([
@@ -130,7 +132,7 @@ class ChamadoAnalisarController extends Controller
 
     public function recepcionar(Request $request)
     {
-        $this->autorizar();
+        $this->autorizarAnalise();
         $request->validate(['CHAMADO_ID' => 'required|integer']);
 
         return DB::transaction(function () use ($request) {
@@ -143,7 +145,7 @@ class ChamadoAnalisarController extends Controller
 
     public function encaminhar(Request $request)
     {
-        $this->autorizar();
+        $this->autorizarAnalise();
         $request->validate([
             'CHAMADO_ID' => 'required|integer',
             'EQUIPE_ID' => 'required|integer',
@@ -159,7 +161,7 @@ class ChamadoAnalisarController extends Controller
 
     public function cancelar(Request $request)
     {
-        $this->autorizar();
+        $this->autorizarAnalise();
         $request->validate([
             'CHAMADO_ID' => 'required|integer',
             'MOTIVO_CANCELAMENTO_ID' => 'required|integer',
@@ -178,10 +180,33 @@ class ChamadoAnalisarController extends Controller
         });
     }
 
-    // Mantido para compatibilidade. A interface encerra atendimentos pelo acompanhamento.
+    public function cancelarAtendimento(Request $request)
+    {
+        $this->autorizarAtendimento();
+        $request->merge([
+            'CHAMADO_SITUACAO_OBSERVACAO' => trim((string) $request->CHAMADO_SITUACAO_OBSERVACAO),
+        ]);
+        $request->validate([
+            'CHAMADO_ID' => 'required|integer',
+            'MOTIVO_CANCELAMENTO_ID' => 'required|integer',
+            'CHAMADO_SITUACAO_OBSERVACAO' => 'required|string',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
+            $this->fluxo->cancelarAtendimento(
+                $chamado,
+                $request->MOTIVO_CANCELAMENTO_ID,
+                $request->CHAMADO_SITUACAO_OBSERVACAO
+            );
+
+            return response(['cod' => 1, 'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)]);
+        });
+    }
+
     public function concluir(Request $request)
     {
-        $this->autorizar();
+        $this->autorizarAtendimento();
         $request->validate(['CHAMADO_ID' => 'required|integer']);
 
         return DB::transaction(function () use ($request) {
@@ -217,19 +242,60 @@ class ChamadoAnalisarController extends Controller
         return $chamado;
     }
 
-    private function autorizar()
+    private function perfisAtivos()
     {
-        $permitido = DB::table('USUARIO_PERFIL')
+        return DB::table('USUARIO_PERFIL')
             ->where('USUARIO_ID', Auth::id())
             ->where('USUARIO_PERFIL_ATIVO', 1)
-            ->whereIn('PERFIL_ID', [
-                PerfilEnum::DESENVOLVEDOR,
-                PerfilEnum::ADMINISTRADOR,
-                PerfilEnum::REGULADOR_CIA,
-            ])
-            ->exists();
+            ->pluck('PERFIL_ID')
+            ->map(function ($perfil) {
+                return (int) $perfil;
+            });
+    }
 
-        abort_unless($permitido, 403);
+    private function podeAnalisar($perfis)
+    {
+        return $perfis->intersect([
+            PerfilEnum::DESENVOLVEDOR,
+            PerfilEnum::ADMINISTRADOR,
+            PerfilEnum::REGULADOR_CIA,
+        ])->isNotEmpty();
+    }
+
+    private function podeAtender($perfis)
+    {
+        return $this->podeAnalisar($perfis)
+            || $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL);
+    }
+
+    private function autorizarVisualizacao()
+    {
+        abort_unless($this->podeAtender($this->perfisAtivos()), 403);
+    }
+
+    private function autorizarAnalise()
+    {
+        abort_unless($this->podeAnalisar($this->perfisAtivos()), 403);
+    }
+
+    private function autorizarAtendimento()
+    {
+        abort_unless($this->podeAtender($this->perfisAtivos()), 403);
+    }
+
+    private function autorizarConsultaChamado(Chamado $chamado)
+    {
+        $perfis = $this->perfisAtivos();
+        if ($this->podeAnalisar($perfis)) {
+            return;
+        }
+
+        abort_unless(
+            $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
+                && $chamado->situacaoAtual
+                && (int) $chamado->situacaoAtual->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO,
+            403
+        );
     }
 
     private function textoJson($valor)
