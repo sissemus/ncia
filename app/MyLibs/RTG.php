@@ -1,14 +1,30 @@
 <?php
 
-
 namespace App\MyLibs;
 
 /*RELAÇÃO DE TABELAS GENÉRICAS*/
-class RTG {
+class RTG
+{
     const TABELA_GENERICA = 0;
     const HIERARQUIA = 1;
+
     const TIPO_PROFISSIONAL = 7;
     const TIPO_VEICULO = 8;
     const SITUACAO_VEICULO = 9;
+
+    const PRIORIDADE_PACIENTE = 11;
+    const TIPO_CHAMADO = 14;
+    const TIPO_PRECAUCAO = 15;
+    const SUPORTE_O2 = 16;
+    const SUPORTE_HEMODINAMICO = 17;
+
+    const SINAIS_VITAIS_TEMPERATURA = 18;
+    const SINAIS_VITAIS_FREQUENCIA_CARDIACA = 19;
+    const SINAIS_VITAIS_PRESSAO_ARTERIAL = 20;
+    const SINAIS_VITAIS_SATURACAO = 21;
+
     const SEXO = 22;
+    const SITUACAO_IDENTIFICACAO = 23;
+    const MOTIVO_CANCELAMENTO = 24;
+    const SITUACAO_CHAMADO = 25;
 }

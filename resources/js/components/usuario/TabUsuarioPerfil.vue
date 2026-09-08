@@ -169,7 +169,7 @@
                         this.usuario = r.data.retorno;
                         this.clearForm();
                         Swal.fire("Sucesso", "Salvo com sucesso", "success");
-                        this.listar();
+                        if (typeof this.listar === 'function') this.listar();
                     })
                     .catch((e) => {
                         console.error("ERRO: ", e);
@@ -192,7 +192,7 @@
                         this.usuario = r.data.retorno;
                         this.clearForm();
                         Swal.fire("Sucesso", "Removido com sucesso", "success");
-                        this.listar();
+                        if (typeof this.listar === 'function') this.listar();
                     })
                     .catch((e) => {
                         console.error("ERRO: ", e);

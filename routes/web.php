@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AplicacaoController;
+use App\Http\Controllers\ChamadoAnalisarController;
+use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
 use App\Http\Controllers\DiagnosticoController;
 use App\Http\Controllers\PacienteController;
@@ -13,6 +15,9 @@ use App\Http\Controllers\VeiculoUnidadeController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
+use App\Http\Controllers\EquipeController;
+use App\Http\Controllers\EquipeProfissionalController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -34,7 +39,13 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
-    Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::prefix('home')->group(function () {
+        Route::get('/', [HomeController::class, 'index'])->name('home');
+        Route::get('chamados-abertos', [HomeController::class, 'chamadosAbertos']);
+        Route::get('chamados-operacionais', [HomeController::class, 'chamadosOperacionais']);
+        Route::get('chamados-expirados', [HomeController::class, 'chamadosExpirados']);
+        Route::post('chamados-expirados/cancelar', [HomeController::class, 'cancelarChamadoExpirado']);
+    });
 
     Route::prefix('perfil')->group(function () {
         Route::get('/', [PerfilController::class, "view"]);
@@ -147,8 +158,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
     });
 
     Route::prefix('veiculo_unidade')->group(function () {
-        Route::get('/', [VeiculoUnidadeController::class, 'view']);
-        Route::get('view', [VeiculoUnidadeController::class, 'view']);
+        // Route::get('/', [VeiculoUnidadeController::class, 'view']);
+        // Route::get('view', [VeiculoUnidadeController::class, 'view']);
         Route::post('inserir', [VeiculoUnidadeController::class, 'inserir']);
         Route::put('alterar', [VeiculoUnidadeController::class, 'alterar']);
         Route::delete('deletar', [VeiculoUnidadeController::class, 'deletar']);
@@ -172,10 +183,11 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete("deletar", [ProfissionalController::class, "deletar"]);
         Route::get("listar", [ProfissionalController::class, "listar"]);
         Route::post("pesquisar", [ProfissionalController::class, "pesquisar"]);
+        Route::post("pesquisarNEquipe", [ProfissionalController::class, "pesquisarNEquipe"]);
         Route::get("buscar/{id}", [ProfissionalController::class, "buscar"]);
-    });
+        });
 
-    Route::prefix("paciente")->group(function () {
+        Route::prefix("paciente")->group(function () {
         Route::get("/", [PacienteController::class, "view"]);
         Route::get("view", [PacienteController::class, "view"]);
         Route::post("inserir", [PacienteController::class, "inserir"]);
@@ -184,6 +196,60 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [PacienteController::class, "pesquisar"]);
         Route::get("buscar/{id}", [PacienteController::class, "buscar"]);
         Route::get("buscar-por-cpf", [PacienteController::class, "buscarPorCpf"]);
+    });
+
+    Route::prefix("chamado")->group(function () {
+        Route::get("/", [ChamadoController::class, "view"]);
+        Route::get("view", [ChamadoController::class, "view"]);
+        Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
+        Route::post("abrir", [ChamadoController::class, "abrir"]);
+    });
+
+    Route::prefix("chamado_acompanhamento")->group(function () {
+        Route::get("/", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
+        Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
+        Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
+        Route::post("concluir", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "concluir"]);
+        Route::post("cancelar", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "cancelar"]);
+    });
+
+    Route::prefix("chamado_analisar")->group(function () {
+        Route::get("/", [ChamadoAnalisarController::class, "view"]);
+        Route::get("view", [ChamadoAnalisarController::class, "view"]);
+        Route::get("search", [ChamadoAnalisarController::class, "search"]);
+        Route::get("buscar/{id}", [ChamadoAnalisarController::class, "buscar"]);
+        Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
+        Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
+        Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
+        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
+        Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
+        Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
+    });
+    
+    Route::prefix("equipe")->group(function () {
+        Route::get("/", [EquipeController::class, "view"]);
+        Route::get("view", [EquipeController::class, "view"]);
+        Route::post("inserir", [EquipeController::class, "inserir"]);
+        Route::put("alterar", [EquipeController::class, "alterar"]);
+        Route::delete("deletar", [EquipeController::class, "deletar"]);
+        Route::get("listar", [EquipeController::class, "listar"]);
+        Route::post("pesquisar", [EquipeController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [EquipeController::class, "buscar"]);
+        Route::get('search', [EquipeController::class, 'search']);
+    });
+    
+    Route::prefix("equipeProfissional")->group(function () {
+        Route::get("/", [EquipeProfissionalController::class, "view"]);
+        Route::get("view", [EquipeProfissionalController::class, "view"]);
+        Route::post("inserir", [EquipeProfissionalController::class, "inserir"]);
+        Route::put("alterar", [EquipeProfissionalController::class, "alterar"]);
+        Route::delete("deletar", [EquipeProfissionalController::class, "deletar"]);
+        Route::get("listar", [EquipeProfissionalController::class, "listar"]);
+        Route::post("pesquisar", [EquipeProfissionalController::class, "pesquisar"]);
+        Route::get("buscar/{id}", [EquipeProfissionalController::class, "buscar"]);
+        Route::get('search', [EquipeProfissionalController::class, 'search']);
+        Route::get('searchNUsado', [EquipeProfissionalController::class, 'searchNUsado']);
     });
     
 });

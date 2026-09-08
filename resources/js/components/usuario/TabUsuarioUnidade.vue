@@ -7,8 +7,9 @@
 
             <v-row>
                 <v-col cols="12">
-                    <v-select label="Unidade*" :items="unidadesSolicitantes" item-value="UNIDADE_ID"
-                        item-text="UNIDADE_NOME" v-model="usuarioUnidade.UNIDADE_ID"></v-select>
+                    <v-autocomplete label="Unidade*" :items="unidadesSolicitantes" item-value="UNIDADE_ID"
+                        item-text="UNIDADE_NOME" v-model="usuarioUnidade.UNIDADE_ID"
+                        :menu-props="{ offsetY: true }"></v-autocomplete>
                 </v-col>
             </v-row>
 
@@ -121,7 +122,7 @@ export default {
                     this.usuario = r.data.retorno;
                     this.clearForm();
                     Swal.fire("Sucesso", "Unidade vinculada com sucesso", "success");
-                    this.listar();
+                    if (typeof this.listar === 'function') this.listar();
                 })
                 .catch(e => {
                     console.error("ERRO: ", e);
@@ -140,7 +141,7 @@ export default {
                     this.usuario = r.data.retorno;
                     this.clearForm();
                     Swal.fire("Sucesso", "Unidade desvinculada com sucesso", "success");
-                    this.listar();
+                    if (typeof this.listar === 'function') this.listar();
                 })
                 .catch(e => {
                     console.error("ERRO: ", e);

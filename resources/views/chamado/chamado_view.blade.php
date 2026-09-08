@@ -1,0 +1,20 @@
+@extends("layouts.app")
+
+@section("content")
+    <chamado-view
+        :sexos='@json($sexos)'
+        :prioridades='@json($prioridades)'
+        :tipos-chamado='@json($tiposChamado)'
+        :tipos-precaucao='@json($tiposPrecaucao)'
+        :suportes-o2='@json($suportesO2)'
+        :suportes-hemodinamicos='@json($suportesHemodinamicos)'
+        :temperaturas='@json($temperaturas)'
+        :frequencias-cardiacas='@json($frequenciasCardiacas)'
+        :pressoes-arteriais='@json($pressoesArteriais)'
+        :saturacoes='@json($saturacoes)'
+        :unidades-solicitantes='@json($unidadesSolicitantes)'
+        :unidades-destino='@json($unidadesDestino)'
+        :procedimentos='@json($procedimentos)'
+        :diagnosticos='@json($diagnosticos)'
+    ></chamado-view>
+@endsection

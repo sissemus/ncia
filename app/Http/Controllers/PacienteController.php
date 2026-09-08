@@ -23,6 +23,8 @@ class PacienteController extends Controller
     {
         $paciente = DB::transaction(function () use ($request) {
             $paciente = new Paciente($request->validated());
+            $paciente->PACIENTE_VULNERABILIDADE_SOCIAL = 0;
+            $paciente->PACIENTE_TEMPORARIO = 0;
             $paciente->USUARIO_ID = Auth::id();
             $paciente->PACIENTE_DT_CAD = now();
             $paciente->PACIENTE_DT_IDENTIFICACAO = now();
@@ -41,11 +43,10 @@ class PacienteController extends Controller
     public function alterar(PacienteUpdateRequest $request)
     {
         $paciente = DB::transaction(function () use ($request) {
-            $paciente = Paciente::findOrFail($request->PACIENTE_ID);
+            $paciente = Paciente::where("PACIENTE_TEMPORARIO", 0)->findOrFail($request->PACIENTE_ID);
             $paciente->fill($request->validated());
 
-            if (!$paciente->PACIENTE_DT_IDENTIFICACAO)
-                $paciente->PACIENTE_DT_IDENTIFICACAO = now();
+            if (!$paciente->PACIENTE_DT_IDENTIFICACAO) $paciente->PACIENTE_DT_IDENTIFICACAO = now();
 
             $paciente->save();
 
@@ -70,8 +71,12 @@ class PacienteController extends Controller
 
     public function buscarPorCpf(Request $request)
     {
+        $request->validate([
+            "PACIENTE_CPF" => ["required", "cpf"],
+        ]);
+
         $cpf = preg_replace("/\D/", "", $request->PACIENTE_CPF);
-        $paciente = Paciente::where("PACIENTE_CPF", $cpf)->first();
+        $paciente = Paciente::where("PACIENTE_TEMPORARIO", 0)->where("PACIENTE_CPF", $cpf)->first();
 
         return response([
             "cod" => 1,

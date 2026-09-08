@@ -30,6 +30,7 @@ Vue.use(UUID);
 Vue.component('login', require('./components/auth/Login').default);
 Vue.component('app', require('./components/App').default);
 Vue.component('home', require('./components/home/Home').default);
+Vue.component('chamado-analisar-view', require('./components/chamado_analisar/ChamadoAnalisarView.vue').default);
 Vue.component('tabela-generica-view', require('./components/tabela_generica/TabelaGenericaView').default);
 Vue.component('usuario-view', require('./components/usuario/UsuarioView').default);
 Vue.component('usuario-alterar-senha-view', require('./components/usuario/UsuarioAlterarSenhaView').default);
@@ -41,7 +42,11 @@ Vue.component('unidade-view', require('./components/unidade/UnidadeView.vue').de
 Vue.component('profissional-view', require('./components/profissional/ProfissionalView.vue').default);
 Vue.component('paciente-view', require('./components/paciente/PacienteView.vue').default);
 Vue.component('veiculo-view', require('./components/veiculo/VeiculoView.vue').default);
-Vue.component('veiculo-unidade-view', require('./components/veiculo_unidade/VeiculoUnidadeView.vue').default);
+Vue.component('chamado-view', require('./components/chamado/ChamadoView.vue').default);
+Vue.component('chamado-acompanhamento-view', require('./components/chamado_acompanhamento/ChamadoAcompanhamentoView.vue').default);
+Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);
+Vue.component('chamado-view', require('./components/chamado/ChamadoView.vue').default);
+Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);
 
 
 /**

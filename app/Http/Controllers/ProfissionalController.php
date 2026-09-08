@@ -74,6 +74,18 @@ class ProfissionalController extends Controller
         ], 200);
     }
 
+    public function pesquisarNEquipe(Request $request)
+    {
+        $profissionais = Profissional::listarNPesquisa($request)
+            ->get();
+
+        return response([
+            "cod" => 1,
+            "msg" => "Profissionais pesquisados com sucesso",
+            "retorno" => $profissionais
+        ], 200);
+    }
+
     public function deletar(Request $request)
     {
         $profissional = Profissional::buscar($request->PROFISSIONAL_ID);
