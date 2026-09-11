@@ -80,8 +80,8 @@
                                 </td>
                                 <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
                                 <td>
-                                    <div><v-icon x-small color="green">mdi-arrow-up</v-icon> {{ chamado.unidade_solicitante ? chamado.unidade_solicitante.UNIDADE_NOME : '-' }}</div>
-                                    <div><v-icon x-small color="red">mdi-arrow-down</v-icon> {{ chamado.unidade_destino ? chamado.unidade_destino.UNIDADE_NOME : '-' }}</div>
+                                    <div><v-icon x-small color="green">mdi-arrow-up</v-icon> {{ getUnidadeSolicitanteNome(chamado) }}</div>
+                                    <div><v-icon x-small color="red">mdi-arrow-down</v-icon> {{ getUnidadeDestinoNome(chamado) }}</div>
                                 </td>
                                 <td>
                                     <v-chip x-small :color="getPrioridadeColor(chamado.TG_PRIORIDADE_ID)" dark>
@@ -132,7 +132,7 @@
                     </v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-chip color="white" class="primary--text font-weight-bold mr-2" small>
-                        {{ descricaoTabelaGenerica(situacoesChamado, chamadoSelecionado.situacao_atual ? chamadoSelecionado.situacao_atual.TG_SITUACAO_ID : null) }}
+                        {{ descricaoTabelaGenerica(situacoesChamado, getSituacaoAtualId(chamadoSelecionado)) }}
                     </v-chip>
                     <v-btn icon @click="showDetailsModal = false">
                         <v-icon>mdi-close</v-icon>
@@ -208,7 +208,7 @@
                                 <v-col cols="12" md="6">
                                     <v-card outlined class="pa-2">
                                         <div class="caption font-weight-bold green--text mb-1">ORIGEM</div>
-                                        <div class="body-2 font-weight-bold">{{ chamadoSelecionado.unidade_solicitante ? chamadoSelecionado.unidade_solicitante.UNIDADE_NOME : '-' }}</div>
+                                        <div class="body-2 font-weight-bold">{{ getUnidadeSolicitanteNome(chamadoSelecionado) }}</div>
                                         <div class="caption grey--text">
                                             Profissional: {{ chamadoSelecionado.profissionalSolicitanteNome || chamadoSelecionado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-' }} |
                                             Setor: {{ chamadoSelecionado.CHAMADO_SETOR_SOLICITANTE || '-' }} | 
@@ -219,7 +219,7 @@
                                 <v-col cols="12" md="6">
                                     <v-card outlined class="pa-2">
                                         <div class="caption font-weight-bold red--text mb-1">DESTINO</div>
-                                        <div class="body-2 font-weight-bold">{{ chamadoSelecionado.unidade_destino ? chamadoSelecionado.unidade_destino.UNIDADE_NOME : '-' }}</div>
+                                        <div class="body-2 font-weight-bold">{{ getUnidadeDestinoNome(chamadoSelecionado) }}</div>
                                         <div class="caption grey--text">
                                             Setor: {{ chamadoSelecionado.CHAMADO_SETOR_DESTINO || '-' }} | 
                                             Leito: {{ chamadoSelecionado.CHAMADO_LEITO_DESTINO || '-' }}
@@ -262,7 +262,7 @@
                             Suporte e Sinais Vitais
                         </v-card-title>
                         <v-card-text class="pt-3">
-                            <v-row dense>
+                            <v-row dense class="mb-2">
                                 <v-col cols="12" md="4">
                                     <v-text-field label="Precaução" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(tiposPrecaucao, chamadoSelecionado.TG_TIPO_PRECAUCAO_ID)"></v-text-field>
@@ -275,21 +275,27 @@
                                     <v-text-field label="Suporte O2" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(suportesO2, chamadoSelecionado.TG_SUPORTE_O2_ID)"></v-text-field>
                                 </v-col>
-                                <v-col cols="6" md="3">
-                                    <v-text-field label="Temperatura" readonly filled dense hide-details
-                                        :value="descricaoTabelaGenerica(temperaturas, chamadoSelecionado.TG_TEMPERATURA_ID)"></v-text-field>
+                            </v-row>
+                            <v-row dense>
+                                <v-col cols="12" sm="6">
+                                    <v-textarea label="Temperatura" readonly filled dense hide-details rows="1" auto-grow
+                                        :title="descricaoTabelaGenerica(temperaturas, chamadoSelecionado.TG_TEMPERATURA_ID)"
+                                        :value="descricaoTabelaGenerica(temperaturas, chamadoSelecionado.TG_TEMPERATURA_ID)"></v-textarea>
                                 </v-col>
-                                <v-col cols="6" md="3">
-                                    <v-text-field label="Pressão Arterial" readonly filled dense hide-details
-                                        :value="descricaoTabelaGenerica(pressoesArteriais, chamadoSelecionado.TG_PRESSAO_ARTERIAL_ID)"></v-text-field>
+                                <v-col cols="12" sm="6">
+                                    <v-textarea label="Pressão Arterial" readonly filled dense hide-details rows="1" auto-grow
+                                        :title="descricaoTabelaGenerica(pressoesArteriais, chamadoSelecionado.TG_PRESSAO_ARTERIAL_ID)"
+                                        :value="descricaoTabelaGenerica(pressoesArteriais, chamadoSelecionado.TG_PRESSAO_ARTERIAL_ID)"></v-textarea>
                                 </v-col>
-                                <v-col cols="6" md="3">
-                                    <v-text-field label="Frequência Cardíaca" readonly filled dense hide-details
-                                        :value="descricaoTabelaGenerica(frequenciasCardiacas, chamadoSelecionado.TG_FREQUENCIA_CARDIACA_ID)"></v-text-field>
+                                <v-col cols="12" sm="6">
+                                    <v-textarea label="Frequência Cardíaca" readonly filled dense hide-details rows="1" auto-grow
+                                        :title="descricaoTabelaGenerica(frequenciasCardiacas, chamadoSelecionado.TG_FREQUENCIA_CARDIACA_ID)"
+                                        :value="descricaoTabelaGenerica(frequenciasCardiacas, chamadoSelecionado.TG_FREQUENCIA_CARDIACA_ID)"></v-textarea>
                                 </v-col>
-                                <v-col cols="6" md="3">
-                                    <v-text-field label="Saturação O2" readonly filled dense hide-details
-                                        :value="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"></v-text-field>
+                                <v-col cols="12" sm="6">
+                                    <v-textarea label="Saturação O2" readonly filled dense hide-details rows="1" auto-grow
+                                        :title="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"
+                                        :value="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"></v-textarea>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -334,23 +340,41 @@
                     <v-card outlined>
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
                             <v-icon small left color="primary">mdi-history</v-icon>
-                            Histórico de Trâmite / Situação
+                            Histórico do Chamado
                         </v-card-title>
                         <v-card-text class="pt-3">
                             <v-timeline dense align-top>
-                                <v-timeline-item v-for="sit in chamadoSelecionado.situacoes" :key="sit.CHAMADO_SITUACAO_ID"
-                                    :color="getSituacaoColor(sit.TG_SITUACAO_ID)" small>
+                                <v-timeline-item
+                                    v-for="sit in situacoesOrdenadas"
+                                    :key="sit.CHAMADO_SITUACAO_ID"
+                                    :color="getSituacaoColor(sit.TG_SITUACAO_ID)"
+                                    small>
                                     <v-row dense>
-                                        <v-col cols="12" md="4">
-                                            <strong>{{ descricaoTabelaGenerica(situacoesChamado, sit.TG_SITUACAO_ID) }}</strong>
-                                            <div class="caption text-muted">{{ formatarDataHora(sit.CHAMADO_SITUACAO_DATA) }}</div>
-                                        </v-col>
-                                        <v-col cols="12" md="8">
-                                            <div class="caption">
-                                                Operador: {{ sit.usuario ? sit.usuario.USUARIO_NOME : 'Sistema' }}
+                                        <v-col cols="12" sm="4" md="3">
+                                            <div class="font-weight-bold" :class="getSituacaoTextColor(sit.TG_SITUACAO_ID)">
+                                                {{ descricaoTabelaGenerica(situacoesChamado, sit.TG_SITUACAO_ID) }}
                                             </div>
-                                            <div class="body-2" v-if="sit.CHAMADO_SITUACAO_OBSERVACAO">
-                                                <em>"{{ sit.CHAMADO_SITUACAO_OBSERVACAO }}"</em>
+                                            <div class="caption grey--text text--darken-2">
+                                                <v-icon x-small>mdi-clock-outline</v-icon>
+                                                {{ formatarDataHora(sit.CHAMADO_SITUACAO_DATA) }}
+                                            </div>
+                                        </v-col>
+                                        <v-col cols="12" sm="8" md="9">
+                                            <!-- Apenas na abertura (Aberto / 1) exibir Registrado por -->
+                                            <div v-if="isSituacaoAberto(sit.TG_SITUACAO_ID)" class="caption mb-1">
+                                                <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
+                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(sit) }}
+                                            </div>
+
+                                            <!-- Detalhes para acompanhamento da etapa -->
+                                            <div class="body-2 text--secondary">
+                                                {{ getDetalheAcompanhamento(sit.TG_SITUACAO_ID) }}
+                                            </div>
+
+                                            <!-- Observações adicionais da fase (se houver, como motivo de cancelamento) -->
+                                            <div v-if="sit.CHAMADO_SITUACAO_OBSERVACAO" class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
+                                                <v-icon x-small>mdi-information-outline</v-icon>
+                                                {{ sit.CHAMADO_SITUACAO_OBSERVACAO }}
                                             </div>
                                         </v-col>
                                     </v-row>
@@ -593,6 +617,23 @@ export default {
                 .join(", ") || "-";
         },
 
+        situacoesOrdenadas() {
+            if (!this.chamadoSelecionado || !this.chamadoSelecionado.situacoes) {
+                return [];
+            }
+
+            return [...this.chamadoSelecionado.situacoes].sort((a, b) => {
+                let dataA = new Date(a.CHAMADO_SITUACAO_DATA || 0).getTime();
+                let dataB = new Date(b.CHAMADO_SITUACAO_DATA || 0).getTime();
+
+                if (dataA !== dataB) {
+                    return dataA - dataB;
+                }
+
+                return (a.CHAMADO_SITUACAO_ID || 0) - (b.CHAMADO_SITUACAO_ID || 0);
+            });
+        },
+
         podeConfirmarEncerramento() {
             if (this.processandoEncerramento) {
                 return false;
@@ -747,6 +788,62 @@ export default {
         calcularIdade(data) {
             if (!data) return "-";
             return moment().diff(moment(data), "years") + " anos";
+        },
+
+        getUnidadeSolicitanteNome(item) {
+            if (!item) return "-";
+            let u = item.unidadeSolicitante || item.unidade_solicitante;
+            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+        },
+
+        getUnidadeDestinoNome(item) {
+            if (!item) return "-";
+            let u = item.unidadeDestino || item.unidade_destino;
+            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+        },
+
+        getSituacaoAtualId(item) {
+            if (!item) return null;
+            let s = item.situacaoAtual || item.situacao_atual;
+            return s ? s.TG_SITUACAO_ID : item.TG_SITUACAO_ID;
+        },
+
+        isSituacaoAberto(situacaoId) {
+            return Number(situacaoId) === 1;
+        },
+
+        getNomeUsuarioRegistro(sit) {
+            if (!sit) return "Unidade Solicitante";
+            let usuario = sit.usuario || sit.USUARIO;
+            return usuario ? usuario.USUARIO_NOME : "Unidade Solicitante";
+        },
+
+        getDetalheAcompanhamento(situacaoId) {
+            switch (Number(situacaoId)) {
+                case 1:
+                    return "Chamado feito e salvo pela unidade, mas não validado pelo Regulador Cia.";
+                case 2:
+                    return "Chamado recebido e sendo analisado pelo Regulador Cia.";
+                case 3:
+                    return "Equipe assistencial do veículo iniciou os procedimentos para o deslocamento do(s) paciente(s).";
+                case 4:
+                    return "Deslocamento de ida e volta finalizado sem intercorrência.";
+                case 5:
+                    return "Chamado não aprovado na análise do Regulador Cia ou que teve alguma intercorrência que impossibilitou a conclusão satisfatória do chamado.";
+                default:
+                    return "";
+            }
+        },
+
+        getSituacaoTextColor(situacaoId) {
+            switch (Number(situacaoId)) {
+                case 1: return "grey--text text--darken-3";
+                case 2: return "blue--text text--darken-3";
+                case 3: return "orange--text text--darken-4";
+                case 4: return "green--text text--darken-3";
+                case 5: return "red--text text--darken-3";
+                default: return "grey--text";
+            }
         }
     }
 }

@@ -162,7 +162,10 @@ class ChamadoAcompanhamentoController extends Controller
             'unidadeDestino',
             'procedimentos',
             'diagnosticos',
-            'situacoes',
+            'situacoes' => function ($query) {
+                $query->orderBy('CHAMADO_SITUACAO_DATA', 'asc')
+                      ->orderBy('CHAMADO_SITUACAO_ID', 'asc');
+            },
             'situacoes.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
