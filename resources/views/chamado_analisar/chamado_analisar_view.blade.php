@@ -9,10 +9,6 @@
     :tipos-precaucao='@json($tiposPrecaucao)'
     :suportes-o2='@json($suportesO2)'
     :suportes-hemodinamicos='@json($suportesHemodinamicos)'
-    :temperaturas='@json($temperaturas)'
-    :frequencias-cardiacas='@json($frequenciasCardiacas)'
-    :pressoes-arteriais='@json($pressoesArteriais)'
-    :saturacoes='@json($saturacoes)'
     :motivos-cancelamento='@json($motivosCancelamento)'
 ></chamado-analisar-view>
 @endsection

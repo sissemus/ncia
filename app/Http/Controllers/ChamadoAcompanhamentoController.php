@@ -34,10 +34,6 @@ class ChamadoAcompanhamentoController extends Controller
         $tiposPrecaucao = TabelaGenerica::tipoPrecaucao();
         $suportesO2 = TabelaGenerica::suporteO2();
         $suportesHemodinamicos = TabelaGenerica::suporteHemodinamico();
-        $temperaturas = TabelaGenerica::sinaisVitaisTemperatura();
-        $frequenciasCardiacas = TabelaGenerica::sinaisVitaisFrequenciaCardiaca();
-        $pressoesArteriais = TabelaGenerica::sinaisVitaisPressaoArterial();
-        $saturacoes = TabelaGenerica::sinaisVitaisSaturacao();
         $motivosCancelamento = TabelaGenerica::motivoCancelamento();
         $podeEncerrar = $this->podeEncerrar($perfis);
         $somenteEmAtendimento = $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
@@ -51,10 +47,6 @@ class ChamadoAcompanhamentoController extends Controller
             'tiposPrecaucao',
             'suportesO2',
             'suportesHemodinamicos',
-            'temperaturas',
-            'frequenciasCardiacas',
-            'pressoesArteriais',
-            'saturacoes',
             'motivosCancelamento',
             'podeEncerrar',
             'somenteEmAtendimento'

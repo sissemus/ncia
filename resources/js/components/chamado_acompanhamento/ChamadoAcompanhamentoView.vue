@@ -211,6 +211,8 @@
                                         <div class="body-2 font-weight-bold">{{ getUnidadeSolicitanteNome(chamadoSelecionado) }}</div>
                                         <div class="caption grey--text">
                                             Profissional: {{ chamadoSelecionado.profissionalSolicitanteNome || chamadoSelecionado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-' }} |
+                                            Conselho: {{ chamadoSelecionado.CHAMADO_CONSELHO_PROFISSIONAL || '-' }}
+                                            {{ chamadoSelecionado.CHAMADO_NUMERO_CONSELHO || '-' }} |
                                             Setor: {{ chamadoSelecionado.CHAMADO_SETOR_SOLICITANTE || '-' }} | 
                                             Leito: {{ chamadoSelecionado.CHAMADO_LEITO_SOLICITANTE || '-' }}
                                         </div>
@@ -279,23 +281,28 @@
                             <v-row dense>
                                 <v-col cols="12" sm="6">
                                     <v-textarea label="Temperatura" readonly filled dense hide-details rows="1" auto-grow
-                                        :title="descricaoTabelaGenerica(temperaturas, chamadoSelecionado.TG_TEMPERATURA_ID)"
-                                        :value="descricaoTabelaGenerica(temperaturas, chamadoSelecionado.TG_TEMPERATURA_ID)"></v-textarea>
+                                        :title="chamadoSelecionado.CHAMADO_TEMPERATURA || '-'"
+                                        :value="chamadoSelecionado.CHAMADO_TEMPERATURA || '-'"></v-textarea>
                                 </v-col>
                                 <v-col cols="12" sm="6">
                                     <v-textarea label="Pressão Arterial" readonly filled dense hide-details rows="1" auto-grow
-                                        :title="descricaoTabelaGenerica(pressoesArteriais, chamadoSelecionado.TG_PRESSAO_ARTERIAL_ID)"
-                                        :value="descricaoTabelaGenerica(pressoesArteriais, chamadoSelecionado.TG_PRESSAO_ARTERIAL_ID)"></v-textarea>
+                                        :title="chamadoSelecionado.CHAMADO_PRESSAO_ARTERIAL || '-'"
+                                        :value="chamadoSelecionado.CHAMADO_PRESSAO_ARTERIAL || '-'"></v-textarea>
                                 </v-col>
                                 <v-col cols="12" sm="6">
                                     <v-textarea label="Frequência Cardíaca" readonly filled dense hide-details rows="1" auto-grow
-                                        :title="descricaoTabelaGenerica(frequenciasCardiacas, chamadoSelecionado.TG_FREQUENCIA_CARDIACA_ID)"
-                                        :value="descricaoTabelaGenerica(frequenciasCardiacas, chamadoSelecionado.TG_FREQUENCIA_CARDIACA_ID)"></v-textarea>
+                                        :title="chamadoSelecionado.CHAMADO_FREQUENCIA_CARDIACA || '-'"
+                                        :value="chamadoSelecionado.CHAMADO_FREQUENCIA_CARDIACA || '-'"></v-textarea>
                                 </v-col>
                                 <v-col cols="12" sm="6">
                                     <v-textarea label="Saturação O2" readonly filled dense hide-details rows="1" auto-grow
-                                        :title="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"
-                                        :value="descricaoTabelaGenerica(saturacoes, chamadoSelecionado.TG_SATURACAO_ID)"></v-textarea>
+                                        :title="chamadoSelecionado.CHAMADO_SATURACAO_O2 || '-'"
+                                        :value="chamadoSelecionado.CHAMADO_SATURACAO_O2 || '-'"></v-textarea>
+                                </v-col>
+                                <v-col cols="12" sm="6">
+                                    <v-textarea label="Escala Glasgow" readonly filled dense hide-details rows="1" auto-grow
+                                        :title="chamadoSelecionado.CHAMADO_ESCALA_GLASGOW || '-'"
+                                        :value="chamadoSelecionado.CHAMADO_ESCALA_GLASGOW || '-'"></v-textarea>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -473,10 +480,6 @@ export default {
         tiposPrecaucao: { type: Array, default: () => [] },
         suportesO2: { type: Array, default: () => [] },
         suportesHemodinamicos: { type: Array, default: () => [] },
-        temperaturas: { type: Array, default: () => [] },
-        frequenciasCardiacas: { type: Array, default: () => [] },
-        pressoesArteriais: { type: Array, default: () => [] },
-        saturacoes: { type: Array, default: () => [] },
         motivosCancelamento: { type: Array, default: () => [] },
         podeEncerrar: { type: Boolean, default: false },
         somenteEmAtendimento: { type: Boolean, default: false }
