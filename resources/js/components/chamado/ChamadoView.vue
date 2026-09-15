@@ -180,9 +180,18 @@
                                             @change="verificarDuplicidade"
                                             :menu-props="{ offsetY: true }"></v-autocomplete>
                                     </v-col>
-                                    <v-col cols="12">
+                                    <v-col cols="12" sm="6">
                                         <v-text-field label="Profissional Solicitante*" autocomplete="off" outlined dense 
                                         hide-details v-model="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE"></v-text-field>
+                                    </v-col>
+                                    <v-col cols="6" sm="3">
+                                        <v-select label="Conselho" :items="['CRM', 'COREN']" clearable outlined dense
+                                            hide-details v-model="chamado.CHAMADO_CONSELHO_PROFISSIONAL"></v-select>
+                                    </v-col>
+                                    <v-col cols="6" sm="3">
+                                        <v-text-field label="Nº do Conselho" autocomplete="off" inputmode="numeric"
+                                            maxlength="6" outlined dense hide-details
+                                            v-model="chamado.CHAMADO_NUMERO_CONSELHO"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="6">
                                         <v-text-field label="Setor Solicitante*" autocomplete="off" outlined dense
@@ -268,24 +277,24 @@
                                     v-model="chamado.TG_SUPORTE_O2_ID"></v-select>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-select label="Temperatura*" :items="temperaturas" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" clearable outlined dense hide-details
-                                    v-model="chamado.TG_TEMPERATURA_ID"></v-select>
+                                <v-text-field label="Temperatura*" autocomplete="off" maxlength="20" outlined dense
+                                    hide-details v-model="chamado.CHAMADO_TEMPERATURA"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-select label="Pressão Arterial*" :items="pressoesArteriais" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" clearable outlined dense hide-details
-                                    v-model="chamado.TG_PRESSAO_ARTERIAL_ID"></v-select>
+                                <v-text-field label="Pressão Arterial*" autocomplete="off" maxlength="20" outlined
+                                    dense hide-details v-model="chamado.CHAMADO_PRESSAO_ARTERIAL"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-select label="Freq. Cardíaca*" :items="frequenciasCardiacas" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" clearable outlined dense hide-details
-                                    v-model="chamado.TG_FREQUENCIA_CARDIACA_ID"></v-select>
+                                <v-text-field label="Freq. Cardíaca*" autocomplete="off" maxlength="20" outlined dense
+                                    hide-details v-model="chamado.CHAMADO_FREQUENCIA_CARDIACA"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-select label="Saturação O2*" :items="saturacoes" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" clearable outlined dense hide-details
-                                    v-model="chamado.TG_SATURACAO_ID"></v-select>
+                                <v-text-field label="Saturação O2*" autocomplete="off" maxlength="20" outlined dense
+                                    hide-details v-model="chamado.CHAMADO_SATURACAO_O2"></v-text-field>
+                            </v-col>
+                            <v-col cols="6" sm="3" md="3">
+                                <v-text-field label="Escala Glasgow" autocomplete="off" maxlength="20" outlined dense
+                                    hide-details v-model="chamado.CHAMADO_ESCALA_GLASGOW"></v-text-field>
                             </v-col>
                         </v-row>
 
@@ -339,10 +348,6 @@ export default {
         tiposPrecaucao: { type: Array, default: () => [] },
         suportesO2: { type: Array, default: () => [] },
         suportesHemodinamicos: { type: Array, default: () => [] },
-        temperaturas: { type: Array, default: () => [] },
-        frequenciasCardiacas: { type: Array, default: () => [] },
-        pressoesArteriais: { type: Array, default: () => [] },
-        saturacoes: { type: Array, default: () => [] },
         unidadesSolicitantes: { type: Array, default: () => [] },
         unidadesDestino: { type: Array, default: () => [] },
         procedimentos: { type: Array, default: () => [] },
@@ -574,15 +579,18 @@ export default {
             if (this.unidadesSolicitantes.length) this.chamado.UNIDADE_ID_SOLICITANTE = this.unidadesSolicitantes[0].UNIDADE_ID;
             if (this.unidadesDestino.length) this.chamado.UNIDADE_ID_DESTINO = this.unidadesDestino[0].UNIDADE_ID;
             this.chamado.CHAMADO_PROFISSIONAL_SOLICITANTE = "Dr. João da Silva";
+            this.chamado.CHAMADO_CONSELHO_PROFISSIONAL = "CRM";
+            this.chamado.CHAMADO_NUMERO_CONSELHO = "123456";
             if (this.procedimentos.length) this.chamado.PROCEDIMENTO_ID = this.procedimentos[0].PROCEDIMENTO_ID;
             if (this.diagnosticos.length) this.chamado.DIAGNOSTICO_ID = this.diagnosticos[0].DIAGNOSTICO_ID;
             if (this.tiposPrecaucao.length) this.chamado.TG_TIPO_PRECAUCAO_ID = this.tiposPrecaucao[0].COLUNA_ID;
             if (this.suportesO2.length) this.chamado.TG_SUPORTE_O2_ID = this.suportesO2[0].COLUNA_ID;
             if (this.suportesHemodinamicos.length) this.chamado.TG_SUPORTE_HEMODINAMICO_ID = this.suportesHemodinamicos[0].COLUNA_ID;
-            if (this.temperaturas.length) this.chamado.TG_TEMPERATURA_ID = this.temperaturas[0].COLUNA_ID;
-            if (this.frequenciasCardiacas.length) this.chamado.TG_FREQUENCIA_CARDIACA_ID = this.frequenciasCardiacas[0].COLUNA_ID;
-            if (this.pressoesArteriais.length) this.chamado.TG_PRESSAO_ARTERIAL_ID = this.pressoesArteriais[0].COLUNA_ID;
-            if (this.saturacoes.length) this.chamado.TG_SATURACAO_ID = this.saturacoes[0].COLUNA_ID;
+            this.chamado.CHAMADO_TEMPERATURA = "36,5 °C";
+            this.chamado.CHAMADO_FREQUENCIA_CARDIACA = "80 bpm";
+            this.chamado.CHAMADO_PRESSAO_ARTERIAL = "120/80 mmHg";
+            this.chamado.CHAMADO_SATURACAO_O2 = "98%";
+            this.chamado.CHAMADO_ESCALA_GLASGOW = "15";
 
             this.chamado.CHAMADO_HORARIO_ATENDIMENTO = "21:30";
             this.chamado.CHAMADO_AMBULANCIA_EXTRA = 0;
@@ -659,6 +667,16 @@ export default {
                 return false;
             }
 
+            if (!!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL !== !!this.chamado.CHAMADO_NUMERO_CONSELHO) {
+                Swal.fire("Atenção", "Informe o conselho profissional e o respectivo número.", "warning");
+                return false;
+            }
+
+            if (this.chamado.CHAMADO_NUMERO_CONSELHO && !/^\d{6}$/.test(this.chamado.CHAMADO_NUMERO_CONSELHO)) {
+                Swal.fire("Atenção", "O número do conselho deve conter exatamente 6 dígitos.", "warning");
+                return false;
+            }
+
             if (!this.chamado.UNIDADE_ID_DESTINO) {
                 Swal.fire("Atenção", "Informe a unidade destino.", "warning");
                 return false;
@@ -704,22 +722,22 @@ export default {
                 return false;
             }
 
-            if (!this.chamado.TG_TEMPERATURA_ID) {
+            if (!this.chamado.CHAMADO_TEMPERATURA) {
                 Swal.fire("Atenção", "Informe a temperatura.", "warning");
                 return false;
             }
 
-            if (!this.chamado.TG_PRESSAO_ARTERIAL_ID) {
+            if (!this.chamado.CHAMADO_PRESSAO_ARTERIAL) {
                 Swal.fire("Atenção", "Informe a pressão arterial.", "warning");
                 return false;
             }
 
-            if (!this.chamado.TG_FREQUENCIA_CARDIACA_ID) {
+            if (!this.chamado.CHAMADO_FREQUENCIA_CARDIACA) {
                 Swal.fire("Atenção", "Informe a frequência cardíaca.", "warning");
                 return false;
             }
 
-            if (!this.chamado.TG_SATURACAO_ID) {
+            if (!this.chamado.CHAMADO_SATURACAO_O2) {
                 Swal.fire("Atenção", "Informe a saturação de O2.", "warning");
                 return false;
             }

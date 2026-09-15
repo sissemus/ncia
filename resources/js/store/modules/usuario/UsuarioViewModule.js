@@ -16,7 +16,7 @@ export default {
             USUARIO_VIGENCIA: null,
             USUARIO_ULTIMO_ACESSO: null,
             USUARIO_CPF: null,
-            USUARIO_EMAIL: null,
+            USUARIO_CONTATO: null,
         },
         listar:null
     },
@@ -51,7 +51,7 @@ export default {
                     USUARIO_VIGENCIA: null,
                     USUARIO_ULTIMO_ACESSO: null,
                     USUARIO_CPF: null,
-                    USUARIO_EMAIL: null,
+                    USUARIO_CONTATO: null,
                 }
             }
         },

@@ -73,57 +73,51 @@ class VeiculoController extends Controller
         // Handle unit mapping
         $vinculoAtivo = VeiculoUnidade::ondeAtivo($veiculo->VEICULO_ID)->first();
 
-        if ($request->filled('UNIDADE_ID')) {
-            $novaUnidadeId = (int) $request->UNIDADE_ID;
-            $dtIni = $request->VEICULO_UNIDADE_DT_INI ? Carbon::parse($request->VEICULO_UNIDADE_DT_INI) : Carbon::now();
+        $novaUnidadeId = (int) $request->UNIDADE_ID;
+        $dtIni = $request->VEICULO_UNIDADE_DT_INI ? Carbon::parse($request->VEICULO_UNIDADE_DT_INI) : Carbon::now();
 
-            if ($vinculoAtivo && $vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
-                $novaData = $dtIni->format('Y-m-d');
-                $dataAntiga = $vinculoAtivo->VEICULO_UNIDADE_DT_INI->format('Y-m-d');
+        if ($vinculoAtivo && (int) $vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
+            $novaData = $dtIni->format('Y-m-d');
+            $dataAntiga = $vinculoAtivo->VEICULO_UNIDADE_DT_INI ? Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI)->format('Y-m-d') : null;
 
-                if ($novaData === $dataAntiga) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'VEICULO_UNIDADE_DT_INI' => ['A data do vínculo deve ser alterada quando a unidade vinculada ao veículo for alterada.']
-                    ]);
-                }
-
-                if ($novaData < $dataAntiga) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'VEICULO_UNIDADE_DT_INI' => ['A data do novo vínculo não pode ser anterior à data do vínculo anterior.']
-                    ]);
-                }
+            if ($dataAntiga && $novaData === $dataAntiga) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'VEICULO_UNIDADE_DT_INI' => ['A data do vínculo deve ser alterada quando a unidade vinculada ao veículo for alterada.']
+                ]);
             }
 
-            if (!$vinculoAtivo) {
-                // No active mapping: create a new one
-                VeiculoUnidade::create([
-                    'VEICULO_ID' => $veiculo->VEICULO_ID,
-                    'UNIDADE_ID' => $novaUnidadeId,
-                    'VEICULO_UNIDADE_DT_INI' => $dtIni,
-                    'VEICULO_UNIDADE_DT_FIM' => null
+            if ($dataAntiga && $novaData < $dataAntiga) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'VEICULO_UNIDADE_DT_INI' => ['A data do novo vínculo não pode ser anterior à data do vínculo anterior.']
                 ]);
-            } else if ($vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
-                // Unit changed: close old mapping and create a new one
-                $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = $dtIni->copy()->subDay();
-                $vinculoAtivo->save();
-
-                VeiculoUnidade::create([
-                    'VEICULO_ID' => $veiculo->VEICULO_ID,
-                    'UNIDADE_ID' => $novaUnidadeId,
-                    'VEICULO_UNIDADE_DT_INI' => $dtIni,
-                    'VEICULO_UNIDADE_DT_FIM' => null
-                ]);
-            } else {
-                // Unit is the same: update DT_INI if changed
-                $vinculoAtivo->VEICULO_UNIDADE_DT_INI = $dtIni;
-                $vinculoAtivo->save();
             }
+
+            // Unidade alterada: encerrar o vínculo anterior e criar o novo
+            $dataIniAntiga = Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI);
+            $dtFimAnterior = $dtIni->copy()->subDay();
+            $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = $dataIniAntiga->isAfter($dtFimAnterior) ? $dataIniAntiga : $dtFimAnterior;
+            $vinculoAtivo->save();
+
+            VeiculoUnidade::create([
+                'VEICULO_ID' => $veiculo->VEICULO_ID,
+                'UNIDADE_ID' => $novaUnidadeId,
+                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
+                'VEICULO_UNIDADE_DT_INI' => $dtIni,
+                'VEICULO_UNIDADE_DT_FIM' => null
+            ]);
+        } else if (!$vinculoAtivo) {
+            // Nenhum vínculo ativo: criar novo
+            VeiculoUnidade::create([
+                'VEICULO_ID' => $veiculo->VEICULO_ID,
+                'UNIDADE_ID' => $novaUnidadeId,
+                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
+                'VEICULO_UNIDADE_DT_INI' => $dtIni,
+                'VEICULO_UNIDADE_DT_FIM' => null
+            ]);
         } else {
-            // UNIDADE_ID is empty: close any active mapping
-            if ($vinculoAtivo) {
-                $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = Carbon::now();
-                $vinculoAtivo->save();
-            }
+            // Mesma unidade: apenas atualiza data se tiver sido alterada
+            $vinculoAtivo->VEICULO_UNIDADE_DT_INI = $dtIni;
+            $vinculoAtivo->save();
         }
 
         return response($veiculo->load(Veiculo::relacionamento()));

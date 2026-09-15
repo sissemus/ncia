@@ -17,20 +17,32 @@ class Telefone implements CastsAttributes
      */
     public function get($model, $key, $value, $attributes)
     {
-        if ($value === null) {
-            return '';
+        if ($value === null || $value === '') {
+            return $value;
         }
 
-        // Adiciona zeros à esquerda para garantir que a string tenha 11 caracteres
-        $telefone = str_pad($value, 11, '0', STR_PAD_LEFT);
+        $telefone = preg_replace('/[^0-9]/', '', $value);
+        $tamanho = strlen($telefone);
 
-        $ddd    = substr($telefone, 0, 2);
-        $prefixo = substr($telefone, 2, 5);
-        $sufixo  = substr($telefone, 7, 4);
+        if ($tamanho === 10) {
+            return sprintf(
+                '(%s) %s-%s',
+                substr($telefone, 0, 2),
+                substr($telefone, 2, 4),
+                substr($telefone, 6, 4)
+            );
+        }
 
-        $telefone_formatado = "($ddd) $prefixo-$sufixo";
+        if ($tamanho === 11) {
+            return sprintf(
+                '(%s) %s-%s',
+                substr($telefone, 0, 2),
+                substr($telefone, 2, 5),
+                substr($telefone, 7, 4)
+            );
+        }
 
-        return $telefone_formatado;
+        return $telefone;
     }
 
     /**
@@ -44,12 +56,10 @@ class Telefone implements CastsAttributes
      */
     public function set($model, $key, $value, $attributes)
     {
-        if ($value == null) {
+        if ($value === null || $value === '') {
             return null;
         }
 
-        $telefone = preg_replace('/[^0-9]/', '', $value);
-
-        return $telefone;
+        return preg_replace('/[^0-9]/', '', $value);
     }
 }

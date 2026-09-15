@@ -36,10 +36,6 @@ class ChamadoAnalisarController extends Controller
             'tiposPrecaucao' => TabelaGenerica::tipoPrecaucao(),
             'suportesO2' => TabelaGenerica::suporteO2(),
             'suportesHemodinamicos' => TabelaGenerica::suporteHemodinamico(),
-            'temperaturas' => TabelaGenerica::sinaisVitaisTemperatura(),
-            'frequenciasCardiacas' => TabelaGenerica::sinaisVitaisFrequenciaCardiaca(),
-            'pressoesArteriais' => TabelaGenerica::sinaisVitaisPressaoArterial(),
-            'saturacoes' => TabelaGenerica::sinaisVitaisSaturacao(),
             'motivosCancelamento' => TabelaGenerica::motivoCancelamento(),
         ]);
     }

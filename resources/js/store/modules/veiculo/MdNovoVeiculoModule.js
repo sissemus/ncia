@@ -32,24 +32,25 @@ export default {
 
     mutations: {
         setVeiculo(state, veiculo = null) {
+            const today = new Date();
+            const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
             if (veiculo) {
                 state.veiculo = JSON.parse(JSON.stringify(veiculo));
                 
-                if (veiculo.vinculoAtivo) {
-                    state.veiculo.UNIDADE_ID = veiculo.vinculoAtivo.UNIDADE_ID;
-                    if (veiculo.vinculoAtivo.VEICULO_UNIDADE_DT_INI) {
-                        state.veiculo.VEICULO_UNIDADE_DT_INI = veiculo.vinculoAtivo.VEICULO_UNIDADE_DT_INI.substring(0, 10);
+                const vinculo = veiculo.vinculoAtivo || veiculo.vinculo_ativo;
+                if (vinculo) {
+                    state.veiculo.UNIDADE_ID = vinculo.UNIDADE_ID ? Number(vinculo.UNIDADE_ID) : null;
+                    if (vinculo.VEICULO_UNIDADE_DT_INI) {
+                        state.veiculo.VEICULO_UNIDADE_DT_INI = String(vinculo.VEICULO_UNIDADE_DT_INI).substring(0, 10);
                     } else {
-                        state.veiculo.VEICULO_UNIDADE_DT_INI = null;
+                        state.veiculo.VEICULO_UNIDADE_DT_INI = localDate;
                     }
                 } else {
                     state.veiculo.UNIDADE_ID = null;
-                    state.veiculo.VEICULO_UNIDADE_DT_INI = null;
+                    state.veiculo.VEICULO_UNIDADE_DT_INI = localDate;
                 }
             } else {
-                const today = new Date();
-                const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                
                 state.veiculo = {
                     VEICULO_ID: null,
                     VEICULO_IDENTIFICACAO: null,

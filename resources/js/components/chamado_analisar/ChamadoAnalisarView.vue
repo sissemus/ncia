@@ -50,16 +50,18 @@
                             <v-col cols="12" md="6"><v-text-field label="Unidade de destino" readonly filled dense hide-details color="deep-orange" :value="valor(unidadeDestino, 'UNIDADE_NOME')" /></v-col>
 
                             <v-col cols="12" md="4"><v-text-field label="Profissional solicitante" readonly filled dense hide-details :value="chamado.profissionalSolicitanteNome || chamado.CHAMADO_PROFISSIONAL_SOLICITANTE || '-'" /></v-col>
-                            <v-col cols="6" md="2"><v-text-field label="Setor de origem" readonly filled dense hide-details :value="chamado.CHAMADO_SETOR_SOLICITANTE || '-'" /></v-col>
-                            <v-col cols="6" md="2"><v-text-field label="Leito de origem" readonly filled dense hide-details :value="chamado.CHAMADO_LEITO_SOLICITANTE || '-'" /></v-col>
-                            <v-col cols="6" md="2"><v-text-field label="Setor de destino" readonly filled dense hide-details :value="chamado.CHAMADO_SETOR_DESTINO || '-'" /></v-col>
-                            <v-col cols="6" md="2"><v-text-field label="Leito de destino" readonly filled dense hide-details :value="chamado.CHAMADO_LEITO_DESTINO || '-'" /></v-col>
+                            <v-col cols="6" md="4"><v-text-field label="Conselho" readonly filled dense hide-details :value="chamado.CHAMADO_CONSELHO_PROFISSIONAL || '-'" /></v-col>
+                            <v-col cols="6" md="4"><v-text-field label="Nº do conselho" readonly filled dense hide-details :value="chamado.CHAMADO_NUMERO_CONSELHO || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Setor de origem" readonly filled dense hide-details :value="chamado.CHAMADO_SETOR_SOLICITANTE || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Leito de origem" readonly filled dense hide-details :value="chamado.CHAMADO_LEITO_SOLICITANTE || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Setor de destino" readonly filled dense hide-details :value="chamado.CHAMADO_SETOR_DESTINO || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Leito de destino" readonly filled dense hide-details :value="chamado.CHAMADO_LEITO_DESTINO || '-'" /></v-col>
 
                             <v-col cols="12" md="6"><v-textarea label="Procedimentos" readonly filled dense hide-details rows="2" :value="procedimentosNome" /></v-col>
                             <v-col cols="12" md="6"><v-textarea label="Diagnósticos" readonly filled dense hide-details rows="2" :value="diagnosticosNome" /></v-col>
-                            <v-col cols="12" md="9"><v-textarea label="Dispositivos" readonly filled dense hide-details rows="2" :value="chamado.CHAMADO_DISPOSITIVOS || '-'" /></v-col>
-                            <v-col cols="6" md="1"><v-text-field label="Peso" readonly filled dense hide-details :value="peso" /></v-col>
-                            <v-col cols="6" md="2"><v-text-field label="Ambulância extra" readonly filled dense hide-details :value="simNao(chamado.CHAMADO_AMBULANCIA_EXTRA)" /></v-col>
+                            <v-col cols="12" md="9"><v-textarea class="campo-detalhe-alinhado" label="Dispositivos" readonly filled dense hide-details rows="2" :value="chamado.CHAMADO_DISPOSITIVOS || '-'" /></v-col>
+                            <v-col cols="6" md="1"><v-textarea class="campo-detalhe-alinhado" label="Peso" readonly filled dense hide-details rows="2" :value="peso" /></v-col>
+                            <v-col cols="6" md="2"><v-textarea class="campo-detalhe-alinhado" label="Ambulância extra" readonly filled dense hide-details rows="2" :value="simNao(chamado.CHAMADO_AMBULANCIA_EXTRA)" /></v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
@@ -71,10 +73,11 @@
                             <v-col cols="12" md="4"><v-text-field label="Precaução" readonly filled dense hide-details :value="descricao(tiposPrecaucao, chamado.TG_TIPO_PRECAUCAO_ID)" /></v-col>
                             <v-col cols="12" md="4"><v-text-field label="Suporte de O2" readonly filled dense hide-details :value="descricao(suportesO2, chamado.TG_SUPORTE_O2_ID)" /></v-col>
                             <v-col cols="12" md="4"><v-text-field label="Suporte hemodinâmico" readonly filled dense hide-details :value="descricao(suportesHemodinamicos, chamado.TG_SUPORTE_HEMODINAMICO_ID)" /></v-col>
-                            <v-col cols="6" md="3"><v-text-field label="Temperatura" readonly filled dense hide-details :value="descricao(temperaturas, chamado.TG_TEMPERATURA_ID)" /></v-col>
-                            <v-col cols="6" md="3"><v-text-field label="Frequência cardíaca" readonly filled dense hide-details :value="descricao(frequenciasCardiacas, chamado.TG_FREQUENCIA_CARDIACA_ID)" /></v-col>
-                            <v-col cols="6" md="3"><v-text-field label="Pressão arterial" readonly filled dense hide-details :value="descricao(pressoesArteriais, chamado.TG_PRESSAO_ARTERIAL_ID)" /></v-col>
-                            <v-col cols="6" md="3"><v-text-field label="Saturação de O2" readonly filled dense hide-details :value="descricao(saturacoes, chamado.TG_SATURACAO_ID)" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Temperatura" readonly filled dense hide-details :value="chamado.CHAMADO_TEMPERATURA || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Frequência cardíaca" readonly filled dense hide-details :value="chamado.CHAMADO_FREQUENCIA_CARDIACA || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Pressão arterial" readonly filled dense hide-details :value="chamado.CHAMADO_PRESSAO_ARTERIAL || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Saturação de O2" readonly filled dense hide-details :value="chamado.CHAMADO_SATURACAO_O2 || '-'" /></v-col>
+                            <v-col cols="6" md="3"><v-text-field label="Escala Glasgow" readonly filled dense hide-details :value="chamado.CHAMADO_ESCALA_GLASGOW || '-'" /></v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
@@ -156,11 +159,7 @@ export default {
         tiposChamado: { type: Array, default: () => [] },
         tiposPrecaucao: { type: Array, default: () => [] },
         suportesO2: { type: Array, default: () => [] },
-        suportesHemodinamicos: { type: Array, default: () => [] },
-        temperaturas: { type: Array, default: () => [] },
-        frequenciasCardiacas: { type: Array, default: () => [] },
-        pressoesArteriais: { type: Array, default: () => [] },
-        saturacoes: { type: Array, default: () => [] }
+        suportesHemodinamicos: { type: Array, default: () => [] }
     },
     data: () => ({
         msgId: 'msgChamadoAnalisar', chamado: null, veiculos: [], equipeSelecionada: null,
@@ -257,6 +256,7 @@ export default {
         executar(acao, dados) {
             if (this.processando) return;
             this.processando = true;
+            let redirecionando = false;
             axios.post(`${this.baseUrl}/chamado_analisar/${acao}`, { CHAMADO_ID: this.chamado.CHAMADO_ID, ...(dados || {}) })
                 .then(response => {
                     this.dialog = false;
@@ -264,10 +264,25 @@ export default {
                     this.chamado = response.data.retorno;
                     this.encaminhadoAgora = acao === 'encaminhar';
                     if (this.encaminhadoAgora) this.veiculos = [];
+                    if (acao === 'encaminhar') {
+                        redirecionando = true;
+                        return Swal.fire({
+                            title: 'Encaminhamento realizado',
+                            text: 'Veículo e equipe vinculados. O chamado passou para Em Atendimento.',
+                            icon: 'success',
+                            confirmButtonText: 'Voltar para Home',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => {
+                            window.location.href = `${this.baseUrl}/home`;
+                        });
+                    }
                     if (acao === 'concluir' || acao === 'cancelar-atendimento') {
                         Swal.fire('Sucesso', acao === 'concluir' ? 'Atendimento concluído com sucesso.' : 'Atendimento cancelado com sucesso.', 'success');
                     }
-                }).catch(this.erro).finally(() => { this.processando = false; });
+                }).catch(this.erro).finally(() => {
+                    if (!redirecionando) this.processando = false;
+                });
         },
         descricaoVeiculoEquipe(veiculo) {
             if (!veiculo) return '-';
@@ -291,4 +306,5 @@ export default {
 .analysis-content { padding: 18px 16px 22px; }
 .status-content { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .status-content span { font-weight: 600; }
+.campo-detalhe-alinhado { height: 80px; }
 </style>

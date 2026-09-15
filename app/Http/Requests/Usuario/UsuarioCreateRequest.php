@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class UsuarioCreateRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            "USUARIO_CONTATO" => preg_replace('/[^0-9]/', '', (string) $this->USUARIO_CONTATO),
+        ]);
+    }
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -29,7 +36,7 @@ class UsuarioCreateRequest extends FormRequest
             "USUARIO_SENHA" => ["required", "same:USUARIO_SENHA_CONFIRMATION", "max:32"],
             "USUARIO_NOME" => ["required", "unique:USUARIO", "max:255"],
             "USUARIO_CPF" => ["required", "unique:USUARIO", "cpf"],
-            "USUARIO_EMAIL" => ["required", "unique:USUARIO", "email", "max:50"],
+            "USUARIO_CONTATO" => ["required", "regex:/^[0-9]{10,11}$/", "unique:USUARIO,USUARIO_CONTATO"],
             "USUARIO_ATIVO" => ["required", "integer"],
             "USUARIO_SENHA_CONFIRMATION" => ["required"]
         ];
@@ -43,7 +50,7 @@ class UsuarioCreateRequest extends FormRequest
             "USUARIO_SENHA" => "<b>SENHA</b>",
             "USUARIO_NOME"  => "<b>NOME</b>",
             "USUARIO_CPF"  => "<b>CPF</b>",
-            "USUARIO_EMAIL" => "<b>EMAIL</b>",
+            "USUARIO_CONTATO" => "<b>NÚMERO DE CONTATO</b>",
             "USUARIO_ATIVO" => "<b>ATIVO</b>",
             "USUARIO_SENHA_CONFIRMATION" => "<b>CONFIRMAR SENHA</b>",
         ];
@@ -52,7 +59,8 @@ class UsuarioCreateRequest extends FormRequest
     public function messages()
     {
         return [
-            "USUARIO_CPF.cpf" => 'O campo :attribute é inválido.'
+            "USUARIO_CPF.cpf" => 'O campo :attribute é inválido.',
+            "USUARIO_CONTATO.regex" => 'O campo :attribute deve conter DDD e telefone com 10 ou 11 dígitos.'
         ];
     }
 }

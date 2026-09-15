@@ -29,10 +29,6 @@ class ChamadoController extends Controller
         $tiposPrecaucao = TabelaGenerica::tipoPrecaucao();
         $suportesO2 = TabelaGenerica::suporteO2();
         $suportesHemodinamicos = TabelaGenerica::suporteHemodinamico();
-        $temperaturas = TabelaGenerica::sinaisVitaisTemperatura();
-        $frequenciasCardiacas = TabelaGenerica::sinaisVitaisFrequenciaCardiaca();
-        $pressoesArteriais = TabelaGenerica::sinaisVitaisPressaoArterial();
-        $saturacoes = TabelaGenerica::sinaisVitaisSaturacao();
         $unidadesSolicitantes = Unidade::where("UNIDADE_ATIVO", 1)
             ->where("UNIDADE_SOLICITANTE", 1)
             ->whereIn("UNIDADE_ID", DB::table("USUARIO_UNIDADE")->where("USUARIO_ID", Auth::id())->pluck("UNIDADE_ID"))
@@ -49,10 +45,6 @@ class ChamadoController extends Controller
             "tiposPrecaucao",
             "suportesO2",
             "suportesHemodinamicos",
-            "temperaturas",
-            "frequenciasCardiacas",
-            "pressoesArteriais",
-            "saturacoes",
             "unidadesSolicitantes",
             "unidadesDestino",
             "procedimentos",
@@ -139,10 +131,13 @@ class ChamadoController extends Controller
                 "TG_TIPO_PRECAUCAO_ID"         => $request->TG_TIPO_PRECAUCAO_ID,
                 "TG_SUPORTE_O2_ID"             => $request->TG_SUPORTE_O2_ID,
                 "TG_SUPORTE_HEMODINAMICO_ID"   => $request->TG_SUPORTE_HEMODINAMICO_ID,
-                "TG_TEMPERATURA_ID"            => $request->TG_TEMPERATURA_ID,
-                "TG_FREQUENCIA_CARDIACA_ID"    => $request->TG_FREQUENCIA_CARDIACA_ID,
-                "TG_PRESSAO_ARTERIAL_ID"       => $request->TG_PRESSAO_ARTERIAL_ID,
-                "TG_SATURACAO_ID"              => $request->TG_SATURACAO_ID,
+                "CHAMADO_TEMPERATURA"          => $request->CHAMADO_TEMPERATURA,
+                "CHAMADO_FREQUENCIA_CARDIACA"  => $request->CHAMADO_FREQUENCIA_CARDIACA,
+                "CHAMADO_PRESSAO_ARTERIAL"     => $request->CHAMADO_PRESSAO_ARTERIAL,
+                "CHAMADO_SATURACAO_O2"         => $request->CHAMADO_SATURACAO_O2,
+                "CHAMADO_ESCALA_GLASGOW"       => $request->CHAMADO_ESCALA_GLASGOW,
+                "CHAMADO_CONSELHO_PROFISSIONAL" => $request->CHAMADO_CONSELHO_PROFISSIONAL,
+                "CHAMADO_NUMERO_CONSELHO"      => $request->CHAMADO_NUMERO_CONSELHO,
                 "CHAMADO_PROFISSIONAL_SOLICITANTE" => $request->CHAMADO_PROFISSIONAL_SOLICITANTE,
             ]);
 
