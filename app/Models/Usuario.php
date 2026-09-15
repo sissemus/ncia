@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\Cpf;
+use App\Casts\Telefone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -25,7 +26,7 @@ class Usuario extends Authenticatable
         "USUARIO_VIGENCIA",
         "USUARIO_ULTIMO_ACESSO",
         "USUARIO_CPF",
-        "USUARIO_EMAIL",
+        "USUARIO_CONTATO",
     ];
 
     protected $casts = [
@@ -37,7 +38,7 @@ class Usuario extends Authenticatable
         "USUARIO_VIGENCIA" => "datetime",
         "USUARIO_ULTIMO_ACESSO" => "datetime",
         "USUARIO_CPF" => Cpf::class,
-        "USUARIO_EMAIL" => "string",
+        "USUARIO_CONTATO" => Telefone::class,
     ];
 
     protected $hidden = [

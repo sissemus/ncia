@@ -8,6 +8,6 @@ export default class Unidade {
         this.USUARIO_VIGENCIA = null;
         this.USUARIO_ULTIMO_ACESSO = null;
         this.USUARIO_CPF = null;
-        this.USUARIO_EMAIL = null;
+        this.USUARIO_CONTATO = null;
     }
 }

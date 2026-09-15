@@ -4,7 +4,7 @@ const usuarioInicial = () => ({
     USUARIO_SENHA: null,
     USUARIO_NOME: null,
     USUARIO_CPF: null,
-    USUARIO_EMAIL: null,
+    USUARIO_CONTATO: null,
     USUARIO_ATIVO: null,
     USUARIO_VIGENCIA: null,
     USUARIO_SENHA_CONFIRMATION: null,

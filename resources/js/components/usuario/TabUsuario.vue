@@ -33,10 +33,13 @@
                 </v-col>
                 <v-col cols="md-6">
                     <v-text-field
-                        label="E-mail*"
-                        type="email"
-                        autocomplete="off"
-                        v-model="usuario.USUARIO_EMAIL"
+                        label="Nº de contato*"
+                        v-mask="['(##) ####-####', '(##) #####-####']"
+                        autocomplete="tel"
+                        inputmode="tel"
+                        hint="Preferencialmente celular com WhatsApp"
+                        persistent-hint
+                        v-model="usuario.USUARIO_CONTATO"
                     ></v-text-field>
                 </v-col>
             </v-row>
