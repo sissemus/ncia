@@ -28,7 +28,7 @@ class EquipeController extends Controller
         return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais', 'tiposVeiculo'));
     }
 
-    public function inserir(Request $request)
+    public function inserir(EquipeCreateRequest $request)
     {
 
         $equipes = [];
@@ -36,12 +36,25 @@ class EquipeController extends Controller
         $EQUIPE_ID = null;
 
         $USUARIO_ID_CAD = Auth::id();
+
+        // informações sobre o veículo
+        $veiculo = Veiculo::findOrFail($request->input('VEICULO_ID'));
+        $tipoVeiculo = $veiculo->TG_TIPO_VEICULO_ID;
+
+        $equipe = new Equipe($request->input());
+        $equipe->EQUIPE_ATIVO = 1;
+        $equipe->EQUIPE_DATA = now()->format('Y-m-d');
+        $equipe->USUARIO_ID_CAD = $USUARIO_ID_CAD;
+
+        DB::beginTransaction();
+
+        // salvando equipe
+        $equipe->save();
+
+        $EQUIPE_ID = $equipe->EQUIPE_ID;
         
         $int = 0;
-
-        $veiculoTipo = [];
-        
-        
+  
         //para o tipo de veículo == 1
         $tiposProfissional_1 = [1, 2, 4];
         $tiposProfissional_1_compare = [];
@@ -49,55 +62,16 @@ class EquipeController extends Controller
         //para o tipo de veículo == 2
         $tiposProfissional_2 = [1, 2, 3, 4];
         $tiposProfissional_2_compare = [];
-
-        DB::beginTransaction();
         
-        foreach ($request->input() as $dados) {
-
-            if($dados['VEICULO_ID'] == null){
-                DB::rollBack();
-                throw ValidationException::withMessages([
-                    'VEICULO_ID' =>
-                        'Veículo não selecionado!'
-                ]);
-            }
-
-            if($dados['EQUIPE_TURNO'] == null){
-                DB::rollBack();
-                throw ValidationException::withMessages([
-                    'EQUIPE_TURNO' =>
-                        'Turno não selecionado!'
-                ]);
-            }
-
-            if($dados['TG_TIPO_PROFISSIONAL_ID'] == null){
-                DB::rollBack();
-                throw ValidationException::withMessages([
-                    'TG_TIPO_PROFISSIONAL_ID' =>
-                        'Tipo de profissional não informado!'
-                ]);
-            }
-
-            if($dados['PROFISSIONAL_ID'] == null){
-                DB::rollBack();
-                throw ValidationException::withMessages([
-                    'PROFISSIONAL_ID' =>
-                        'Profissional não informado!'
-                ]);
-            }
+        foreach ($request->input('equipeProfissionais') as $dados) {
 
             $PROFISSIONAL_ID = $dados['PROFISSIONAL_ID'];
-
-            $VEICULO_ID = $dados['VEICULO_ID'];
 
             $profissional = Profissional::findOrFail($PROFISSIONAL_ID);
 
             $tipoProfissional  = $profissional->TG_TIPO_PROFISSIONAL_ID;
 
-            $veiculo = Veiculo::findOrFail($VEICULO_ID);
-
-            $tipoVeiculo = $veiculo->TG_TIPO_VEICULO_ID;
-
+            // crio um array temporário para armazenar o tipo do veículo
             if($tipoVeiculo == 1){
                 array_push($tiposProfissional_1_compare, $tipoProfissional);
             }
@@ -105,21 +79,9 @@ class EquipeController extends Controller
                 array_push($tiposProfissional_2_compare, $tipoProfissional);
             }
 
-            if($int == 0){
-                    
-                $equipe = new Equipe($dados);
-                $equipe->EQUIPE_ATIVO = 1;
-                $equipe->EQUIPE_DATA = now()->format('Y-m-d');
-                $equipe->USUARIO_ID_CAD = $USUARIO_ID_CAD;
-                
-                $equipe->save();
-
-                $EQUIPE_ID = $equipe->EQUIPE_ID;
-
-            }
-
             $int++;
 
+            // informações da equipeProfissional
             $equipeProfissional = new EquipeProfissional($dados);
 
             // para cada profissional
@@ -128,17 +90,18 @@ class EquipeController extends Controller
             $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
 
             $equipeProfissional->USUARIO_ID_CAD = $USUARIO_ID_CAD;
-            
+
             $equipeProfissional->save();
     
         }
 
-        //validando
+        //validando se a equipe está completa
         if($tipoVeiculo == 1){
 
             sort($tiposProfissional_1);
             sort($tiposProfissional_1_compare);
 
+            // comparando por tipo de equipe
             if($tiposProfissional_1 != $tiposProfissional_1_compare){
                 throw ValidationException::withMessages([
                     'TG_TIPO_PROFISSIONAL_ID' =>
