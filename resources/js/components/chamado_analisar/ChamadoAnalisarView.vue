@@ -257,6 +257,7 @@ export default {
         executar(acao, dados) {
             if (this.processando) return;
             this.processando = true;
+            let redirecionando = false;
             axios.post(`${this.baseUrl}/chamado_analisar/${acao}`, { CHAMADO_ID: this.chamado.CHAMADO_ID, ...(dados || {}) })
                 .then(response => {
                     this.dialog = false;
@@ -264,10 +265,25 @@ export default {
                     this.chamado = response.data.retorno;
                     this.encaminhadoAgora = acao === 'encaminhar';
                     if (this.encaminhadoAgora) this.veiculos = [];
+                    if (acao === 'encaminhar') {
+                        redirecionando = true;
+                        return Swal.fire({
+                            title: 'Encaminhamento realizado',
+                            text: 'Veículo e equipe vinculados. O chamado passou para Em Atendimento.',
+                            icon: 'success',
+                            confirmButtonText: 'Voltar para Home',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => {
+                            window.location.href = `${this.baseUrl}/home`;
+                        });
+                    }
                     if (acao === 'concluir' || acao === 'cancelar-atendimento') {
                         Swal.fire('Sucesso', acao === 'concluir' ? 'Atendimento concluído com sucesso.' : 'Atendimento cancelado com sucesso.', 'success');
                     }
-                }).catch(this.erro).finally(() => { this.processando = false; });
+                }).catch(this.erro).finally(() => {
+                    if (!redirecionando) this.processando = false;
+                });
         },
         descricaoVeiculoEquipe(veiculo) {
             if (!veiculo) return '-';
