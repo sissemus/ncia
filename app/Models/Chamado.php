@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\MyLibs\RTG;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Chamado extends Model
@@ -177,5 +179,180 @@ class Chamado extends Model
     public static function pesquisarAcompanhamento($requisicao, $unidadeIds = null)
     {
         return self::pesquisarParaAnalise($requisicao, $unidadeIds);
+    }
+
+    public static function getDadosRelatorioChamadoEmAtendimento($id)
+    {
+        $chamado = self::with([
+            'paciente',
+            'unidadeSolicitante',
+            'unidadeDestino',
+            'procedimentos',
+            'diagnosticos',
+            'situacoes.usuario',
+            'situacaoAtual',
+            'vinculosEquipe.equipe.veiculo',
+            'vinculosEquipe.equipe.equipeProfissional.profissional',
+        ])->findOrFail($id);
+
+        $genericos = TabelaGenerica::whereIn('TABELA_ID', [
+            RTG::SEXO,
+            RTG::PRIORIDADE_PACIENTE,
+            RTG::TIPO_CHAMADO,
+            RTG::TIPO_PRECAUCAO,
+            RTG::SUPORTE_O2,
+            RTG::SUPORTE_HEMODINAMICO,
+            RTG::SITUACAO_CHAMADO,
+        ])->get();
+
+        $descricao = function ($tabelaId, $colunaId) use ($genericos) {
+            $item = $genericos->first(function ($item) use ($tabelaId, $colunaId) {
+                return (int) $item->TABELA_ID === (int) $tabelaId
+                    && (int) $item->COLUNA_ID === (int) $colunaId;
+            });
+
+            return $item ? $item->DESCRICAO : '-';
+        };
+
+        $paciente = $chamado->paciente;
+        $nomePaciente = $paciente ? trim((string) $paciente->PACIENTE_NOME) : '';
+        if (!$nomePaciente && $paciente && $paciente->PACIENTE_VULNERABILIDADE_SOCIAL) {
+            $nomePaciente = 'PACIENTE EM VULNERABILIDADE SOCIAL';
+        }
+
+        $profissionalSolicitante = trim((string) $chamado->CHAMADO_PROFISSIONAL_SOLICITANTE);
+        if (ctype_digit($profissionalSolicitante)) {
+            $profissional = Profissional::find((int) $profissionalSolicitante);
+            $profissionalSolicitante = $profissional
+                ? $profissional->PROFISSIONAL_NOME
+                : $profissionalSolicitante;
+        }
+
+        $vinculoEquipe = $chamado->vinculosEquipe->first(function ($vinculo) {
+            return (int) $vinculo->CHAMADO_EQUIPE_ATIVO === 1;
+        }) ?: $chamado->vinculosEquipe->first();
+        $equipe = $vinculoEquipe ? $vinculoEquipe->equipe : null;
+        $veiculo = $equipe ? $equipe->veiculo : null;
+        $profissionais = $equipe
+            ? $equipe->equipeProfissional
+                ->filter(function ($item) {
+                    return (int) $item->EQUIPE_PROFISSIONAL_ATIVO === 1;
+                })
+                ->map(function ($item) {
+                    return $item->profissional ? $item->profissional->PROFISSIONAL_NOME : null;
+                })
+                ->filter()
+                ->implode(', ')
+            : '';
+
+        $nascimento = $paciente && $paciente->PACIENTE_DT_NASCIMENTO
+            ? Carbon::parse($paciente->PACIENTE_DT_NASCIMENTO)
+            : null;
+        $situacoes = $chamado->situacoes
+            ->sortBy(function ($situacao) {
+                return sprintf(
+                    '%s-%010d',
+                    Carbon::parse($situacao->CHAMADO_SITUACAO_DATA)->format('YmdHis.u'),
+                    $situacao->CHAMADO_SITUACAO_ID
+                );
+            })
+            ->values();
+
+        if ($situacoes->isEmpty()) {
+            $situacoes = collect([null]);
+        }
+
+        return $situacoes->map(function ($situacao) use (
+            $chamado,
+            $paciente,
+            $nomePaciente,
+            $nascimento,
+            $profissionalSolicitante,
+            $descricao,
+            $equipe,
+            $veiculo,
+            $profissionais
+        ) {
+            return [
+                'CHAMADO_ID' => (string) $chamado->CHAMADO_ID,
+                'SITUACAO_ATUAL' => $descricao(RTG::SITUACAO_CHAMADO, $chamado->situacaoAtual->TG_SITUACAO_ID),
+                'PACIENTE_NOME' => self::valorRelatorio($nomePaciente),
+                'PACIENTE_CPF' => self::valorRelatorio($paciente ? $paciente->PACIENTE_CPF : null),
+                'PACIENTE_NASCIMENTO' => $nascimento ? $nascimento->format('d/m/Y') : '-',
+                'PACIENTE_IDADE' => $nascimento ? $nascimento->age . ' anos' : '-',
+                'PACIENTE_SEXO' => $descricao(RTG::SEXO, $paciente ? $paciente->TG_SEXO_ID : null),
+                'PACIENTE_VULNERABILIDADE' => self::simNao($paciente && $paciente->PACIENTE_VULNERABILIDADE_SOCIAL),
+                'PACIENTE_TEMPORARIO' => self::simNao($paciente && $paciente->PACIENTE_TEMPORARIO),
+                'CHAMADO_DATA' => self::formatarDataHoraRelatorio($chamado->CHAMADO_DATA),
+                'TIPO_CHAMADO' => $descricao(RTG::TIPO_CHAMADO, $chamado->TG_CHAMADO_ID),
+                'PRIORIDADE' => $descricao(RTG::PRIORIDADE_PACIENTE, $chamado->TG_PRIORIDADE_ID),
+                'HORARIO_ATENDIMENTO' => self::formatarHoraRelatorio($chamado->CHAMADO_HORARIO_ATENDIMENTO),
+                'AMBULANCIA_EXTRA' => self::simNao($chamado->CHAMADO_AMBULANCIA_EXTRA),
+                'UNIDADE_ORIGEM' => self::valorRelatorio($chamado->unidadeSolicitante ? $chamado->unidadeSolicitante->UNIDADE_NOME : null),
+                'SETOR_ORIGEM' => self::valorRelatorio($chamado->CHAMADO_SETOR_SOLICITANTE),
+                'LEITO_ORIGEM' => self::valorRelatorio($chamado->CHAMADO_LEITO_SOLICITANTE),
+                'UNIDADE_DESTINO' => self::valorRelatorio($chamado->unidadeDestino ? $chamado->unidadeDestino->UNIDADE_NOME : null),
+                'SETOR_DESTINO' => self::valorRelatorio($chamado->CHAMADO_SETOR_DESTINO),
+                'LEITO_DESTINO' => self::valorRelatorio($chamado->CHAMADO_LEITO_DESTINO),
+                'PROFISSIONAL_SOLICITANTE' => self::valorRelatorio($profissionalSolicitante),
+                'CONSELHO_PROFISSIONAL' => self::valorRelatorio($chamado->CHAMADO_CONSELHO_PROFISSIONAL),
+                'NUMERO_CONSELHO' => self::valorRelatorio($chamado->CHAMADO_NUMERO_CONSELHO),
+                'PROCEDIMENTOS' => self::valorRelatorio($chamado->procedimentos->pluck('PROCEDIMENTO_DESCRICAO')->implode(', ')),
+                'DIAGNOSTICOS' => self::valorRelatorio($chamado->diagnosticos->pluck('DIAGNOSTICO_DESCRICAO')->implode(', ')),
+                'DISPOSITIVOS' => self::valorRelatorio($chamado->CHAMADO_DISPOSITIVOS),
+                'PESO' => $chamado->CHAMADO_PESO !== null ? $chamado->CHAMADO_PESO . ' kg' : '-',
+                'PRECAUCAO' => $descricao(RTG::TIPO_PRECAUCAO, $chamado->TG_TIPO_PRECAUCAO_ID),
+                'SUPORTE_O2' => $descricao(RTG::SUPORTE_O2, $chamado->TG_SUPORTE_O2_ID),
+                'SUPORTE_HEMODINAMICO' => $descricao(RTG::SUPORTE_HEMODINAMICO, $chamado->TG_SUPORTE_HEMODINAMICO_ID),
+                'TEMPERATURA' => self::valorRelatorio($chamado->CHAMADO_TEMPERATURA),
+                'PRESSAO_ARTERIAL' => self::valorRelatorio($chamado->CHAMADO_PRESSAO_ARTERIAL),
+                'FREQUENCIA_CARDIACA' => self::valorRelatorio($chamado->CHAMADO_FREQUENCIA_CARDIACA),
+                'SATURACAO_O2' => self::valorRelatorio($chamado->CHAMADO_SATURACAO_O2),
+                'ESCALA_GLASGOW' => self::valorRelatorio($chamado->CHAMADO_ESCALA_GLASGOW),
+                'OBSERVACOES' => self::valorRelatorio($chamado->CHAMADO_OBSERVACAO),
+                'VEICULO' => self::valorRelatorio($veiculo ? $veiculo->VEICULO_IDENTIFICACAO : null),
+                'VEICULO_PLACA' => self::valorRelatorio($veiculo ? $veiculo->VEICULO_PLACA : null),
+                'EQUIPE' => $equipe ? 'Equipe Nº ' . $equipe->EQUIPE_ID . ($equipe->EQUIPE_TURNO ? ' - ' . $equipe->EQUIPE_TURNO : '') : '-',
+                'PROFISSIONAIS' => self::valorRelatorio($profissionais),
+                'HISTORICO_SITUACAO' => $situacao
+                    ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID)
+                    : '-',
+                'HISTORICO_DATA' => $situacao
+                    ? self::formatarDataHoraRelatorio($situacao->CHAMADO_SITUACAO_DATA)
+                    : '-',
+                'HISTORICO_USUARIO' => self::valorRelatorio($situacao && $situacao->usuario
+                    ? $situacao->usuario->USUARIO_NOME
+                    : null),
+                'HISTORICO_OBSERVACAO' => self::valorRelatorio($situacao
+                    ? $situacao->CHAMADO_SITUACAO_OBSERVACAO
+                    : null),
+            ];
+        })->all();
+    }
+
+    private static function valorRelatorio($valor)
+    {
+        $valor = trim((string) $valor);
+        return $valor !== '' ? $valor : '-';
+    }
+
+    private static function simNao($valor)
+    {
+        return $valor ? 'Sim' : 'Não';
+    }
+
+    private static function formatarDataHoraRelatorio($valor)
+    {
+        return $valor ? Carbon::parse($valor)->format('d/m/Y H:i:s') : '-';
+    }
+
+    private static function formatarHoraRelatorio($valor)
+    {
+        if (!$valor) {
+            return '-';
+        }
+
+        $valor = (string) $valor;
+        return preg_match('/(\d{2}:\d{2})/', $valor, $resultado) ? $resultado[1] : $valor;
     }
 }

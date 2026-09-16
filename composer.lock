@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f12d806045abee007cd1f9549350c965",
+    "content-hash": "48410124007c741ddc89bd3487f9073e",
     "packages": [
         {
             "name": "arcanedev/log-viewer",
@@ -559,6 +559,50 @@
                 }
             ],
             "time": "2020-12-29T14:50:06+00:00"
+        },
+        {
+            "name": "eltonwebnet/jasper-rdr",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/eltonwebnet/jasper-rdr.git",
+                "reference": "421926a90646cdd82639ece54b04e2942af2539a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/eltonwebnet/jasper-rdr/zipball/421926a90646cdd82639ece54b04e2942af2539a",
+                "reference": "421926a90646cdd82639ece54b04e2942af2539a",
+                "shasum": ""
+            },
+            "default-branch": true,
+            "type": "project",
+            "extra": {
+                "laravel": {
+                    "dont-discover": [
+                        "*"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Eltonwebnet\\JasperRdr\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Elton França Alencar",
+                    "email": "eltonwebnet@gmail.com"
+                }
+            ],
+            "description": "Renderizador de Relatorios Jasper para Laravel",
+            "support": {
+                "source": "https://github.com/eltonwebnet/jasper-rdr/tree/master",
+                "issues": "https://github.com/eltonwebnet/jasper-rdr/issues"
+            },
+            "time": "2025-05-14T02:37:07+00:00"
         },
         {
             "name": "fideloper/proxy",
@@ -9156,7 +9200,9 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": [],
+    "stability-flags": {
+        "eltonwebnet/jasper-rdr": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -9164,5 +9210,5 @@
         "ext-json": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.6.0"
 }

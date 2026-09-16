@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ChamadoEmAtendimento" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a2acaafd-e642-4d50-83b2-cddb8e319d85">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="pBrasao" class="java.lang.String"/>
+	<parameter name="pGeradoEm" class="java.lang.String"/>
+	<queryString language="SQL"><![CDATA[]]></queryString>
+	<field name="CHAMADO_ID" class="java.lang.String"/>
+	<field name="SITUACAO_ATUAL" class="java.lang.String"/>
+	<field name="PACIENTE_NOME" class="java.lang.String"/>
+	<field name="PACIENTE_CPF" class="java.lang.String"/>
+	<field name="PACIENTE_NASCIMENTO" class="java.lang.String"/>
+	<field name="PACIENTE_IDADE" class="java.lang.String"/>
+	<field name="PACIENTE_SEXO" class="java.lang.String"/>
+	<field name="PACIENTE_VULNERABILIDADE" class="java.lang.String"/>
+	<field name="PACIENTE_TEMPORARIO" class="java.lang.String"/>
+	<field name="CHAMADO_DATA" class="java.lang.String"/>
+	<field name="TIPO_CHAMADO" class="java.lang.String"/>
+	<field name="PRIORIDADE" class="java.lang.String"/>
+	<field name="HORARIO_ATENDIMENTO" class="java.lang.String"/>
+	<field name="AMBULANCIA_EXTRA" class="java.lang.String"/>
+	<field name="UNIDADE_ORIGEM" class="java.lang.String"/>
+	<field name="SETOR_ORIGEM" class="java.lang.String"/>
+	<field name="LEITO_ORIGEM" class="java.lang.String"/>
+	<field name="UNIDADE_DESTINO" class="java.lang.String"/>
+	<field name="SETOR_DESTINO" class="java.lang.String"/>
+	<field name="LEITO_DESTINO" class="java.lang.String"/>
+	<field name="PROFISSIONAL_SOLICITANTE" class="java.lang.String"/>
+	<field name="CONSELHO_PROFISSIONAL" class="java.lang.String"/>
+	<field name="NUMERO_CONSELHO" class="java.lang.String"/>
+	<field name="PROCEDIMENTOS" class="java.lang.String"/>
+	<field name="DIAGNOSTICOS" class="java.lang.String"/>
+	<field name="DISPOSITIVOS" class="java.lang.String"/>
+	<field name="PESO" class="java.lang.String"/>
+	<field name="PRECAUCAO" class="java.lang.String"/>
+	<field name="SUPORTE_O2" class="java.lang.String"/>
+	<field name="SUPORTE_HEMODINAMICO" class="java.lang.String"/>
+	<field name="TEMPERATURA" class="java.lang.String"/>
+	<field name="PRESSAO_ARTERIAL" class="java.lang.String"/>
+	<field name="FREQUENCIA_CARDIACA" class="java.lang.String"/>
+	<field name="SATURACAO_O2" class="java.lang.String"/>
+	<field name="ESCALA_GLASGOW" class="java.lang.String"/>
+	<field name="OBSERVACOES" class="java.lang.String"/>
+	<field name="VEICULO" class="java.lang.String"/>
+	<field name="VEICULO_PLACA" class="java.lang.String"/>
+	<field name="EQUIPE" class="java.lang.String"/>
+	<field name="PROFISSIONAIS" class="java.lang.String"/>
+	<field name="HISTORICO_SITUACAO" class="java.lang.String"/>
+	<field name="HISTORICO_DATA" class="java.lang.String"/>
+	<field name="HISTORICO_USUARIO" class="java.lang.String"/>
+	<field name="HISTORICO_OBSERVACAO" class="java.lang.String"/>
+	<group name="Chamado">
+		<groupExpression><![CDATA[$F{CHAMADO_ID}]]></groupExpression>
+		<groupHeader>
+			<band height="600" splitType="Stretch">
+				<rectangle><reportElement x="1" y="0" width="553" height="82" forecolor="#B0BEC5" uuid="41b10a7b-5428-491b-9ff0-cc9a45dcbb2a"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
+				<staticText><reportElement mode="Opaque" x="1" y="0" width="553" height="20" backcolor="#E9ECEF" uuid="996ccab1-b0ae-4632-8e92-481ad3fd1901"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[IDENTIFICAÇÃO DO PACIENTE]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="24" width="539" height="18" uuid="aa3439a8-f0aa-4114-a5ad-7ba6f62a55f7"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Paciente:</b> " + $F{PACIENTE_NOME}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="44" width="539" height="18" uuid="09efac85-10f9-4180-a15a-cf80be7bb260"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>CPF:</b> " + $F{PACIENTE_CPF} + "     <b>Nascimento:</b> " + $F{PACIENTE_NASCIMENTO} + "     <b>Idade:</b> " + $F{PACIENTE_IDADE} + "     <b>Sexo:</b> " + $F{PACIENTE_SEXO}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="64" width="539" height="18" uuid="d084c326-4e37-4764-8463-eb4fe4783d5a"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Vulnerabilidade social:</b> " + $F{PACIENTE_VULNERABILIDADE}]]></textFieldExpression></textField>
+
+				<rectangle><reportElement positionType="Float" x="1" y="94" width="553" height="82" forecolor="#B0BEC5" uuid="4133b37c-abab-4cf5-bf59-6b68a8ad12b1"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
+				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="94" width="553" height="20" backcolor="#E9ECEF" uuid="bf9398dd-f9f0-425c-af96-8e27c13d1628"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[DADOS DO CHAMADO]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="118" width="539" height="18" uuid="2b02e389-bdc0-4ba6-9eef-7b59097fe08e"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Abertura:</b> " + $F{CHAMADO_DATA} + "     <b>Tipo:</b> " + $F{TIPO_CHAMADO} + "     <b>Prioridade:</b> " + $F{PRIORIDADE}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="138" width="539" height="18" uuid="94d751ac-94aa-4030-acf5-a014937757b0"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Horário de atendimento:</b> " + $F{HORARIO_ATENDIMENTO} + "     <b>Ambulância extra:</b> " + $F{AMBULANCIA_EXTRA}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="158" width="539" height="18" uuid="5e40f470-f428-478f-9548-6e65ff83e85a"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Profissional solicitante:</b> " + $F{PROFISSIONAL_SOLICITANTE} + "     <b>Conselho:</b> " + $F{CONSELHO_PROFISSIONAL} + " " + $F{NUMERO_CONSELHO}]]></textFieldExpression></textField>
+
+				<rectangle><reportElement positionType="Float" x="1" y="188" width="553" height="62" forecolor="#B0BEC5" uuid="075508a4-ae29-4fce-a729-18450f1377fd"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
+				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="188" width="553" height="20" backcolor="#E9ECEF" uuid="409d4387-29f9-45cc-bb78-0fa4879d8894"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[ORIGEM E DESTINO]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="212" width="539" height="18" uuid="8cb5d53f-a32c-49e4-9848-a4b39bbd3469"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Origem:</b> " + $F{UNIDADE_ORIGEM} + "     <b>Setor:</b> " + $F{SETOR_ORIGEM} + "     <b>Leito:</b> " + $F{LEITO_ORIGEM}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="232" width="539" height="18" uuid="c081ae44-4188-4af0-a692-30f56c0eb6cf"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Destino:</b> " + $F{UNIDADE_DESTINO} + "     <b>Setor:</b> " + $F{SETOR_DESTINO} + "     <b>Leito:</b> " + $F{LEITO_DESTINO}]]></textFieldExpression></textField>
+
+				<rectangle><reportElement positionType="Float" x="1" y="262" width="553" height="202" forecolor="#B0BEC5" uuid="2ed6d503-c4dd-4477-948b-d7ad21da0b52"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
+				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="262" width="553" height="20" backcolor="#E9ECEF" uuid="d3c5398d-aa88-4cc6-a4dd-8f799dd4b45d"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[INFORMAÇÕES ASSISTENCIAIS]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="286" width="539" height="28" uuid="90561f94-899d-43df-b86e-f315f430bf11"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Procedimentos:</b> " + $F{PROCEDIMENTOS}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="316" width="539" height="28" uuid="969fda49-0297-4a37-ac2a-d1049b77801d"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Diagnósticos:</b> " + $F{DIAGNOSTICOS}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="346" width="539" height="18" uuid="41c914bd-c6a6-4584-bcd2-722a018079d9"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Dispositivos:</b> " + $F{DISPOSITIVOS} + "     <b>Peso:</b> " + $F{PESO}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="366" width="539" height="18" uuid="941101a8-f812-4df3-b79b-51a232b99112"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Precaução:</b> " + $F{PRECAUCAO} + "     <b>Suporte O2:</b> " + $F{SUPORTE_O2} + "     <b>Suporte hemodinâmico:</b> " + $F{SUPORTE_HEMODINAMICO}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="386" width="539" height="18" uuid="d8c54ad9-ccee-4c38-a71d-08d96c94735c"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Temperatura:</b> " + $F{TEMPERATURA} + "     <b>Pressão arterial:</b> " + $F{PRESSAO_ARTERIAL} + "     <b>Frequência cardíaca:</b> " + $F{FREQUENCIA_CARDIACA}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="406" width="539" height="18" uuid="ec83c649-fc42-4885-b09c-9151cf0722fd"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Saturação O2:</b> " + $F{SATURACAO_O2} + "     <b>Escala Glasgow:</b> " + $F{ESCALA_GLASGOW}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="426" width="539" height="38" uuid="8f810054-54ee-4166-b0b2-ec7b57b946a1"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Observações:</b> " + $F{OBSERVACOES}]]></textFieldExpression></textField>
+
+				<rectangle><reportElement positionType="Float" x="1" y="476" width="553" height="92" forecolor="#B0BEC5" uuid="7331fa78-3daf-437c-ae2f-c32bf475cd88"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
+				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="476" width="553" height="20" backcolor="#E9ECEF" uuid="178b5363-d061-40e2-b913-b0b80625e97e"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[VEÍCULO E EQUIPE VINCULADOS]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="500" width="539" height="18" uuid="87838b2e-6301-47d0-97de-e0ea0939cd12"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Veículo:</b> " + $F{VEICULO} + "     <b>Placa:</b> " + $F{VEICULO_PLACA}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="520" width="539" height="18" uuid="b2c79b01-06ef-492e-a6d8-4ad2ff18b25b"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Equipe:</b> " + $F{EQUIPE}]]></textFieldExpression></textField>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="540" width="539" height="28" uuid="8cdf22f1-43f5-4a1b-adf9-e79148496f9e"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Profissionais:</b> " + $F{PROFISSIONAIS}]]></textFieldExpression></textField>
+
+				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="580" width="553" height="20" backcolor="#D6EAF8" forecolor="#000000" uuid="ed532590-fe90-48ed-8e0e-9daa4aa8bd23"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[HISTÓRICO DO CHAMADO]]></text></staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="54" splitType="Stretch">
+			<image><reportElement x="0" y="0" width="30" height="50" uuid="6bd97d85-b804-45b0-9a31-a9ec9fa64e2b"/><imageExpression><![CDATA[$P{pBrasao}]]></imageExpression></image>
+			<staticText><reportElement x="42" y="0" width="350" height="10" uuid="89a89c5c-7332-4281-a08b-3284f417980d"/><textElement><font size="6" isBold="true"/></textElement><text><![CDATA[PREFEITURA DE SÃO LUÍS]]></text></staticText>
+			<staticText><reportElement x="42" y="10" width="350" height="10" uuid="f443cb20-a5dc-4c65-97da-a3337885e7ae"/><textElement><font size="6" isBold="true"/></textElement><text><![CDATA[SECRETARIA MUNICIPAL DE SAÚDE - SEMUS]]></text></staticText>
+			<staticText><reportElement x="42" y="20" width="350" height="10" uuid="4778130f-e168-4dfb-a213-8865f6540db0"/><textElement><font size="6" isBold="true"/></textElement><text><![CDATA[SUPERINTENDÊNCIA DE INFORMAÇÃO DA SAÚDE - SIS]]></text></staticText>
+			<staticText><reportElement x="42" y="30" width="350" height="10" uuid="f4a24149-84a4-4c34-a2be-f8bf101d7fe8"/><textElement><font size="6" isBold="true"/></textElement><text><![CDATA[CENTRAL INTERNA DE AMBULÂNCIA - CIA]]></text></staticText>
+			<textField><reportElement x="415" y="0" width="140" height="16" uuid="6a4196d3-2e23-49e9-9aa6-c3ad55a0425b"/><textElement textAlignment="Right"><font size="8"/></textElement><textFieldExpression><![CDATA[$P{pGeradoEm}]]></textFieldExpression></textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="42" splitType="Stretch">
+			<staticText><reportElement x="0" y="0" width="555" height="20" uuid="61b0a353-23db-49b5-9fe1-c072c09d2196"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="11" isBold="true"/></textElement><text><![CDATA[CHAMADO EM ATENDIMENTO]]></text></staticText>
+			<textField><reportElement x="0" y="20" width="555" height="18" uuid="be912a95-d809-47d4-bf73-814842a91ea5"/><textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement><textFieldExpression><![CDATA["CHAMADO Nº " + $F{CHAMADO_ID}]]></textFieldExpression></textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField isStretchWithOverflow="true"><reportElement mode="Opaque" x="1" y="0" width="104" height="22" backcolor="#F7F7F7" uuid="cd968b84-a0c4-4e55-b30b-f617e1e8c20c"/><box leftPadding="3" rightPadding="3"><pen lineWidth="0.5" lineColor="#CFD8DC"/></box><textElement verticalAlignment="Middle"><font size="8"/></textElement><textFieldExpression><![CDATA[$F{HISTORICO_DATA}]]></textFieldExpression></textField>
+			<textField isStretchWithOverflow="true"><reportElement mode="Opaque" x="105" y="0" width="95" height="22" backcolor="#F7F7F7" uuid="b80d560b-d93f-47f6-8eea-904d80ddc522"/><box leftPadding="3" rightPadding="3"><pen lineWidth="0.5" lineColor="#CFD8DC"/></box><textElement verticalAlignment="Middle"><font size="8" isBold="true"/></textElement><textFieldExpression><![CDATA[$F{HISTORICO_SITUACAO}]]></textFieldExpression></textField>
+			<textField isStretchWithOverflow="true"><reportElement mode="Opaque" x="200" y="0" width="120" height="22" backcolor="#F7F7F7" uuid="bb8bc831-af91-4d84-942a-176626671724"/><box leftPadding="3" rightPadding="3"><pen lineWidth="0.5" lineColor="#CFD8DC"/></box><textElement verticalAlignment="Middle"><font size="8"/></textElement><textFieldExpression><![CDATA[$F{HISTORICO_USUARIO}]]></textFieldExpression></textField>
+			<textField isStretchWithOverflow="true"><reportElement mode="Opaque" x="320" y="0" width="234" height="22" backcolor="#F7F7F7" uuid="9b89342d-12ea-44f4-8ad4-824fb075b8a7"/><box leftPadding="3" rightPadding="3"><pen lineWidth="0.5" lineColor="#CFD8DC"/></box><textElement verticalAlignment="Middle"><font size="8"/></textElement><textFieldExpression><![CDATA[$F{HISTORICO_OBSERVACAO}]]></textFieldExpression></textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="18">
+			<textField><reportElement x="455" y="2" width="100" height="14" uuid="07c6b566-14a5-42ec-bcec-8417353a66fd"/><textElement textAlignment="Right"><font size="8"/></textElement><textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression></textField>
+		</band>
+	</pageFooter>
+</jasperReport>

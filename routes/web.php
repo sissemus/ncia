@@ -18,6 +18,7 @@ use App\Http\Controllers\UsuarioUnidadeController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\EquipeProfissionalController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\RelatorioController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +46,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get('chamados-operacionais', [HomeController::class, 'chamadosOperacionais']);
         Route::get('chamados-expirados', [HomeController::class, 'chamadosExpirados']);
         Route::post('chamados-expirados/cancelar', [HomeController::class, 'cancelarChamadoExpirado']);
+    });
+
+    Route::prefix('relatorio')->group(function () {
+        Route::get('chamado-em-atendimento/{id}', [RelatorioController::class, 'chamadoEmAtendimento']);
     });
 
     Route::prefix('perfil')->group(function () {

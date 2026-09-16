@@ -60,6 +60,13 @@
                                     @click="abrirAcaoChamado(chamado)">
                                     <v-icon>{{ iconeAcaoFila }}</v-icon>
                                 </v-btn>
+                                <v-btn v-if="abaAtiva === 'atendimento'" icon color="primary"
+                                    title="Baixar PDF do chamado"
+                                    :loading="gerandoPdfId === chamado.CHAMADO_ID"
+                                    :disabled="gerandoPdfId !== null"
+                                    @click="baixarPdf(chamado)">
+                                    <v-icon>mdi-printer</v-icon>
+                                </v-btn>
                             </td>
                         </tr>
                     </tbody>
@@ -170,6 +177,7 @@ export default {
             paginacaoExpirados: { current_page: 1, total: 0, last_page: 1 },
             carregandoExpirados: false,
             recepcionandoId: null,
+            gerandoPdfId: null,
             cancelandoId: null,
         };
     },
@@ -322,6 +330,25 @@ export default {
                 return;
             }
             this.recepcionar(chamado.CHAMADO_ID);
+        },
+        baixarPdf(chamado) {
+            if (this.gerandoPdfId !== null) return;
+            this.gerandoPdfId = chamado.CHAMADO_ID;
+
+            axios.get(`${this.baseUrl}/relatorio/chamado-em-atendimento/${chamado.CHAMADO_ID}`, {
+                responseType: "blob",
+            }).then(response => {
+                const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `Chamado_Atendimento_${chamado.CHAMADO_ID}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }).catch(error => this.erro(error, this.msgId)).finally(() => {
+                this.gerandoPdfId = null;
+            });
         },
         cancelarExpirado(chamado) {
             if (this.cancelandoId !== null) return;
