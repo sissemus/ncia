@@ -308,6 +308,8 @@
                         </v-card-text>
                     </v-card>
 
+                    <atualizacao-clinica />
+
                     <!-- Veículo, Equipe e Profissionais -->
                     <v-card outlined class="mb-4" v-if="equipeVinculada">
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
@@ -352,37 +354,58 @@
                         <v-card-text class="pt-3">
                             <v-timeline dense align-top>
                                 <v-timeline-item
-                                    v-for="sit in situacoesOrdenadas"
-                                    :key="sit.CHAMADO_SITUACAO_ID"
-                                    :color="getSituacaoColor(sit.TG_SITUACAO_ID)"
+                                    v-for="evento in historicoOrdenado"
+                                    :key="evento.chave"
+                                    :color="evento.tipo === 'atualizacao' ? 'purple' : getSituacaoColor(evento.item.TG_SITUACAO_ID)"
                                     small>
                                     <v-row dense>
                                         <v-col cols="12" sm="4" md="3">
-                                            <div class="font-weight-bold" :class="getSituacaoTextColor(sit.TG_SITUACAO_ID)">
-                                                {{ descricaoTabelaGenerica(situacoesChamado, sit.TG_SITUACAO_ID) }}
+                                            <div v-if="evento.tipo === 'atualizacao'" class="font-weight-bold purple--text">
+                                                Atualização Clínica Nº {{ evento.item.ATUALIZACAO_CLINICA_ID }}
+                                            </div>
+                                            <div v-else class="font-weight-bold" :class="getSituacaoTextColor(evento.item.TG_SITUACAO_ID)">
+                                                {{ descricaoTabelaGenerica(situacoesChamado, evento.item.TG_SITUACAO_ID) }}
                                             </div>
                                             <div class="caption grey--text text--darken-2">
                                                 <v-icon x-small>mdi-clock-outline</v-icon>
-                                                {{ formatarDataHora(sit.CHAMADO_SITUACAO_DATA) }}
+                                                {{ formatarDataHora(evento.data) }}
                                             </div>
                                         </v-col>
                                         <v-col cols="12" sm="8" md="9">
+                                            <template v-if="evento.tipo === 'atualizacao'">
+                                                <div class="caption mb-1">
+                                                    <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
+                                                    <span class="font-weight-medium">Registrado por:</span>
+                                                    {{ evento.item.usuario ? evento.item.usuario.USUARIO_NOME : '-' }}
+                                                </div>
+                                                <div class="body-2 text--secondary">
+                                                    Prioridade: {{ descricaoTabelaGenerica(prioridades, evento.item.TG_PRIORIDADE_ANTERIOR_ID) }}
+                                                    → {{ descricaoTabelaGenerica(prioridades, evento.item.TG_PRIORIDADE_ID) }} |
+                                                    Profissional: {{ evento.item.ATUALIZACAO_CLINICA_PROFISSIONAL }}
+                                                </div>
+                                                <div class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
+                                                    <v-icon x-small>mdi-information-outline</v-icon>
+                                                    {{ evento.item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA }}
+                                                </div>
+                                            </template>
+                                            <template v-else>
                                             <!-- Apenas na abertura (Aberto / 1) exibir Registrado por -->
-                                            <div v-if="isSituacaoAberto(sit.TG_SITUACAO_ID)" class="caption mb-1">
+                                            <div v-if="isSituacaoAberto(evento.item.TG_SITUACAO_ID)" class="caption mb-1">
                                                 <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
-                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(sit) }}
+                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(evento.item) }}
                                             </div>
 
                                             <!-- Detalhes para acompanhamento da etapa -->
                                             <div class="body-2 text--secondary">
-                                                {{ getDetalheAcompanhamento(sit.TG_SITUACAO_ID) }}
+                                                {{ getDetalheAcompanhamento(evento.item.TG_SITUACAO_ID) }}
                                             </div>
 
                                             <!-- Observações adicionais da fase (se houver, como motivo de cancelamento) -->
-                                            <div v-if="sit.CHAMADO_SITUACAO_OBSERVACAO" class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
+                                            <div v-if="evento.item.CHAMADO_SITUACAO_OBSERVACAO" class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
                                                 <v-icon x-small>mdi-information-outline</v-icon>
-                                                {{ sit.CHAMADO_SITUACAO_OBSERVACAO }}
+                                                {{ evento.item.CHAMADO_SITUACAO_OBSERVACAO }}
                                             </div>
+                                            </template>
                                         </v-col>
                                     </v-row>
                                 </v-timeline-item>
@@ -500,6 +523,18 @@ export default {
         };
     },
 
+    created() {
+        this.$store.dispatch("DominioModule/setAtualizacaoClinicaDominios", {
+            prioridades: this.prioridades,
+            tiposChamado: this.tiposChamado,
+            tiposPrecaucao: this.tiposPrecaucao,
+            suportesO2: this.suportesO2,
+            suportesHemodinamicos: this.suportesHemodinamicos,
+            sexos: this.sexos
+        });
+        this.$store.dispatch("AtualizacaoClinicaModule/clear");
+    },
+
     mounted() {
         if (this.somenteEmAtendimento) {
             this.chamadoPesquisa.TG_SITUACAO_ID = 3;
@@ -546,7 +581,7 @@ export default {
         },
 
         chamadoSelecionado() {
-            return this.$store.getters["ChamadoAcompanhamentoViewModule/getChamadoSelecionado"];
+            return this.$store.getters["AtualizacaoClinicaModule/getChamado"];
         },
 
         statusSelecionado() {
@@ -637,6 +672,32 @@ export default {
             });
         },
 
+        historicoOrdenado() {
+            let eventos = this.situacoesOrdenadas.map(item => ({
+                tipo: "situacao",
+                chave: `situacao-${item.CHAMADO_SITUACAO_ID}`,
+                data: item.CHAMADO_SITUACAO_DATA,
+                item
+            }));
+            let atualizacoes = this.chamadoSelecionado
+                ? this.chamadoSelecionado.atualizacoesClinicas || this.chamadoSelecionado.atualizacoes_clinicas || []
+                : [];
+
+            atualizacoes.forEach(item => eventos.push({
+                tipo: "atualizacao",
+                chave: `atualizacao-${item.ATUALIZACAO_CLINICA_ID}`,
+                data: item.ATUALIZACAO_CLINICA_DATA,
+                item
+            }));
+
+            return eventos.sort((a, b) => {
+                let dataA = new Date(a.data || 0).getTime();
+                let dataB = new Date(b.data || 0).getTime();
+                if (dataA !== dataB) return dataA - dataB;
+                return a.chave.localeCompare(b.chave);
+            });
+        },
+
         podeConfirmarEncerramento() {
             if (this.processandoEncerramento) {
                 return false;
@@ -718,9 +779,14 @@ export default {
                 dados
             ).then(response => {
                 return this.$store.dispatch(
-                    "ChamadoAcompanhamentoViewModule/setChamadoSelecionado",
-                    response.data.retorno
+                    "AtualizacaoClinicaModule/setChamado",
+                    {
+                        chamado: response.data.retorno,
+                        contexto: "acompanhamento"
+                    }
                 ).then(() => {
+                    return this.$store.dispatch("AtualizacaoClinicaModule/carregar");
+                }).then(() => {
                     this.showEncerramentoModal = false;
                     this.fullScreen = false;
 

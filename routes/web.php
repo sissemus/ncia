@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AplicacaoController;
+use App\Http\Controllers\AtualizacaoClinicaController;
 use App\Http\Controllers\ChamadoAnalisarController;
 use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
@@ -50,6 +51,11 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
 
     Route::prefix('relatorio')->group(function () {
         Route::get('chamado-em-atendimento/{id}', [RelatorioController::class, 'chamadoEmAtendimento']);
+    });
+
+    Route::prefix('atualizacao_clinica')->group(function () {
+        Route::get('chamado/{id}', [AtualizacaoClinicaController::class, 'chamado']);
+        Route::post('/', [AtualizacaoClinicaController::class, 'store']);
     });
 
     Route::prefix('perfil')->group(function () {

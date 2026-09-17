@@ -82,6 +82,8 @@
                     </v-card-text>
                 </v-card>
 
+                <atualizacao-clinica />
+
                 <v-card v-if="equipeVinculada" outlined class="mb-4">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Veículo e equipe vinculados</v-card-title>
                     <v-card-text class="pt-3">
@@ -162,12 +164,24 @@ export default {
         suportesHemodinamicos: { type: Array, default: () => [] }
     },
     data: () => ({
-        msgId: 'msgChamadoAnalisar', chamado: null, veiculos: [], equipeSelecionada: null,
+        msgId: 'msgChamadoAnalisar', veiculos: [], equipeSelecionada: null,
         dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false,
         processando: false
     }),
+    created() {
+        this.$store.dispatch('DominioModule/setAtualizacaoClinicaDominios', {
+            prioridades: this.prioridades,
+            tiposChamado: this.tiposChamado,
+            tiposPrecaucao: this.tiposPrecaucao,
+            suportesO2: this.suportesO2,
+            suportesHemodinamicos: this.suportesHemodinamicos,
+            sexos: this.sexos
+        });
+        this.$store.dispatch('AtualizacaoClinicaModule/clear');
+    },
     computed: {
         baseUrl() { return this.$store.getters.getBaseUrl; },
+        chamado() { return this.$store.getters['AtualizacaoClinicaModule/getChamado']; },
         paciente() { return this.chamado ? this.chamado.paciente : null; },
         unidadeSolicitante() { return this.chamado && (this.chamado.unidadeSolicitante || this.chamado.unidade_solicitante); },
         unidadeDestino() { return this.chamado && (this.chamado.unidadeDestino || this.chamado.unidade_destino); },
@@ -227,7 +241,10 @@ export default {
             const id = new URLSearchParams(window.location.search).get('chamado');
             if (!id) return;
             axios.get(`${this.baseUrl}/chamado_analisar/buscar/${id}`).then(response => {
-                this.chamado = response.data;
+                this.$store.dispatch('AtualizacaoClinicaModule/setChamado', {
+                    chamado: response.data,
+                    contexto: 'analise'
+                });
                 if (this.statusId === 2) this.carregarVeiculos();
             }).catch(this.erro);
         },
@@ -261,7 +278,10 @@ export default {
                 .then(response => {
                     this.dialog = false;
                     this.fullScreen = false;
-                    this.chamado = response.data.retorno;
+                    this.$store.dispatch('AtualizacaoClinicaModule/setChamado', {
+                        chamado: response.data.retorno,
+                        contexto: 'analise'
+                    }).then(() => this.$store.dispatch('AtualizacaoClinicaModule/carregar'));
                     this.encaminhadoAgora = acao === 'encaminhar';
                     if (this.encaminhadoAgora) this.veiculos = [];
                     if (acao === 'encaminhar') {

@@ -95,6 +95,13 @@ class Chamado extends Model
         return $this->hasMany(ChamadoSituacao::class, "CHAMADO_ID", "CHAMADO_ID");
     }
 
+    public function atualizacoesClinicas()
+    {
+        return $this->hasMany(AtualizacaoClinica::class, "CHAMADO_ID", "CHAMADO_ID")
+            ->orderBy("ATUALIZACAO_CLINICA_DATA")
+            ->orderBy("ATUALIZACAO_CLINICA_ID");
+    }
+
     public function chamadoProcedimentos()
     {
         return $this->hasMany(ChamadoProcedimento::class, "CHAMADO_ID", "CHAMADO_ID");
@@ -190,6 +197,7 @@ class Chamado extends Model
             'procedimentos',
             'diagnosticos',
             'situacoes.usuario',
+            'atualizacoesClinicas.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional',
@@ -248,21 +256,59 @@ class Chamado extends Model
         $nascimento = $paciente && $paciente->PACIENTE_DT_NASCIMENTO
             ? Carbon::parse($paciente->PACIENTE_DT_NASCIMENTO)
             : null;
-        $situacoes = $chamado->situacoes
-            ->sortBy(function ($situacao) {
-                return sprintf(
-                    '%s-%010d',
-                    Carbon::parse($situacao->CHAMADO_SITUACAO_DATA)->format('YmdHis.u'),
-                    $situacao->CHAMADO_SITUACAO_ID
-                );
-            })
-            ->values();
+        $eventos = $chamado->situacoes->map(function ($situacao) {
+            return [
+                'tipo' => 'situacao',
+                'id' => $situacao->CHAMADO_SITUACAO_ID,
+                'data' => $situacao->CHAMADO_SITUACAO_DATA,
+                'item' => $situacao,
+            ];
+        })->concat($chamado->atualizacoesClinicas->map(function ($atualizacao) {
+            return [
+                'tipo' => 'atualizacao',
+                'id' => $atualizacao->ATUALIZACAO_CLINICA_ID,
+                'data' => $atualizacao->ATUALIZACAO_CLINICA_DATA,
+                'item' => $atualizacao,
+            ];
+        }))->sortBy(function ($evento) {
+            return sprintf(
+                '%s-%s-%010d',
+                Carbon::parse($evento['data'])->format('YmdHis.u'),
+                $evento['tipo'],
+                $evento['id']
+            );
+        })->values();
 
-        if ($situacoes->isEmpty()) {
-            $situacoes = collect([null]);
+        if ($eventos->isEmpty()) {
+            $eventos = collect([null]);
         }
 
-        return $situacoes->map(function ($situacao) use (
+        $escapar = function ($valor) {
+            return htmlspecialchars(self::valorRelatorio($valor), ENT_QUOTES, 'UTF-8');
+        };
+        $atualizacoesClinicas = $chamado->atualizacoesClinicas->map(function ($atualizacao) use ($descricao, $escapar) {
+            $usuario = $atualizacao->usuario ? $atualizacao->usuario->USUARIO_NOME : null;
+
+            return '<b>Atualização Clínica Nº ' . $atualizacao->ATUALIZACAO_CLINICA_ID . '</b><br/>'
+                . '<b>Data/hora:</b> ' . self::formatarDataHoraRelatorio($atualizacao->ATUALIZACAO_CLINICA_DATA)
+                . '     <b>Registrado por:</b> ' . $escapar($usuario) . '<br/>'
+                . '<b>Prioridade:</b> ' . $escapar($descricao(RTG::PRIORIDADE_PACIENTE, $atualizacao->TG_PRIORIDADE_ANTERIOR_ID))
+                . ' para ' . $escapar($descricao(RTG::PRIORIDADE_PACIENTE, $atualizacao->TG_PRIORIDADE_ID)) . '<br/>'
+                . '<b>Profissional responsável:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_PROFISSIONAL)
+                . '     <b>Conselho:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_CONSELHO)
+                . ' ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_NUMERO_CONSELHO) . '<br/>'
+                . '<b>Precaução:</b> ' . $escapar($descricao(RTG::TIPO_PRECAUCAO, $atualizacao->TG_TIPO_PRECAUCAO_ID))
+                . '     <b>Suporte O2:</b> ' . $escapar($descricao(RTG::SUPORTE_O2, $atualizacao->TG_SUPORTE_O2_ID))
+                . '     <b>Suporte hemodinâmico:</b> ' . $escapar($descricao(RTG::SUPORTE_HEMODINAMICO, $atualizacao->TG_SUPORTE_HEMODINAMICO_ID)) . '<br/>'
+                . '<b>Temperatura:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_TEMPERATURA)
+                . '     <b>Pressão arterial:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL)
+                . '     <b>Frequência cardíaca:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA) . '<br/>'
+                . '<b>Saturação O2:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_SATURACAO_O2)
+                . '     <b>Escala Glasgow:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_ESCALA_GLASGOW) . '<br/>'
+                . '<b>Justificativa médica:</b> ' . nl2br($escapar($atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA), false);
+        })->implode('<br/><br/>');
+
+        return $eventos->map(function ($evento) use (
             $chamado,
             $paciente,
             $nomePaciente,
@@ -271,8 +317,13 @@ class Chamado extends Model
             $descricao,
             $equipe,
             $veiculo,
-            $profissionais
+            $profissionais,
+            $atualizacoesClinicas
         ) {
+            $itemHistorico = $evento ? $evento['item'] : null;
+            $atualizacao = $evento && $evento['tipo'] === 'atualizacao' ? $itemHistorico : null;
+            $situacao = $evento && $evento['tipo'] === 'situacao' ? $itemHistorico : null;
+
             return [
                 'CHAMADO_ID' => (string) $chamado->CHAMADO_ID,
                 'SITUACAO_ATUAL' => $descricao(RTG::SITUACAO_CHAMADO, $chamado->situacaoAtual->TG_SITUACAO_ID),
@@ -314,18 +365,19 @@ class Chamado extends Model
                 'VEICULO_PLACA' => self::valorRelatorio($veiculo ? $veiculo->VEICULO_PLACA : null),
                 'EQUIPE' => $equipe ? 'Equipe Nº ' . $equipe->EQUIPE_ID . ($equipe->EQUIPE_TURNO ? ' - ' . $equipe->EQUIPE_TURNO : '') : '-',
                 'PROFISSIONAIS' => self::valorRelatorio($profissionais),
-                'HISTORICO_SITUACAO' => $situacao
-                    ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID)
+                'ATUALIZACOES_CLINICAS' => self::valorRelatorio($atualizacoesClinicas),
+                'HISTORICO_SITUACAO' => $atualizacao
+                    ? 'ATUALIZAÇÃO CLÍNICA Nº ' . $atualizacao->ATUALIZACAO_CLINICA_ID
+                    : ($situacao ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID) : '-'),
+                'HISTORICO_DATA' => $evento
+                    ? self::formatarDataHoraRelatorio($evento['data'])
                     : '-',
-                'HISTORICO_DATA' => $situacao
-                    ? self::formatarDataHoraRelatorio($situacao->CHAMADO_SITUACAO_DATA)
-                    : '-',
-                'HISTORICO_USUARIO' => self::valorRelatorio($situacao && $situacao->usuario
-                    ? $situacao->usuario->USUARIO_NOME
+                'HISTORICO_USUARIO' => self::valorRelatorio($itemHistorico && $itemHistorico->usuario
+                    ? $itemHistorico->usuario->USUARIO_NOME
                     : null),
-                'HISTORICO_OBSERVACAO' => self::valorRelatorio($situacao
-                    ? $situacao->CHAMADO_SITUACAO_OBSERVACAO
-                    : null),
+                'HISTORICO_OBSERVACAO' => self::valorRelatorio($atualizacao
+                    ? $atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA
+                    : ($situacao ? $situacao->CHAMADO_SITUACAO_OBSERVACAO : null)),
             ];
         })->all();
     }

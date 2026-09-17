@@ -159,6 +159,7 @@ class ChamadoAcompanhamentoController extends Controller
                       ->orderBy('CHAMADO_SITUACAO_ID', 'asc');
             },
             'situacoes.usuario',
+            'atualizacoesClinicas.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional'

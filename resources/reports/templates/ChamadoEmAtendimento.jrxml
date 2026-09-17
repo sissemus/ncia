@@ -45,6 +45,7 @@
 	<field name="VEICULO_PLACA" class="java.lang.String"/>
 	<field name="EQUIPE" class="java.lang.String"/>
 	<field name="PROFISSIONAIS" class="java.lang.String"/>
+	<field name="ATUALIZACOES_CLINICAS" class="java.lang.String"/>
 	<field name="HISTORICO_SITUACAO" class="java.lang.String"/>
 	<field name="HISTORICO_DATA" class="java.lang.String"/>
 	<field name="HISTORICO_USUARIO" class="java.lang.String"/>
@@ -52,7 +53,7 @@
 	<group name="Chamado">
 		<groupExpression><![CDATA[$F{CHAMADO_ID}]]></groupExpression>
 		<groupHeader>
-			<band height="600" splitType="Stretch">
+			<band height="570" splitType="Stretch">
 				<rectangle><reportElement x="1" y="0" width="553" height="82" forecolor="#B0BEC5" uuid="41b10a7b-5428-491b-9ff0-cc9a45dcbb2a"/><graphicElement><pen lineWidth="0.5"/></graphicElement></rectangle>
 				<staticText><reportElement mode="Opaque" x="1" y="0" width="553" height="20" backcolor="#E9ECEF" uuid="996ccab1-b0ae-4632-8e92-481ad3fd1901"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[IDENTIFICAÇÃO DO PACIENTE]]></text></staticText>
 				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="24" width="539" height="18" uuid="aa3439a8-f0aa-4114-a5ad-7ba6f62a55f7"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Paciente:</b> " + $F{PACIENTE_NOME}]]></textFieldExpression></textField>
@@ -85,8 +86,24 @@
 				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="500" width="539" height="18" uuid="87838b2e-6301-47d0-97de-e0ea0939cd12"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Veículo:</b> " + $F{VEICULO} + "     <b>Placa:</b> " + $F{VEICULO_PLACA}]]></textFieldExpression></textField>
 				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="520" width="539" height="18" uuid="b2c79b01-06ef-492e-a6d8-4ad2ff18b25b"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Equipe:</b> " + $F{EQUIPE}]]></textFieldExpression></textField>
 				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="8" y="540" width="539" height="28" uuid="8cdf22f1-43f5-4a1b-adf9-e79148496f9e"/><textElement markup="html"><font size="9"/></textElement><textFieldExpression><![CDATA["<b>Profissionais:</b> " + $F{PROFISSIONAIS}]]></textFieldExpression></textField>
-
-				<staticText><reportElement positionType="Float" mode="Opaque" x="1" y="580" width="553" height="20" backcolor="#D6EAF8" forecolor="#000000" uuid="ed532590-fe90-48ed-8e0e-9daa4aa8bd23"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[HISTÓRICO DO CHAMADO]]></text></staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="AtualizacoesClinicas">
+		<groupExpression><![CDATA[$F{CHAMADO_ID}]]></groupExpression>
+		<groupHeader>
+			<band height="48" splitType="Stretch">
+				<printWhenExpression><![CDATA[Boolean.valueOf(!$F{ATUALIZACOES_CLINICAS}.equals("-"))]]></printWhenExpression>
+				<staticText><reportElement mode="Opaque" x="1" y="8" width="553" height="20" backcolor="#E9ECEF" uuid="72b76d37-e530-49be-8a79-f16564847118"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[ATUALIZAÇÕES CLÍNICAS]]></text></staticText>
+				<textField isStretchWithOverflow="true"><reportElement positionType="Float" x="1" y="28" width="553" height="20" uuid="ac02d419-e270-41e9-901d-34f7a5a65344"/><box topPadding="6" leftPadding="8" bottomPadding="6" rightPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement markup="html"><font size="8"/></textElement><textFieldExpression><![CDATA[$F{ATUALIZACOES_CLINICAS}]]></textFieldExpression></textField>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="HistoricoChamado">
+		<groupExpression><![CDATA[$F{CHAMADO_ID}]]></groupExpression>
+		<groupHeader>
+			<band height="28">
+				<staticText><reportElement mode="Opaque" x="1" y="8" width="553" height="20" backcolor="#D6EAF8" forecolor="#000000" uuid="ed532590-fe90-48ed-8e0e-9daa4aa8bd23"/><box leftPadding="8"><pen lineWidth="0.5" lineColor="#B0BEC5"/></box><textElement verticalAlignment="Middle"><font size="10" isBold="true"/></textElement><text><![CDATA[HISTÓRICO DO CHAMADO]]></text></staticText>
 			</band>
 		</groupHeader>
 	</group>
