@@ -161,6 +161,7 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
+import PrioridadePacienteEnum, { getPrioridadeColor as obterCorPrioridade } from "../../enums/PrioridadePacienteEnum";
 
 export default {
     name: "AtualizacaoClinica",
@@ -219,7 +220,9 @@ export default {
             return [...this.atualizacoes].sort((a, b) => Number(b.ATUALIZACAO_CLINICA_ID) - Number(a.ATUALIZACAO_CLINICA_ID));
         },
         prioridadesDisponiveis() {
-            return (this.prioridades || []).filter(item => !String(item.DESCRICAO || "").toUpperCase().includes("AZUL"));
+            return (this.prioridades || []).filter(
+                item => Number(item.COLUNA_ID) !== PrioridadePacienteEnum.AZUL
+            );
         },
         podeSalvar() {
             if (this.processando) return false;
@@ -265,12 +268,7 @@ export default {
             return item ? item.DESCRICAO : "-";
         },
         corPrioridade(id) {
-            const valor = this.descricao(this.prioridades, id).toUpperCase();
-            if (valor.includes("VERMELHO")) return "red darken-3";
-            if (valor.includes("LARANJA")) return "orange darken-2";
-            if (valor.includes("AMARELO")) return "amber darken-2";
-            if (valor.includes("VERDE")) return "green darken-1";
-            return "grey";
+            return obterCorPrioridade(id);
         },
         unidadeNome(camel, snake) {
             const unidade = this.chamado[camel] || this.chamado[snake];

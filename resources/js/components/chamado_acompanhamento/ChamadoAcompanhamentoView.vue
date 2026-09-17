@@ -97,6 +97,16 @@
                                     <v-btn icon color="primary" @click="verDetalhes(chamado.CHAMADO_ID)" title="Visualizar Detalhes">
                                         <v-icon>mdi-eye</v-icon>
                                     </v-btn>
+                                    <v-btn
+                                        v-if="podeImprimir(chamado)"
+                                        icon
+                                        color="primary"
+                                        title="Baixar PDF do chamado"
+                                        :loading="gerandoPdfId === chamado.CHAMADO_ID"
+                                        :disabled="gerandoPdfId !== null"
+                                        @click="baixarPdf(chamado)">
+                                        <v-icon>mdi-printer</v-icon>
+                                    </v-btn>
                                 </td>
                             </tr>
                         </tbody>
@@ -489,6 +499,11 @@ import moment from "moment";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import UtilsMixins from "../../mixins/UtilsMixins";
+import { getPrioridadeColor as obterCorPrioridade } from "../../enums/PrioridadePacienteEnum";
+import SituacaoChamadoEnum, {
+    getSituacaoChamadoColor as obterCorSituacao,
+    getSituacaoChamadoTextColor as obterCorTextoSituacao
+} from "../../enums/SituacaoChamadoEnum";
 
 export default {
     name: "ChamadoAcompanhamentoView",
@@ -519,7 +534,8 @@ export default {
             acaoEncerramento: null,
             motivoCancelamento: null,
             motivacaoCancelamento: "",
-            processandoEncerramento: false
+            processandoEncerramento: false,
+            gerandoPdfId: null
         };
     },
 
@@ -537,7 +553,7 @@ export default {
 
     mounted() {
         if (this.somenteEmAtendimento) {
-            this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+            this.chamadoPesquisa.TG_SITUACAO_ID = SituacaoChamadoEnum.EM_ATENDIMENTO;
         }
 
         const chamadoId = new URLSearchParams(window.location.search).get("chamado");
@@ -593,7 +609,8 @@ export default {
         },
 
         podeEncerrarSelecionado() {
-            return this.podeEncerrar && this.statusSelecionado === 3;
+            return this.podeEncerrar
+                && this.statusSelecionado === SituacaoChamadoEnum.EM_ATENDIMENTO;
         },
 
         procedimentosSelecionados() {
@@ -722,7 +739,7 @@ export default {
             this.$store.dispatch("ChamadoAcompanhamentoViewModule/setChamadoPesquisa", null)
                 .then(() => {
                     if (this.somenteEmAtendimento) {
-                        this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+                        this.chamadoPesquisa.TG_SITUACAO_ID = SituacaoChamadoEnum.EM_ATENDIMENTO;
                     }
 
                     this.pesquisar();
@@ -829,23 +846,44 @@ export default {
         },
 
         getSituacaoColor(situacaoId) {
-            switch (Number(situacaoId)) {
-                case 1: return "grey darken-1"; // Aberto
-                case 2: return "blue darken-2"; // Em análise
-                case 3: return "orange darken-3"; // Em atendimento
-                case 4: return "green darken-2"; // Concluído
-                case 5: return "red darken-2"; // Cancelado
-                default: return "grey";
-            }
+            return obterCorSituacao(situacaoId);
         },
 
         getPrioridadeColor(prioridadeId) {
-            switch (Number(prioridadeId)) {
-                case 1: return "red darken-3"; // Alta / Emergência
-                case 2: return "orange darken-2"; // Média / Urgência
-                case 3: return "green darken-1"; // Baixa
-                default: return "blue-grey";
+            return obterCorPrioridade(prioridadeId);
+        },
+
+        podeImprimir(chamado) {
+            return !!chamado
+                && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO;
+        },
+
+        baixarPdf(chamado) {
+            if (!chamado || this.gerandoPdfId !== null) {
+                return;
             }
+
+            const id = chamado.CHAMADO_ID;
+            this.gerandoPdfId = id;
+
+            axios.get(`${this.baseUrl}/relatorio/chamado-em-atendimento/${id}`, {
+                responseType: "blob"
+            }).then(response => {
+                const blob = new Blob([response.data], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = url;
+                link.download = `Chamado_Atendimento_${id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }).catch(error => {
+                this.erro(error);
+            }).finally(() => {
+                this.gerandoPdfId = null;
+            });
         },
 
         descricaoTabelaGenerica(lista, colunaId) {
@@ -878,7 +916,7 @@ export default {
         },
 
         isSituacaoAberto(situacaoId) {
-            return Number(situacaoId) === 1;
+            return Number(situacaoId) === SituacaoChamadoEnum.ABERTO;
         },
 
         getNomeUsuarioRegistro(sit) {
@@ -889,15 +927,15 @@ export default {
 
         getDetalheAcompanhamento(situacaoId) {
             switch (Number(situacaoId)) {
-                case 1:
+                case SituacaoChamadoEnum.ABERTO:
                     return "Chamado feito e salvo pela unidade, mas não validado pelo Regulador Cia.";
-                case 2:
+                case SituacaoChamadoEnum.EM_ANALISE:
                     return "Chamado recebido e sendo analisado pelo Regulador Cia.";
-                case 3:
+                case SituacaoChamadoEnum.EM_ATENDIMENTO:
                     return "Equipe assistencial do veículo iniciou os procedimentos para o deslocamento do(s) paciente(s).";
-                case 4:
+                case SituacaoChamadoEnum.CONCLUIDO:
                     return "Deslocamento de ida e volta finalizado sem intercorrência.";
-                case 5:
+                case SituacaoChamadoEnum.CANCELADO:
                     return "Chamado não aprovado na análise do Regulador Cia ou que teve alguma intercorrência que impossibilitou a conclusão satisfatória do chamado.";
                 default:
                     return "";
@@ -905,14 +943,7 @@ export default {
         },
 
         getSituacaoTextColor(situacaoId) {
-            switch (Number(situacaoId)) {
-                case 1: return "grey--text text--darken-3";
-                case 2: return "blue--text text--darken-3";
-                case 3: return "orange--text text--darken-4";
-                case 4: return "green--text text--darken-3";
-                case 5: return "red--text text--darken-3";
-                default: return "grey--text";
-            }
+            return obterCorTextoSituacao(situacaoId);
         }
     }
 }

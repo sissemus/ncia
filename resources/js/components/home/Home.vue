@@ -152,6 +152,8 @@
 import TratarErroAjax from "../assets/TratarErroAjax";
 import { mapGetters } from "vuex";
 import Swal from "sweetalert2";
+import { getPrioridadeColor as obterCorPrioridade } from "../../enums/PrioridadePacienteEnum";
+import SituacaoChamadoEnum from "../../enums/SituacaoChamadoEnum";
 
 export default {
     name: "Home",
@@ -287,7 +289,9 @@ export default {
                 : `${this.baseUrl}/home/chamados-operacionais`;
             const params = { page: paginacao.current_page };
             if (aba !== "abertos") {
-                params.situacao = aba === "analise" ? 2 : 3;
+                params.situacao = aba === "analise"
+                    ? SituacaoChamadoEnum.EM_ANALISE
+                    : SituacaoChamadoEnum.EM_ATENDIMENTO;
             }
             this.carregandoFilas[aba] = true;
             return axios.get(url, { params }).then(response => {
@@ -413,11 +417,7 @@ export default {
             return item ? item.DESCRICAO : "-";
         },
         corPrioridade(id) {
-            const descricao = this.descricao(this.prioridades, id).toUpperCase();
-            if (descricao.indexOf("VERMELHO") >= 0) return "red";
-            if (descricao.indexOf("LARANJA") >= 0) return "orange";
-            if (descricao.indexOf("AMARELO") >= 0) return "yellow darken-2";
-            return "green";
+            return obterCorPrioridade(id);
         },
         formatarDataHora(data) {
             const dataConvertida = this.converterData(data);

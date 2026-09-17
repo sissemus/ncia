@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\AtualizacaoClinica;
 
+use App\MyLibs\PrioridadePacienteEnum;
 use App\MyLibs\RTG;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -31,9 +32,7 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
             "TG_PRIORIDADE_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")
                 ->where("TABELA_ID", RTG::PRIORIDADE_PACIENTE)
                 ->where("ATIVO", 1)
-                ->where(function ($query) {
-                    $query->where("DESCRICAO", "not like", "%AZUL%");
-                })],
+                ->whereNot("COLUNA_ID", PrioridadePacienteEnum::AZUL)],
             "TG_TIPO_PRECAUCAO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_PRECAUCAO)->where("ATIVO", 1)],
             "TG_SUPORTE_O2_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_O2)->where("ATIVO", 1)],
             "TG_SUPORTE_HEMODINAMICO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_HEMODINAMICO)->where("ATIVO", 1)],

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\MyLibs\RTG;
+use App\MyLibs\SituacaoChamadoEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -165,7 +166,11 @@ class Chamado extends Model
         if ($requisicao->TG_SITUACAO_ID) {
             $query->where('cs.TG_SITUACAO_ID', $requisicao->TG_SITUACAO_ID);
         } elseif ($requisicao->analise) {
-            $query->whereIn('cs.TG_SITUACAO_ID', [1, 2, 3]);
+            $query->whereIn('cs.TG_SITUACAO_ID', [
+                SituacaoChamadoEnum::ABERTO,
+                SituacaoChamadoEnum::EM_ANALISE,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ]);
         }
 
         if ($requisicao->CHAMADO_DATA) {
