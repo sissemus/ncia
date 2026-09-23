@@ -96,31 +96,31 @@ class EquipeController extends Controller
         }
 
         //validando se a equipe está completa
-        if($tipoVeiculo == 1){
+        // if($tipoVeiculo == 1){
 
-            sort($tiposProfissional_1);
-            sort($tiposProfissional_1_compare);
+        //     sort($tiposProfissional_1);
+        //     sort($tiposProfissional_1_compare);
 
-            // comparando por tipo de equipe
-            if($tiposProfissional_1 != $tiposProfissional_1_compare){
-                throw ValidationException::withMessages([
-                    'TG_TIPO_PROFISSIONAL_ID' =>
-                        'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
-                ]);
-            }
-        }
-        else{
+        //     // comparando por tipo de equipe
+        //     if($tiposProfissional_1 != $tiposProfissional_1_compare){
+        //         throw ValidationException::withMessages([
+        //             'TG_TIPO_PROFISSIONAL_ID' =>
+        //                 'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
+        //         ]);
+        //     }
+        // }
+        // else{
 
-            sort($tiposProfissional_2);
-            sort($tiposProfissional_2_compare);
+        //     sort($tiposProfissional_2);
+        //     sort($tiposProfissional_2_compare);
 
-            if($tiposProfissional_2 != $tiposProfissional_2_compare){
-                throw ValidationException::withMessages([
-                    'TG_TIPO_PROFISSIONAL_ID' =>
-                        'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
-                ]);
-            }
-        }
+        //     if($tiposProfissional_2 != $tiposProfissional_2_compare){
+        //         throw ValidationException::withMessages([
+        //             'TG_TIPO_PROFISSIONAL_ID' =>
+        //                 'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
+        //         ]);
+        //     }
+        // }
 
         DB::commit();
         
