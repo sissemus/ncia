@@ -14,8 +14,7 @@ export default {
             TG_SITUACAO_ID: null,
             CHAMADO_DATA: null,
             TG_PRIORIDADE_ID: null
-        },
-        chamadoSelecionado: null
+        }
     },
 
     getters: {
@@ -27,9 +26,6 @@ export default {
         },
         getChamadoPesquisa(state) {
             return state.chamadoPesquisa;
-        },
-        getChamadoSelecionado(state) {
-            return state.chamadoSelecionado;
         }
     },
 
@@ -64,9 +60,6 @@ export default {
                     TG_PRIORIDADE_ID: null
                 };
             }
-        },
-        setChamadoSelecionado(state, chamado) {
-            state.chamadoSelecionado = chamado ? JSON.parse(JSON.stringify(chamado)) : null;
         }
     },
 
@@ -79,9 +72,6 @@ export default {
         },
         setChamadoPesquisa({ commit }, chamadoPesquisa) {
             commit('setChamadoPesquisa', chamadoPesquisa);
-        },
-        setChamadoSelecionado({ commit }, chamado) {
-            commit('setChamadoSelecionado', chamado);
         },
         search(context, msgId) {
             let baseUrl = context.rootGetters['getBaseUrl'];
@@ -107,11 +97,15 @@ export default {
         },
         buscarChamado(context, { id, msgId }) {
             let baseUrl = context.rootGetters['getBaseUrl'];
+            context.dispatch('AtualizacaoClinicaModule/clear', null, { root: true });
             return axios({
                 method: 'GET',
                 url: `${baseUrl}/chamado_acompanhamento/buscar/${id}`
             }).then(r => {
-                context.dispatch('setChamadoSelecionado', r.data);
+                context.dispatch('AtualizacaoClinicaModule/setChamado', {
+                    chamado: r.data,
+                    contexto: 'acompanhamento'
+                }, { root: true });
             }).catch(e => {
                 console.error('ERRO AO BUSCAR DETALHES DO CHAMADO: ', e);
                 context.dispatch('TratarErroAjaxModule/tratarErro', {

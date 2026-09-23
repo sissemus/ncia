@@ -15,7 +15,7 @@ class VeiculoUnidadeController extends Controller
     {
         // Fetch active vehicles and active units to populate form select options
         $veiculos = Veiculo::where('VEICULO_ATIVO', 1)->orderBy('VEICULO_IDENTIFICACAO')->get();
-        $unidades = Unidade::where('UNIDADE_ATIVO', 1)->orderBy('UNIDADE_NOME')->get();
+        $unidades = Unidade::where('UNIDADE_ATIVO', 1)->where('UNIDADE_SOLICITANTE', 1)->orderBy('UNIDADE_NOME')->get();
 
         return view("veiculo_unidade.veiculo_unidade_view", compact('veiculos', 'unidades'));
     }

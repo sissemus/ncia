@@ -20,7 +20,13 @@ class VeiculoCreateRequest extends FormRequest
             "TG_TIPO_VEICULO_ID" => ["required", "integer"],
             "TG_SITUACAO_VEICULO_ID" => ["required", "integer"],
             "VEICULO_ATIVO" => ["required", "integer", "in:0,1"],
-            "UNIDADE_ID" => ["required", "integer", "exists:UNIDADE,UNIDADE_ID"],
+            "UNIDADE_ID" => [
+                "required",
+                "integer",
+                \Illuminate\Validation\Rule::exists("UNIDADE", "UNIDADE_ID")
+                    ->where("UNIDADE_ATIVO", 1)
+                    ->where("UNIDADE_SOLICITANTE", 1),
+            ],
             "VEICULO_UNIDADE_DT_INI" => ["required", "date"],
         ];
     }

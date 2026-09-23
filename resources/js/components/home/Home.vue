@@ -60,6 +60,13 @@
                                     @click="abrirAcaoChamado(chamado)">
                                     <v-icon>{{ iconeAcaoFila }}</v-icon>
                                 </v-btn>
+                                <v-btn v-if="abaAtiva === 'atendimento'" icon color="primary"
+                                    title="Baixar PDF do chamado"
+                                    :loading="gerandoPdfId === chamado.CHAMADO_ID"
+                                    :disabled="gerandoPdfId !== null"
+                                    @click="baixarPdf(chamado)">
+                                    <v-icon>mdi-printer</v-icon>
+                                </v-btn>
                             </td>
                         </tr>
                     </tbody>
@@ -145,6 +152,8 @@
 import TratarErroAjax from "../assets/TratarErroAjax";
 import { mapGetters } from "vuex";
 import Swal from "sweetalert2";
+import { getPrioridadeColor as obterCorPrioridade } from "../../enums/PrioridadePacienteEnum";
+import SituacaoChamadoEnum from "../../enums/SituacaoChamadoEnum";
 
 export default {
     name: "Home",
@@ -170,6 +179,7 @@ export default {
             paginacaoExpirados: { current_page: 1, total: 0, last_page: 1 },
             carregandoExpirados: false,
             recepcionandoId: null,
+            gerandoPdfId: null,
             cancelandoId: null,
         };
     },
@@ -279,7 +289,9 @@ export default {
                 : `${this.baseUrl}/home/chamados-operacionais`;
             const params = { page: paginacao.current_page };
             if (aba !== "abertos") {
-                params.situacao = aba === "analise" ? 2 : 3;
+                params.situacao = aba === "analise"
+                    ? SituacaoChamadoEnum.EM_ANALISE
+                    : SituacaoChamadoEnum.EM_ATENDIMENTO;
             }
             this.carregandoFilas[aba] = true;
             return axios.get(url, { params }).then(response => {
@@ -322,6 +334,25 @@ export default {
                 return;
             }
             this.recepcionar(chamado.CHAMADO_ID);
+        },
+        baixarPdf(chamado) {
+            if (this.gerandoPdfId !== null) return;
+            this.gerandoPdfId = chamado.CHAMADO_ID;
+
+            axios.get(`${this.baseUrl}/relatorio/chamado-em-atendimento/${chamado.CHAMADO_ID}`, {
+                responseType: "blob",
+            }).then(response => {
+                const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `Chamado_Atendimento_${chamado.CHAMADO_ID}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }).catch(error => this.erro(error, this.msgId)).finally(() => {
+                this.gerandoPdfId = null;
+            });
         },
         cancelarExpirado(chamado) {
             if (this.cancelandoId !== null) return;
@@ -386,11 +417,7 @@ export default {
             return item ? item.DESCRICAO : "-";
         },
         corPrioridade(id) {
-            const descricao = this.descricao(this.prioridades, id).toUpperCase();
-            if (descricao.indexOf("VERMELHO") >= 0) return "red";
-            if (descricao.indexOf("LARANJA") >= 0) return "orange";
-            if (descricao.indexOf("AMARELO") >= 0) return "yellow darken-2";
-            return "green";
+            return obterCorPrioridade(id);
         },
         formatarDataHora(data) {
             const dataConvertida = this.converterData(data);

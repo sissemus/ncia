@@ -10,6 +10,7 @@ class Unidade extends Model
     protected $table = "UNIDADE";
     protected $primaryKey = "UNIDADE_ID";
     public $timestamps = false;
+    public static $snakeAttributes = false;
 
     protected $fillable = [
         "UNIDADE_NOME",

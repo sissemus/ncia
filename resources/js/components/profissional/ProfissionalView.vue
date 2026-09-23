@@ -53,6 +53,7 @@
                             <th class="text-left">ID</th>
                             <th class="text-left">Nome</th>
                             <th class="text-left">CPF</th>
+                            <th class="text-left">Contato (WhatsApp)</th>
                             <th class="text-left">Nascimento</th>
                             <th class="text-left">Sexo</th>
                             <th class="text-left">Tipo de Profissional</th>
@@ -66,6 +67,7 @@
                             <td>{{ profissional.PROFISSIONAL_ID }}</td>
                             <td>{{ profissional.PROFISSIONAL_NOME }}</td>
                             <td>{{ formatarCpf(profissional.PROFISSIONAL_CPF) }}</td>
+                            <td>{{ formatarTelefone(profissional.PROFISSIONAL_WHATSAPP) }}</td>
                             <td>{{ formatarDataBR(profissional.PROFISSIONAL_NASCIMENTO) }}</td>
                             <td>{{ profissional.sexo ? profissional.sexo.DESCRICAO : '' }}</td>
                             <td>
@@ -256,6 +258,17 @@ export default {
             cpf = cpf.toString().replace(/\D/g, "")
 
             return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4")
+        },
+
+        formatarTelefone(telefone) {
+            if (!telefone) return "-";
+            const num = telefone.toString().replace(/\D/g, "");
+            if (num.length === 11) {
+                return num.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+            } else if (num.length === 10) {
+                return num.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+            }
+            return telefone;
         }
     }
 }

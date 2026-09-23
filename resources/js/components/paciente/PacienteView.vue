@@ -62,7 +62,12 @@
                     <tbody>
                         <tr v-for="paciente in pacientes" :key="paciente.PACIENTE_ID">
                             <td>{{ paciente.PACIENTE_ID }}</td>
-                            <td>{{ paciente.PACIENTE_NOME }}</td>
+                            <td>
+                                <div>{{ paciente.PACIENTE_NOME }}</div>
+                                <small class="grey--text text--darken-1" v-if="paciente.PACIENTE_NOME_SOCIAL">
+                                    <v-icon x-small color="grey">mdi-account-outline</v-icon> Nome Social: {{ paciente.PACIENTE_NOME_SOCIAL }}
+                                </small>
+                            </td>
                             <td>{{ mascararCpf(paciente.PACIENTE_CPF) }}</td>
                             <td>{{ formatarDataBR(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ calcularIdadeCompleta(paciente.PACIENTE_DT_NASCIMENTO) }}</td>

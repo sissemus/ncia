@@ -31,6 +31,7 @@ Vue.component('login', require('./components/auth/Login').default);
 Vue.component('app', require('./components/App').default);
 Vue.component('home', require('./components/home/Home').default);
 Vue.component('chamado-analisar-view', require('./components/chamado_analisar/ChamadoAnalisarView.vue').default);
+Vue.component('atualizacao-clinica', require('./components/atualizacao_clinica/AtualizacaoClinica.vue').default);
 Vue.component('tabela-generica-view', require('./components/tabela_generica/TabelaGenericaView').default);
 Vue.component('usuario-view', require('./components/usuario/UsuarioView').default);
 Vue.component('usuario-alterar-senha-view', require('./components/usuario/UsuarioAlterarSenhaView').default);

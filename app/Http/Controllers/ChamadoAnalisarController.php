@@ -222,6 +222,7 @@ class ChamadoAnalisarController extends Controller
             'procedimentos',
             'diagnosticos',
             'situacoes.usuario',
+            'atualizacoesClinicas.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional',

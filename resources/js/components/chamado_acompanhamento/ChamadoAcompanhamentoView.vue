@@ -97,6 +97,16 @@
                                     <v-btn icon color="primary" @click="verDetalhes(chamado.CHAMADO_ID)" title="Visualizar Detalhes">
                                         <v-icon>mdi-eye</v-icon>
                                     </v-btn>
+                                    <v-btn
+                                        v-if="podeImprimir(chamado)"
+                                        icon
+                                        color="primary"
+                                        title="Baixar PDF do chamado"
+                                        :loading="gerandoPdfId === chamado.CHAMADO_ID"
+                                        :disabled="gerandoPdfId !== null"
+                                        @click="baixarPdf(chamado)">
+                                        <v-icon>mdi-printer</v-icon>
+                                    </v-btn>
                                 </td>
                             </tr>
                         </tbody>
@@ -308,6 +318,8 @@
                         </v-card-text>
                     </v-card>
 
+                    <atualizacao-clinica />
+
                     <!-- Veículo, Equipe e Profissionais -->
                     <v-card outlined class="mb-4" v-if="equipeVinculada">
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
@@ -352,37 +364,58 @@
                         <v-card-text class="pt-3">
                             <v-timeline dense align-top>
                                 <v-timeline-item
-                                    v-for="sit in situacoesOrdenadas"
-                                    :key="sit.CHAMADO_SITUACAO_ID"
-                                    :color="getSituacaoColor(sit.TG_SITUACAO_ID)"
+                                    v-for="evento in historicoOrdenado"
+                                    :key="evento.chave"
+                                    :color="evento.tipo === 'atualizacao' ? 'purple' : getSituacaoColor(evento.item.TG_SITUACAO_ID)"
                                     small>
                                     <v-row dense>
                                         <v-col cols="12" sm="4" md="3">
-                                            <div class="font-weight-bold" :class="getSituacaoTextColor(sit.TG_SITUACAO_ID)">
-                                                {{ descricaoTabelaGenerica(situacoesChamado, sit.TG_SITUACAO_ID) }}
+                                            <div v-if="evento.tipo === 'atualizacao'" class="font-weight-bold purple--text">
+                                                Atualização Clínica Nº {{ evento.item.ATUALIZACAO_CLINICA_ID }}
+                                            </div>
+                                            <div v-else class="font-weight-bold" :class="getSituacaoTextColor(evento.item.TG_SITUACAO_ID)">
+                                                {{ descricaoTabelaGenerica(situacoesChamado, evento.item.TG_SITUACAO_ID) }}
                                             </div>
                                             <div class="caption grey--text text--darken-2">
                                                 <v-icon x-small>mdi-clock-outline</v-icon>
-                                                {{ formatarDataHora(sit.CHAMADO_SITUACAO_DATA) }}
+                                                {{ formatarDataHora(evento.data) }}
                                             </div>
                                         </v-col>
                                         <v-col cols="12" sm="8" md="9">
+                                            <template v-if="evento.tipo === 'atualizacao'">
+                                                <div class="caption mb-1">
+                                                    <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
+                                                    <span class="font-weight-medium">Registrado por:</span>
+                                                    {{ evento.item.usuario ? evento.item.usuario.USUARIO_NOME : '-' }}
+                                                </div>
+                                                <div class="body-2 text--secondary">
+                                                    Prioridade: {{ descricaoTabelaGenerica(prioridades, evento.item.TG_PRIORIDADE_ANTERIOR_ID) }}
+                                                    → {{ descricaoTabelaGenerica(prioridades, evento.item.TG_PRIORIDADE_ID) }} |
+                                                    Profissional: {{ evento.item.ATUALIZACAO_CLINICA_PROFISSIONAL }}
+                                                </div>
+                                                <div class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
+                                                    <v-icon x-small>mdi-information-outline</v-icon>
+                                                    {{ evento.item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA }}
+                                                </div>
+                                            </template>
+                                            <template v-else>
                                             <!-- Apenas na abertura (Aberto / 1) exibir Registrado por -->
-                                            <div v-if="isSituacaoAberto(sit.TG_SITUACAO_ID)" class="caption mb-1">
+                                            <div v-if="isSituacaoAberto(evento.item.TG_SITUACAO_ID)" class="caption mb-1">
                                                 <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
-                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(sit) }}
+                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(evento.item) }}
                                             </div>
 
                                             <!-- Detalhes para acompanhamento da etapa -->
                                             <div class="body-2 text--secondary">
-                                                {{ getDetalheAcompanhamento(sit.TG_SITUACAO_ID) }}
+                                                {{ getDetalheAcompanhamento(evento.item.TG_SITUACAO_ID) }}
                                             </div>
 
                                             <!-- Observações adicionais da fase (se houver, como motivo de cancelamento) -->
-                                            <div v-if="sit.CHAMADO_SITUACAO_OBSERVACAO" class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
+                                            <div v-if="evento.item.CHAMADO_SITUACAO_OBSERVACAO" class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
                                                 <v-icon x-small>mdi-information-outline</v-icon>
-                                                {{ sit.CHAMADO_SITUACAO_OBSERVACAO }}
+                                                {{ evento.item.CHAMADO_SITUACAO_OBSERVACAO }}
                                             </div>
+                                            </template>
                                         </v-col>
                                     </v-row>
                                 </v-timeline-item>
@@ -466,6 +499,11 @@ import moment from "moment";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import UtilsMixins from "../../mixins/UtilsMixins";
+import { getPrioridadeColor as obterCorPrioridade } from "../../enums/PrioridadePacienteEnum";
+import SituacaoChamadoEnum, {
+    getSituacaoChamadoColor as obterCorSituacao,
+    getSituacaoChamadoTextColor as obterCorTextoSituacao
+} from "../../enums/SituacaoChamadoEnum";
 
 export default {
     name: "ChamadoAcompanhamentoView",
@@ -482,7 +520,8 @@ export default {
         suportesHemodinamicos: { type: Array, default: () => [] },
         motivosCancelamento: { type: Array, default: () => [] },
         podeEncerrar: { type: Boolean, default: false },
-        somenteEmAtendimento: { type: Boolean, default: false }
+        somenteEmAtendimento: { type: Boolean, default: false },
+        unidades: { type: Array, default: () => [] }
     },
 
     data() {
@@ -496,13 +535,26 @@ export default {
             acaoEncerramento: null,
             motivoCancelamento: null,
             motivacaoCancelamento: "",
-            processandoEncerramento: false
+            processandoEncerramento: false,
+            gerandoPdfId: null
         };
+    },
+
+    created() {
+        this.$store.dispatch("DominioModule/setAtualizacaoClinicaDominios", {
+            prioridades: this.prioridades,
+            tiposChamado: this.tiposChamado,
+            tiposPrecaucao: this.tiposPrecaucao,
+            suportesO2: this.suportesO2,
+            suportesHemodinamicos: this.suportesHemodinamicos,
+            sexos: this.sexos
+        });
+        this.$store.dispatch("AtualizacaoClinicaModule/clear");
     },
 
     mounted() {
         if (this.somenteEmAtendimento) {
-            this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+            this.chamadoPesquisa.TG_SITUACAO_ID = SituacaoChamadoEnum.EM_ATENDIMENTO;
         }
 
         const chamadoId = new URLSearchParams(window.location.search).get("chamado");
@@ -546,7 +598,7 @@ export default {
         },
 
         chamadoSelecionado() {
-            return this.$store.getters["ChamadoAcompanhamentoViewModule/getChamadoSelecionado"];
+            return this.$store.getters["AtualizacaoClinicaModule/getChamado"];
         },
 
         statusSelecionado() {
@@ -558,7 +610,8 @@ export default {
         },
 
         podeEncerrarSelecionado() {
-            return this.podeEncerrar && this.statusSelecionado === 3;
+            return this.podeEncerrar
+                && this.statusSelecionado === SituacaoChamadoEnum.EM_ATENDIMENTO;
         },
 
         procedimentosSelecionados() {
@@ -637,6 +690,32 @@ export default {
             });
         },
 
+        historicoOrdenado() {
+            let eventos = this.situacoesOrdenadas.map(item => ({
+                tipo: "situacao",
+                chave: `situacao-${item.CHAMADO_SITUACAO_ID}`,
+                data: item.CHAMADO_SITUACAO_DATA,
+                item
+            }));
+            let atualizacoes = this.chamadoSelecionado
+                ? this.chamadoSelecionado.atualizacoesClinicas || this.chamadoSelecionado.atualizacoes_clinicas || []
+                : [];
+
+            atualizacoes.forEach(item => eventos.push({
+                tipo: "atualizacao",
+                chave: `atualizacao-${item.ATUALIZACAO_CLINICA_ID}`,
+                data: item.ATUALIZACAO_CLINICA_DATA,
+                item
+            }));
+
+            return eventos.sort((a, b) => {
+                let dataA = new Date(a.data || 0).getTime();
+                let dataB = new Date(b.data || 0).getTime();
+                if (dataA !== dataB) return dataA - dataB;
+                return a.chave.localeCompare(b.chave);
+            });
+        },
+
         podeConfirmarEncerramento() {
             if (this.processandoEncerramento) {
                 return false;
@@ -661,7 +740,7 @@ export default {
             this.$store.dispatch("ChamadoAcompanhamentoViewModule/setChamadoPesquisa", null)
                 .then(() => {
                     if (this.somenteEmAtendimento) {
-                        this.chamadoPesquisa.TG_SITUACAO_ID = 3;
+                        this.chamadoPesquisa.TG_SITUACAO_ID = SituacaoChamadoEnum.EM_ATENDIMENTO;
                     }
 
                     this.pesquisar();
@@ -718,9 +797,14 @@ export default {
                 dados
             ).then(response => {
                 return this.$store.dispatch(
-                    "ChamadoAcompanhamentoViewModule/setChamadoSelecionado",
-                    response.data.retorno
+                    "AtualizacaoClinicaModule/setChamado",
+                    {
+                        chamado: response.data.retorno,
+                        contexto: "acompanhamento"
+                    }
                 ).then(() => {
+                    return this.$store.dispatch("AtualizacaoClinicaModule/carregar");
+                }).then(() => {
                     this.showEncerramentoModal = false;
                     this.fullScreen = false;
 
@@ -763,23 +847,44 @@ export default {
         },
 
         getSituacaoColor(situacaoId) {
-            switch (Number(situacaoId)) {
-                case 1: return "grey darken-1"; // Aberto
-                case 2: return "blue darken-2"; // Em análise
-                case 3: return "orange darken-3"; // Em atendimento
-                case 4: return "green darken-2"; // Concluído
-                case 5: return "red darken-2"; // Cancelado
-                default: return "grey";
-            }
+            return obterCorSituacao(situacaoId);
         },
 
         getPrioridadeColor(prioridadeId) {
-            switch (Number(prioridadeId)) {
-                case 1: return "red darken-3"; // Alta / Emergência
-                case 2: return "orange darken-2"; // Média / Urgência
-                case 3: return "green darken-1"; // Baixa
-                default: return "blue-grey";
+            return obterCorPrioridade(prioridadeId);
+        },
+
+        podeImprimir(chamado) {
+            return !!chamado
+                && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO;
+        },
+
+        baixarPdf(chamado) {
+            if (!chamado || this.gerandoPdfId !== null) {
+                return;
             }
+
+            const id = chamado.CHAMADO_ID;
+            this.gerandoPdfId = id;
+
+            axios.get(`${this.baseUrl}/relatorio/chamado-em-atendimento/${id}`, {
+                responseType: "blob"
+            }).then(response => {
+                const blob = new Blob([response.data], { type: "application/pdf" });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = url;
+                link.download = `Chamado_Atendimento_${id}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            }).catch(error => {
+                this.erro(error);
+            }).finally(() => {
+                this.gerandoPdfId = null;
+            });
         },
 
         descricaoTabelaGenerica(lista, colunaId) {
@@ -795,14 +900,36 @@ export default {
 
         getUnidadeSolicitanteNome(item) {
             if (!item) return "-";
+            if (item.unidadeSolicitanteNome && item.unidadeSolicitanteNome !== "-") {
+                return item.unidadeSolicitanteNome;
+            }
             let u = item.unidadeSolicitante || item.unidade_solicitante;
-            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+            if (u && (u.UNIDADE_NOME || u.unidade_nome)) {
+                return u.UNIDADE_NOME || u.unidade_nome;
+            }
+            let id = item.UNIDADE_ID_SOLICITANTE || item.unidade_id_solicitante;
+            if (id && this.unidades && this.unidades.length) {
+                let found = this.unidades.find(x => Number(x.UNIDADE_ID) === Number(id));
+                if (found) return found.UNIDADE_NOME || found.unidade_nome;
+            }
+            return "-";
         },
 
         getUnidadeDestinoNome(item) {
             if (!item) return "-";
+            if (item.unidadeDestinoNome && item.unidadeDestinoNome !== "-") {
+                return item.unidadeDestinoNome;
+            }
             let u = item.unidadeDestino || item.unidade_destino;
-            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+            if (u && (u.UNIDADE_NOME || u.unidade_nome)) {
+                return u.UNIDADE_NOME || u.unidade_nome;
+            }
+            let id = item.UNIDADE_ID_DESTINO || item.unidade_id_destino;
+            if (id && this.unidades && this.unidades.length) {
+                let found = this.unidades.find(x => Number(x.UNIDADE_ID) === Number(id));
+                if (found) return found.UNIDADE_NOME || found.unidade_nome;
+            }
+            return "-";
         },
 
         getSituacaoAtualId(item) {
@@ -812,7 +939,7 @@ export default {
         },
 
         isSituacaoAberto(situacaoId) {
-            return Number(situacaoId) === 1;
+            return Number(situacaoId) === SituacaoChamadoEnum.ABERTO;
         },
 
         getNomeUsuarioRegistro(sit) {
@@ -823,15 +950,15 @@ export default {
 
         getDetalheAcompanhamento(situacaoId) {
             switch (Number(situacaoId)) {
-                case 1:
+                case SituacaoChamadoEnum.ABERTO:
                     return "Chamado feito e salvo pela unidade, mas não validado pelo Regulador Cia.";
-                case 2:
+                case SituacaoChamadoEnum.EM_ANALISE:
                     return "Chamado recebido e sendo analisado pelo Regulador Cia.";
-                case 3:
+                case SituacaoChamadoEnum.EM_ATENDIMENTO:
                     return "Equipe assistencial do veículo iniciou os procedimentos para o deslocamento do(s) paciente(s).";
-                case 4:
+                case SituacaoChamadoEnum.CONCLUIDO:
                     return "Deslocamento de ida e volta finalizado sem intercorrência.";
-                case 5:
+                case SituacaoChamadoEnum.CANCELADO:
                     return "Chamado não aprovado na análise do Regulador Cia ou que teve alguma intercorrência que impossibilitou a conclusão satisfatória do chamado.";
                 default:
                     return "";
@@ -839,14 +966,7 @@ export default {
         },
 
         getSituacaoTextColor(situacaoId) {
-            switch (Number(situacaoId)) {
-                case 1: return "grey--text text--darken-3";
-                case 2: return "blue--text text--darken-3";
-                case 3: return "orange--text text--darken-4";
-                case 4: return "green--text text--darken-3";
-                case 5: return "red--text text--darken-3";
-                default: return "grey--text";
-            }
+            return obterCorTextoSituacao(situacaoId);
         }
     }
 }

@@ -92,7 +92,7 @@
                         <v-row>
                             <v-col cols="11">
                                 <v-select
-                                    label="Profissional*"
+                                    label="Profissionais Selecionados*"
                                     :items="profissionalEspecifico"
                                     item-value="value"
                                     item-text="text"
@@ -106,7 +106,7 @@
                             </v-col>
                         </v-row>
                     </v-card-text>
-                        <v-simple-table dense v-show="equipeMontada.length" class="mb-0">
+                        <v-simple-table dense v-show="equipeProfissionais.length" class="mb-0">
                             <template v-slot:default>
                                 <thead>
                                     <tr>
@@ -117,7 +117,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="row in equipeMontada" :key="equipe['EQUIPE_ID']">
+                                    <tr v-for="row in equipeProfissionais" :key="equipe['EQUIPE_ID']">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
                                         <td>
@@ -203,8 +203,9 @@ export default {
                     value: 'SN' 
                 }
             ],
-            equipeMontada:[],
+            equipeProfissionais:[],
             VEICULO_ID: null,
+            EQUIPE_ID: null,
             EQUIPE_TURNO: null,
             PROFISSIONAL_ID: null,
             TABELA_ID: 7,
@@ -343,16 +344,24 @@ export default {
             //     return;
             // }
 
-            if (!this.equipeMontada) {
+            if (!this.equipeProfissionais) {
                 return;
             }
 
             // const equipe = this.equipe
+            const equipeProfissionais = this.equipeProfissionais
 
-            const equipeMontada = this.equipeMontada
-
+            const equipe = {
+                EQUIPE_ID : this.EQUIPE_ID
+                , VEICULO_ID: this.VEICULO_ID
+                , EQUIPE_TURNO: this.EQUIPE_TURNO
+                , EQUIPE_DATA: null
+                , EQUIPE_ATIVO: 1
+                , equipeProfissionais: equipeProfissionais
+            }
+                        
             const dados = {
-                ...equipeMontada
+                ...equipe
                 
             };
 
@@ -516,7 +525,7 @@ export default {
             );
 
             //verifica se esse profissional já foi adicionado a lista de profissionais selecionados
-            const profissionalExiste = this.equipeMontada.find(
+            const profissionalExiste = this.equipeProfissionais.find(
                 item => item.PROFISSIONAL_ID === id
             )
 
@@ -526,17 +535,26 @@ export default {
             }
 
             //adiciona à lista, o profissional e suas características
-            this.equipeMontada.push(
+            // this.equipeProfissionais.push(
+            //     {
+            //         VEICULO_ID: this.VEICULO_ID,
+            //         EQUIPE_ID: null,
+            //         EQUIPE_DATA: null, //pegar a data do servidor
+            //         EQUIPE_TURNO: this.EQUIPE_TURNO,
+            //         EQUIPE_ATIVO: 1,
+            //         TG_TIPO_PROFISSIONAL_ID: this.TG_TIPO_PROFISSIONAL_ID,
+            //         PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
+            //         PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
+            //         PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão
+            //     }
+            // );
+            
+            this.equipeProfissionais.push(
                 {
-                    VEICULO_ID: this.VEICULO_ID,
                     EQUIPE_ID: null,
-                    EQUIPE_DATA: null, //pegar a data do servidor
-                    EQUIPE_TURNO: this.EQUIPE_TURNO,
-                    EQUIPE_ATIVO: 1,
                     TG_TIPO_PROFISSIONAL_ID: this.TG_TIPO_PROFISSIONAL_ID,
                     PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
                     PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
-                    PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão
                 }
             );
             
@@ -557,18 +575,18 @@ export default {
 
             // Só remove se o usuário clicou em Confirmar
             if (result.isConfirmed) {
-                const index = this.equipeMontada.findIndex(
+                const index = this.equipeProfissionais.findIndex(
                     item => item.PROFISSIONAL_ID == id
                 )
 
                 if (index !== -1) {
-                    this.equipeMontada.splice(index, 1)
+                    this.equipeProfissionais.splice(index, 1)
                 }
             }
         },
         resetarFormulario() {
 
-            this.equipeMontada = [];
+            this.equipeProfissionais = [];
 
             this.VEICULO_ID = null;
             this.EQUIPE_TURNO = null;

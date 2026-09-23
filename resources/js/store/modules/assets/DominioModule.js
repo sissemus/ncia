@@ -6,6 +6,11 @@ export default {
         sexos: [],
         tipoProfissionais: [],
         tipoVeiculos: [],
+        prioridades: [],
+        tiposChamado: [],
+        tiposPrecaucao: [],
+        suportesO2: [],
+        suportesHemodinamicos: [],
     },
     getters: {
         getAplicacoes(state) {
@@ -23,6 +28,11 @@ export default {
         getTipoVeiculos(state) {
             return state.tipoVeiculos
         },
+        getPrioridades: state => state.prioridades,
+        getTiposChamado: state => state.tiposChamado,
+        getTiposPrecaucao: state => state.tiposPrecaucao,
+        getSuportesO2: state => state.suportesO2,
+        getSuportesHemodinamicos: state => state.suportesHemodinamicos,
     },
     mutations: {
         setAplicacoes(state, aplicacoes) {
@@ -40,6 +50,14 @@ export default {
         setTipoVeiculos(state, tipoVeiculos) {
             state.tipoVeiculos = JSON.parse(JSON.stringify(tipoVeiculos))
         },
+        setAtualizacaoClinicaDominios(state, dominios = {}) {
+            state.prioridades = JSON.parse(JSON.stringify(dominios.prioridades || []))
+            state.tiposChamado = JSON.parse(JSON.stringify(dominios.tiposChamado || []))
+            state.tiposPrecaucao = JSON.parse(JSON.stringify(dominios.tiposPrecaucao || []))
+            state.suportesO2 = JSON.parse(JSON.stringify(dominios.suportesO2 || []))
+            state.suportesHemodinamicos = JSON.parse(JSON.stringify(dominios.suportesHemodinamicos || []))
+            state.sexos = JSON.parse(JSON.stringify(dominios.sexos || []))
+        },
     },
     actions: {
         setAplicacoes({commit}, aplicacoes) {
@@ -56,6 +74,9 @@ export default {
         },
         setTipoVeiculos({commit}, tipoVeiculos) {
             commit('setTipoVeiculos', tipoVeiculos)
+        },
+        setAtualizacaoClinicaDominios({commit}, dominios) {
+            commit('setAtualizacaoClinicaDominios', dominios)
         },
     }
 }

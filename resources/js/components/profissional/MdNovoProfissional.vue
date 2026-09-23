@@ -53,7 +53,12 @@
                 </v-row>
 
                 <v-row>
-                    <v-col cols="12" md="4">
+                    <v-col cols="12" md="6">
+                        <v-text-field label="Contato (WhatsApp)" v-mask="['(##) ####-####', '(##) #####-####']" autocomplete="off"
+                            clearable v-model="profissional.PROFISSIONAL_WHATSAPP"></v-text-field>
+                    </v-col>
+
+                    <v-col cols="12" md="6">
                         <v-select label="Ativo*" :items="ativos" item-value="id" item-text="text"
                             v-model="profissional.PROFISSIONAL_ATIVO"></v-select>
                     </v-col>

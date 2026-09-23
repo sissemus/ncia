@@ -66,7 +66,7 @@
                                     <v-autocomplete
                                         :key="'unidade-' + formKey"
                                         label="Unidade de Saúde*"
-                                        :items="unidades"
+                                        :items="unidadesSolicitantesAtivas"
                                         item-value="UNIDADE_ID"
                                         item-text="UNIDADE_NOME"
                                         v-model="form.UNIDADE_ID"
@@ -168,6 +168,10 @@ export default {
         },
         veiculoStore() {
             return this.$store.getters['MdNovoVeiculoModule/getVeiculo'];
+        },
+        unidadesSolicitantesAtivas() {
+            if (!this.unidades) return [];
+            return this.unidades.filter(u => Number(u.UNIDADE_ATIVO) === 1 && Number(u.UNIDADE_SOLICITANTE) === 1);
         },
         houveMudancaUnidade() {
             return !!(

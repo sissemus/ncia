@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\MyLibs\RTG;
+use App\MyLibs\SituacaoChamadoEnum;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Chamado extends Model
@@ -63,6 +66,35 @@ class Chamado extends Model
         "CHAMADO_AMBULANCIA_EXTRA" => "boolean",
     ];
 
+    protected $appends = [
+        "unidadeSolicitanteNome",
+        "unidadeDestinoNome",
+    ];
+
+    public function getUnidadeSolicitanteNomeAttribute()
+    {
+        if ($this->relationLoaded('unidadeSolicitante') && $this->unidadeSolicitante) {
+            return $this->unidadeSolicitante->UNIDADE_NOME;
+        }
+        if ($this->UNIDADE_ID_SOLICITANTE) {
+            $u = Unidade::find($this->UNIDADE_ID_SOLICITANTE);
+            return $u ? $u->UNIDADE_NOME : '-';
+        }
+        return '-';
+    }
+
+    public function getUnidadeDestinoNomeAttribute()
+    {
+        if ($this->relationLoaded('unidadeDestino') && $this->unidadeDestino) {
+            return $this->unidadeDestino->UNIDADE_NOME;
+        }
+        if ($this->UNIDADE_ID_DESTINO) {
+            $u = Unidade::find($this->UNIDADE_ID_DESTINO);
+            return $u ? $u->UNIDADE_NOME : '-';
+        }
+        return '-';
+    }
+
     public function paciente()
     {
         return $this->belongsTo(Paciente::class, "PACIENTE_ID", "PACIENTE_ID");
@@ -91,6 +123,13 @@ class Chamado extends Model
     public function situacoes()
     {
         return $this->hasMany(ChamadoSituacao::class, "CHAMADO_ID", "CHAMADO_ID");
+    }
+
+    public function atualizacoesClinicas()
+    {
+        return $this->hasMany(AtualizacaoClinica::class, "CHAMADO_ID", "CHAMADO_ID")
+            ->orderBy("ATUALIZACAO_CLINICA_DATA")
+            ->orderBy("ATUALIZACAO_CLINICA_ID");
     }
 
     public function chamadoProcedimentos()
@@ -156,7 +195,11 @@ class Chamado extends Model
         if ($requisicao->TG_SITUACAO_ID) {
             $query->where('cs.TG_SITUACAO_ID', $requisicao->TG_SITUACAO_ID);
         } elseif ($requisicao->analise) {
-            $query->whereIn('cs.TG_SITUACAO_ID', [1, 2, 3]);
+            $query->whereIn('cs.TG_SITUACAO_ID', [
+                SituacaoChamadoEnum::ABERTO,
+                SituacaoChamadoEnum::EM_ANALISE,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ]);
         }
 
         if ($requisicao->CHAMADO_DATA) {
@@ -177,5 +220,225 @@ class Chamado extends Model
     public static function pesquisarAcompanhamento($requisicao, $unidadeIds = null)
     {
         return self::pesquisarParaAnalise($requisicao, $unidadeIds);
+    }
+
+    public static function getDadosRelatorioChamadoEmAtendimento($id)
+    {
+        $chamado = self::with([
+            'paciente',
+            'unidadeSolicitante',
+            'unidadeDestino',
+            'procedimentos',
+            'diagnosticos',
+            'situacoes.usuario',
+            'atualizacoesClinicas.usuario',
+            'situacaoAtual',
+            'vinculosEquipe.equipe.veiculo',
+            'vinculosEquipe.equipe.equipeProfissional.profissional',
+        ])->findOrFail($id);
+
+        $genericos = TabelaGenerica::whereIn('TABELA_ID', [
+            RTG::SEXO,
+            RTG::PRIORIDADE_PACIENTE,
+            RTG::TIPO_CHAMADO,
+            RTG::TIPO_PRECAUCAO,
+            RTG::SUPORTE_O2,
+            RTG::SUPORTE_HEMODINAMICO,
+            RTG::SITUACAO_CHAMADO,
+        ])->get();
+
+        $descricao = function ($tabelaId, $colunaId) use ($genericos) {
+            $item = $genericos->first(function ($item) use ($tabelaId, $colunaId) {
+                return (int) $item->TABELA_ID === (int) $tabelaId
+                    && (int) $item->COLUNA_ID === (int) $colunaId;
+            });
+
+            return $item ? $item->DESCRICAO : '-';
+        };
+
+        $paciente = $chamado->paciente;
+        $nomePaciente = $paciente ? trim((string) $paciente->PACIENTE_NOME) : '';
+        if (!$nomePaciente && $paciente && $paciente->PACIENTE_VULNERABILIDADE_SOCIAL) {
+            $nomePaciente = 'PACIENTE EM VULNERABILIDADE SOCIAL';
+        }
+
+        $profissionalSolicitante = trim((string) $chamado->CHAMADO_PROFISSIONAL_SOLICITANTE);
+        if (ctype_digit($profissionalSolicitante)) {
+            $profissional = Profissional::find((int) $profissionalSolicitante);
+            $profissionalSolicitante = $profissional
+                ? $profissional->PROFISSIONAL_NOME
+                : $profissionalSolicitante;
+        }
+
+        $vinculoEquipe = $chamado->vinculosEquipe->first(function ($vinculo) {
+            return (int) $vinculo->CHAMADO_EQUIPE_ATIVO === 1;
+        }) ?: $chamado->vinculosEquipe->first();
+        $equipe = $vinculoEquipe ? $vinculoEquipe->equipe : null;
+        $veiculo = $equipe ? $equipe->veiculo : null;
+        $profissionais = $equipe
+            ? $equipe->equipeProfissional
+                ->filter(function ($item) {
+                    return (int) $item->EQUIPE_PROFISSIONAL_ATIVO === 1;
+                })
+                ->map(function ($item) {
+                    return $item->profissional ? $item->profissional->PROFISSIONAL_NOME : null;
+                })
+                ->filter()
+                ->implode(', ')
+            : '';
+
+        $nascimento = $paciente && $paciente->PACIENTE_DT_NASCIMENTO
+            ? Carbon::parse($paciente->PACIENTE_DT_NASCIMENTO)
+            : null;
+        $eventos = $chamado->situacoes->map(function ($situacao) {
+            return [
+                'tipo' => 'situacao',
+                'id' => $situacao->CHAMADO_SITUACAO_ID,
+                'data' => $situacao->CHAMADO_SITUACAO_DATA,
+                'item' => $situacao,
+            ];
+        })->concat($chamado->atualizacoesClinicas->map(function ($atualizacao) {
+            return [
+                'tipo' => 'atualizacao',
+                'id' => $atualizacao->ATUALIZACAO_CLINICA_ID,
+                'data' => $atualizacao->ATUALIZACAO_CLINICA_DATA,
+                'item' => $atualizacao,
+            ];
+        }))->sortBy(function ($evento) {
+            return sprintf(
+                '%s-%s-%010d',
+                Carbon::parse($evento['data'])->format('YmdHis.u'),
+                $evento['tipo'],
+                $evento['id']
+            );
+        })->values();
+
+        if ($eventos->isEmpty()) {
+            $eventos = collect([null]);
+        }
+
+        $escapar = function ($valor) {
+            return htmlspecialchars(self::valorRelatorio($valor), ENT_QUOTES, 'UTF-8');
+        };
+        $atualizacoesClinicas = $chamado->atualizacoesClinicas->map(function ($atualizacao) use ($descricao, $escapar) {
+            $usuario = $atualizacao->usuario ? $atualizacao->usuario->USUARIO_NOME : null;
+
+            return '<b>Atualização Clínica Nº ' . $atualizacao->ATUALIZACAO_CLINICA_ID . '</b><br/>'
+                . '<b>Data/hora:</b> ' . self::formatarDataHoraRelatorio($atualizacao->ATUALIZACAO_CLINICA_DATA)
+                . '     <b>Registrado por:</b> ' . $escapar($usuario) . '<br/>'
+                . '<b>Prioridade:</b> ' . $escapar($descricao(RTG::PRIORIDADE_PACIENTE, $atualizacao->TG_PRIORIDADE_ANTERIOR_ID))
+                . ' para ' . $escapar($descricao(RTG::PRIORIDADE_PACIENTE, $atualizacao->TG_PRIORIDADE_ID)) . '<br/>'
+                . '<b>Profissional responsável:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_PROFISSIONAL)
+                . '     <b>Conselho:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_CONSELHO)
+                . ' ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_NUMERO_CONSELHO) . '<br/>'
+                . '<b>Precaução:</b> ' . $escapar($descricao(RTG::TIPO_PRECAUCAO, $atualizacao->TG_TIPO_PRECAUCAO_ID))
+                . '     <b>Suporte O2:</b> ' . $escapar($descricao(RTG::SUPORTE_O2, $atualizacao->TG_SUPORTE_O2_ID))
+                . '     <b>Suporte hemodinâmico:</b> ' . $escapar($descricao(RTG::SUPORTE_HEMODINAMICO, $atualizacao->TG_SUPORTE_HEMODINAMICO_ID)) . '<br/>'
+                . '<b>Temperatura:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_TEMPERATURA)
+                . '     <b>Pressão arterial:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL)
+                . '     <b>Frequência cardíaca:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA) . '<br/>'
+                . '<b>Saturação O2:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_SATURACAO_O2)
+                . '     <b>Escala Glasgow:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_ESCALA_GLASGOW) . '<br/>'
+                . '<b>Justificativa médica:</b> ' . nl2br($escapar($atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA), false);
+        })->implode('<br/><br/>');
+
+        return $eventos->map(function ($evento) use (
+            $chamado,
+            $paciente,
+            $nomePaciente,
+            $nascimento,
+            $profissionalSolicitante,
+            $descricao,
+            $equipe,
+            $veiculo,
+            $profissionais,
+            $atualizacoesClinicas
+        ) {
+            $itemHistorico = $evento ? $evento['item'] : null;
+            $atualizacao = $evento && $evento['tipo'] === 'atualizacao' ? $itemHistorico : null;
+            $situacao = $evento && $evento['tipo'] === 'situacao' ? $itemHistorico : null;
+
+            return [
+                'CHAMADO_ID' => (string) $chamado->CHAMADO_ID,
+                'SITUACAO_ATUAL' => $descricao(RTG::SITUACAO_CHAMADO, $chamado->situacaoAtual->TG_SITUACAO_ID),
+                'PACIENTE_NOME' => self::valorRelatorio($nomePaciente),
+                'PACIENTE_CPF' => self::valorRelatorio($paciente ? $paciente->PACIENTE_CPF : null),
+                'PACIENTE_NASCIMENTO' => $nascimento ? $nascimento->format('d/m/Y') : '-',
+                'PACIENTE_IDADE' => $nascimento ? $nascimento->age . ' anos' : '-',
+                'PACIENTE_SEXO' => $descricao(RTG::SEXO, $paciente ? $paciente->TG_SEXO_ID : null),
+                'PACIENTE_VULNERABILIDADE' => self::simNao($paciente && $paciente->PACIENTE_VULNERABILIDADE_SOCIAL),
+                'PACIENTE_TEMPORARIO' => self::simNao($paciente && $paciente->PACIENTE_TEMPORARIO),
+                'CHAMADO_DATA' => self::formatarDataHoraRelatorio($chamado->CHAMADO_DATA),
+                'TIPO_CHAMADO' => $descricao(RTG::TIPO_CHAMADO, $chamado->TG_CHAMADO_ID),
+                'PRIORIDADE' => $descricao(RTG::PRIORIDADE_PACIENTE, $chamado->TG_PRIORIDADE_ID),
+                'HORARIO_ATENDIMENTO' => self::formatarHoraRelatorio($chamado->CHAMADO_HORARIO_ATENDIMENTO),
+                'AMBULANCIA_EXTRA' => self::simNao($chamado->CHAMADO_AMBULANCIA_EXTRA),
+                'UNIDADE_ORIGEM' => self::valorRelatorio($chamado->unidadeSolicitante ? $chamado->unidadeSolicitante->UNIDADE_NOME : null),
+                'SETOR_ORIGEM' => self::valorRelatorio($chamado->CHAMADO_SETOR_SOLICITANTE),
+                'LEITO_ORIGEM' => self::valorRelatorio($chamado->CHAMADO_LEITO_SOLICITANTE),
+                'UNIDADE_DESTINO' => self::valorRelatorio($chamado->unidadeDestino ? $chamado->unidadeDestino->UNIDADE_NOME : null),
+                'SETOR_DESTINO' => self::valorRelatorio($chamado->CHAMADO_SETOR_DESTINO),
+                'LEITO_DESTINO' => self::valorRelatorio($chamado->CHAMADO_LEITO_DESTINO),
+                'PROFISSIONAL_SOLICITANTE' => self::valorRelatorio($profissionalSolicitante),
+                'CONSELHO_PROFISSIONAL' => self::valorRelatorio($chamado->CHAMADO_CONSELHO_PROFISSIONAL),
+                'NUMERO_CONSELHO' => self::valorRelatorio($chamado->CHAMADO_NUMERO_CONSELHO),
+                'PROCEDIMENTOS' => self::valorRelatorio($chamado->procedimentos->pluck('PROCEDIMENTO_DESCRICAO')->implode(', ')),
+                'DIAGNOSTICOS' => self::valorRelatorio($chamado->diagnosticos->pluck('DIAGNOSTICO_DESCRICAO')->implode(', ')),
+                'DISPOSITIVOS' => self::valorRelatorio($chamado->CHAMADO_DISPOSITIVOS),
+                'PESO' => $chamado->CHAMADO_PESO !== null ? $chamado->CHAMADO_PESO . ' kg' : '-',
+                'PRECAUCAO' => $descricao(RTG::TIPO_PRECAUCAO, $chamado->TG_TIPO_PRECAUCAO_ID),
+                'SUPORTE_O2' => $descricao(RTG::SUPORTE_O2, $chamado->TG_SUPORTE_O2_ID),
+                'SUPORTE_HEMODINAMICO' => $descricao(RTG::SUPORTE_HEMODINAMICO, $chamado->TG_SUPORTE_HEMODINAMICO_ID),
+                'TEMPERATURA' => self::valorRelatorio($chamado->CHAMADO_TEMPERATURA),
+                'PRESSAO_ARTERIAL' => self::valorRelatorio($chamado->CHAMADO_PRESSAO_ARTERIAL),
+                'FREQUENCIA_CARDIACA' => self::valorRelatorio($chamado->CHAMADO_FREQUENCIA_CARDIACA),
+                'SATURACAO_O2' => self::valorRelatorio($chamado->CHAMADO_SATURACAO_O2),
+                'ESCALA_GLASGOW' => self::valorRelatorio($chamado->CHAMADO_ESCALA_GLASGOW),
+                'OBSERVACOES' => self::valorRelatorio($chamado->CHAMADO_OBSERVACAO),
+                'VEICULO' => self::valorRelatorio($veiculo ? $veiculo->VEICULO_IDENTIFICACAO : null),
+                'VEICULO_PLACA' => self::valorRelatorio($veiculo ? $veiculo->VEICULO_PLACA : null),
+                'EQUIPE' => $equipe ? 'Equipe Nº ' . $equipe->EQUIPE_ID . ($equipe->EQUIPE_TURNO ? ' - ' . $equipe->EQUIPE_TURNO : '') : '-',
+                'PROFISSIONAIS' => self::valorRelatorio($profissionais),
+                'ATUALIZACOES_CLINICAS' => self::valorRelatorio($atualizacoesClinicas),
+                'HISTORICO_SITUACAO' => $atualizacao
+                    ? 'ATUALIZAÇÃO CLÍNICA Nº ' . $atualizacao->ATUALIZACAO_CLINICA_ID
+                    : ($situacao ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID) : '-'),
+                'HISTORICO_DATA' => $evento
+                    ? self::formatarDataHoraRelatorio($evento['data'])
+                    : '-',
+                'HISTORICO_USUARIO' => self::valorRelatorio($itemHistorico && $itemHistorico->usuario
+                    ? $itemHistorico->usuario->USUARIO_NOME
+                    : null),
+                'HISTORICO_OBSERVACAO' => self::valorRelatorio($atualizacao
+                    ? $atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA
+                    : ($situacao ? $situacao->CHAMADO_SITUACAO_OBSERVACAO : null)),
+            ];
+        })->all();
+    }
+
+    private static function valorRelatorio($valor)
+    {
+        $valor = trim((string) $valor);
+        return $valor !== '' ? $valor : '-';
+    }
+
+    private static function simNao($valor)
+    {
+        return $valor ? 'Sim' : 'Não';
+    }
+
+    private static function formatarDataHoraRelatorio($valor)
+    {
+        return $valor ? Carbon::parse($valor)->format('d/m/Y H:i:s') : '-';
+    }
+
+    private static function formatarHoraRelatorio($valor)
+    {
+        if (!$valor) {
+            return '-';
+        }
+
+        $valor = (string) $valor;
+        return preg_match('/(\d{2}:\d{2})/', $valor, $resultado) ? $resultado[1] : $valor;
     }
 }

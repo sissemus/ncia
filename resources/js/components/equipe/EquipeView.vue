@@ -30,34 +30,48 @@
             </v-card-text>
             <v-simple-table dense v-show="veiculos.length" class="mb-0">
                 <template v-slot:default>
-                    <thead>
-                        <tr>
-                            <th class="text-left">Id</th>
-                            <th class="text-left">Veículo</th>
-                            <th class="text-left">Equipe</th>
-                            <th class="text-center">Data</th>
-                            <th class="text-center">Turno</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
                     <tbody>
-                        <tr v-for="veiculo in veiculos">
-                            <td>{{ veiculo.VEICULO_ID }}</td>
-                            <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td v-if="veiculo.equipe">
-                                <tr v-for="prf in veiculo.equipe.equipeProfissional">
-                                    <td>{{ prf ? prf.profissional.PROFISSIONAL_NOME : '' }} - 
-                                    {{ prf && prf.profissional.tipoProfissional ? prf.profissional.tipoProfissional.DESCRICAO : '' }}</td>
+                        <tr>
+                            <td class="text-left">Id</td>
+                            <td class="text-left">Veículo</td>
+                            <td colspan="4">&nbsp;</td>
+                        </tr>
+                        <tr v-for="(veiculo, indexVeiculo) in veiculos">
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ String(veiculo.VEICULO_ID).padStart(5, '0') }}</td>
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
+                            <td v-if="veiculo.equipe.length > 0">
+                                <tr>
+                                    <td style="font-weight: bold;">Equipe(s)</td>
+                                    <td style="text-align: center;font-weight: bold;">Data</td>
+                                    <td style="text-align: center;font-weight: bold;">Turno</td>
+                                    <td style="text-align: center;font-weight: bold;">Ação</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <hr>
+                                    </td>
+                                </tr>
+                                <tr v-for="(eqp, idxEqp) in veiculo.equipe">
+                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width: 78%;padding: 0px 10px 0px 0px;">
+                                        <span v-for="(prf, idxPrf) in eqp.equipeProfissional">
+                                            {{prf.profissional.PROFISSIONAL_NOME}} - {{ "(" + prf.profissional.tipoProfissional.DESCRICAO + ")" }}
+                                            <br>
+                                        </span>
+                                    </td>
+                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 10%;">
+                                        {{formatarData(veiculo.equipe[idxEqp].EQUIPE_DATA)}}
+                                    </td>
+                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 7%;">
+                                        {{veiculo.equipe[idxEqp].EQUIPE_TURNO}}
+                                    </td>
+                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 5%;">
+                                        <v-btn icon @click="deletar(veiculo.equipe[idxEqp])" title="Remover Equipes">
+                                            <v-icon>mdi-delete</v-icon>
+                                        </v-btn>
+                                    </td>
                                 </tr>
                             </td>
-                            <td v-else></td>
-                            <td class="text-center">{{ veiculo.equipe ? formatarData(veiculo.equipe.EQUIPE_DATA) : '' }}</td>
-                            <td class="text-center">{{ veiculo.equipe ? veiculo.equipe.EQUIPE_TURNO : '' }}</td>
-                            <td>
-                                <v-btn v-if="veiculo.equipe" icon @click="deletar(veiculo)" title="Remover Equipes">
-                                    <v-icon>mdi-delete</v-icon>
-                                </v-btn>
-                            </td>
+                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">&nbsp;</td>
                         </tr>
                     </tbody>
                 </template>
@@ -104,6 +118,8 @@ export default {
         return {
             msgId: 'msgEquipeView',
             msgIdDebug: 'msgEquipeViewDebug',
+
+            idxEqp: 0,
         }
     },
     mounted() {
@@ -141,8 +157,8 @@ export default {
             get() {
                 return this.$store.getters['VeiculoViewModule/getVeiculos']
                     .filter(veiculo =>
-                        veiculo.TG_SITUACAO_VEICULO_ID == 1 &&
-                        veiculo.VEICULO_ATIVO == 1
+                    veiculo.VEICULO_ATIVO == 1
+                        // && veiculo.TG_SITUACAO_VEICULO_ID == 1
                     )
             },
             set(newValue) {
@@ -233,6 +249,26 @@ export default {
 
             return `${partes[2]}/${partes[1]}/${partes[0]}`;
         },   
+        preencherComProfissional(equipes) {
+            if (!equipes || equipes.length === 0) {
+                return '';
+            }
+
+            let acumulador = [];
+            
+            for (let equipe of equipes) {
+                for (let prf of equipe.equipeProfissional) {
+                    // Cria o texto de cada profissional
+                    let nomeProfissional = `${prf.profissional.PROFISSIONAL_NOME} (${prf.profissional.tipoProfissional.DESCRICAO})`;
+                    acumulador.push(nomeProfissional);
+                }
+            }
+            
+            // Une todos os profissionais colocando um <br> entre eles
+            return acumulador.join('\n');
+        }
+
+        
     }
 }
 </script>

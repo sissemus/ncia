@@ -12,5 +12,6 @@
         :motivos-cancelamento='@json($motivosCancelamento)'
         :pode-encerrar='@json($podeEncerrar)'
         :somente-em-atendimento='@json($somenteEmAtendimento)'
+        :unidades='@json($unidades)'
     ></chamado-acompanhamento-view>
 @endsection

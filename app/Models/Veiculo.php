@@ -44,7 +44,7 @@ class Veiculo extends Model
 
     public function equipe()
     {
-        return $this->hasOne(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
+        return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
             ->where('EQUIPE_DATA', now()->format('Y-m-d'));
     }
 

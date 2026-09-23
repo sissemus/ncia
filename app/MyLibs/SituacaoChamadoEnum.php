@@ -9,4 +9,15 @@ class SituacaoChamadoEnum
     const EM_ATENDIMENTO = 3;
     const CONCLUIDO = 4;
     const CANCELADO = 5;
+
+    public static function values()
+    {
+        return [
+            self::ABERTO,
+            self::EM_ANALISE,
+            self::EM_ATENDIMENTO,
+            self::CONCLUIDO,
+            self::CANCELADO,
+        ];
+    }
 }

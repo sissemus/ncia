@@ -17,6 +17,7 @@ class PacienteCreateRequest extends FormRequest
     {
         return [
             "PACIENTE_NOME" => ["required", "string", "max:150"],
+            "PACIENTE_NOME_SOCIAL" => ["nullable", "string", "max:150"],
             "PACIENTE_CPF" => ["required", "cpf", Rule::unique("PACIENTE", "PACIENTE_CPF")],
             "PACIENTE_DT_NASCIMENTO" => ["required", "date", "before_or_equal:today"],
             "TG_SEXO_ID" => ["required", "integer"],
@@ -28,6 +29,7 @@ class PacienteCreateRequest extends FormRequest
         return [
             "PACIENTE_ID" => "<b>PACIENTE ID</b>",
             "PACIENTE_NOME" => "<b>NOME COMPLETO</b>",
+            "PACIENTE_NOME_SOCIAL" => "<b>NOME SOCIAL</b>",
             "PACIENTE_CPF" => "<b>CPF</b>",
             "PACIENTE_DT_NASCIMENTO" => "<b>DATA DE NASCIMENTO</b>",
             "TG_SEXO_ID" => "<b>SEXO AO NASCIMENTO</b>",

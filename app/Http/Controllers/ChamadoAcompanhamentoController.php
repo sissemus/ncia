@@ -38,6 +38,7 @@ class ChamadoAcompanhamentoController extends Controller
         $podeEncerrar = $this->podeEncerrar($perfis);
         $somenteEmAtendimento = $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
             && !$this->podeVisualizarTodos($perfis);
+        $unidades = \App\Models\Unidade::all();
 
         return view("chamado_acompanhamento.chamado_acompanhamento_view", compact(
             'prioridades',
@@ -49,7 +50,8 @@ class ChamadoAcompanhamentoController extends Controller
             'suportesHemodinamicos',
             'motivosCancelamento',
             'podeEncerrar',
-            'somenteEmAtendimento'
+            'somenteEmAtendimento',
+            'unidades'
         ));
     }
 
@@ -159,6 +161,7 @@ class ChamadoAcompanhamentoController extends Controller
                       ->orderBy('CHAMADO_SITUACAO_ID', 'asc');
             },
             'situacoes.usuario',
+            'atualizacoesClinicas.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional'
@@ -172,6 +175,18 @@ class ChamadoAcompanhamentoController extends Controller
         }
 
         $chamado->setAttribute('profissionalSolicitanteNome', $profissional ?: '-');
+
+        $unidadeSol = $chamado->unidadeSolicitante;
+        if (!$unidadeSol && $chamado->UNIDADE_ID_SOLICITANTE) {
+            $unidadeSol = \App\Models\Unidade::find($chamado->UNIDADE_ID_SOLICITANTE);
+        }
+        $chamado->setAttribute('unidadeSolicitanteNome', $unidadeSol ? $unidadeSol->UNIDADE_NOME : '-');
+
+        $unidadeDest = $chamado->unidadeDestino;
+        if (!$unidadeDest && $chamado->UNIDADE_ID_DESTINO) {
+            $unidadeDest = \App\Models\Unidade::find($chamado->UNIDADE_ID_DESTINO);
+        }
+        $chamado->setAttribute('unidadeDestinoNome', $unidadeDest ? $unidadeDest->UNIDADE_NOME : '-');
 
         return $chamado;
     }

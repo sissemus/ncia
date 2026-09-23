@@ -45,6 +45,14 @@ class CompartilharVariaveis {
             PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
 
+        try {
+            DB::table('APLICACAO')
+                ->where('APLICACAO_URL', 'chamado_acompanhamento')
+                ->where('APLICACAO_NOME', '!=', 'Acompanhar Chamado')
+                ->update(['APLICACAO_NOME' => 'Acompanhar Chamado']);
+        } catch (\Throwable $th) {
+        }
+
         foreach ($aplicacoes as &$aplicacao) {
             if ($aplicacao['APLICACAO_URL'] === 'chamado') {
                 $aplicacao['children'] = array_values(array_filter(
@@ -55,6 +63,11 @@ class CompartilharVariaveis {
                         return true;
                     }
                 ));
+                foreach ($aplicacao['children'] as &$child) {
+                    if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') {
+                        $child['APLICACAO_NOME'] = 'Acompanhar Chamado';
+                    }
+                }
                 $children = collect($aplicacao['children']);
                 if ($podeAnalisar && !$children->contains('APLICACAO_URL', 'chamado_analisar')) {
                     $aplicacao['children'][] = [
@@ -67,7 +80,7 @@ class CompartilharVariaveis {
                 if ($podeAcompanhar && !$children->contains('APLICACAO_URL', 'chamado_acompanhamento')) {
                     $aplicacao['children'][] = [
                         'APLICACAO_ID' => -2,
-                        'APLICACAO_NOME' => 'Acompanhamento de Chamados',
+                        'APLICACAO_NOME' => 'Acompanhar Chamado',
                         'APLICACAO_URL' => 'chamado_acompanhamento',
                         'APLICACAO_ICONE' => 'mdi-clipboard-list-outline',
                     ];

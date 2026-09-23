@@ -18,7 +18,7 @@
                     </div>
                 </v-alert>
 
-                <v-alert v-if="statusId === 3" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
+                <v-alert v-if="chamadoEmAtendimento" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
                     <strong>{{ encaminhadoAgora ? 'Encaminhamento realizado.' : 'Chamado em atendimento.' }}</strong>
                     O chamado está vinculado ao veículo e à equipe informados abaixo.
                 </v-alert>
@@ -82,6 +82,8 @@
                     </v-card-text>
                 </v-card>
 
+                <atualizacao-clinica />
+
                 <v-card v-if="equipeVinculada" outlined class="mb-4">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Veículo e equipe vinculados</v-card-title>
                     <v-card-text class="pt-3">
@@ -96,11 +98,11 @@
                 <v-textarea label="Observações" readonly filled rows="3" :value="chamado.CHAMADO_OBSERVACAO || '-'" />
 
                 <v-divider class="my-3"></v-divider>
-                <v-btn v-if="statusId === 2" color="primary" tile :disabled="!veiculos.length" @click="abrirEncaminhar">Encaminhar para atendimento</v-btn>
-                <v-btn v-if="statusId === 2" color="error" dark tile class="ml-2" @click="abrirCancelar">Cancelar análise</v-btn>
-                <v-btn v-if="statusId === 3" color="success" tile :disabled="processando" @click="abrirConcluir">Concluir Atendimento</v-btn>
-                <v-btn v-if="statusId === 3" color="error" dark tile class="ml-2" :disabled="processando" @click="abrirCancelarAtendimento">Cancelar Atendimento</v-btn>
-                <v-alert v-if="statusId === 2 && !veiculos.length" class="mt-3" type="warning" outlined>Não há veículo/equipe disponível para encaminhamento.</v-alert>
+                <v-btn v-if="chamadoEmAnalise" color="primary" tile :disabled="!veiculos.length" @click="abrirEncaminhar">Encaminhar para atendimento</v-btn>
+                <v-btn v-if="chamadoEmAnalise" color="error" dark tile class="ml-2" @click="abrirCancelar">Cancelar análise</v-btn>
+                <v-btn v-if="chamadoEmAtendimento" color="success" tile :disabled="processando" @click="abrirConcluir">Concluir Atendimento</v-btn>
+                <v-btn v-if="chamadoEmAtendimento" color="error" dark tile class="ml-2" :disabled="processando" @click="abrirCancelarAtendimento">Cancelar Atendimento</v-btn>
+                <v-alert v-if="chamadoEmAnalise && !veiculos.length" class="mt-3" type="warning" outlined>Não há veículo/equipe disponível para encaminhamento.</v-alert>
             </v-card-text>
 
             <v-card-text v-else>
@@ -147,6 +149,11 @@
 import moment from 'moment';
 import TratarErroAjax from '../assets/TratarErroAjax';
 import Swal from 'sweetalert2';
+import { getPrioridadeColor as obterCorPrioridade } from '../../enums/PrioridadePacienteEnum';
+import SituacaoChamadoEnum, {
+    getSituacaoChamadoAlertType,
+    getSituacaoChamadoColor
+} from '../../enums/SituacaoChamadoEnum';
 
 export default {
     name: 'ChamadoAnalisarView',
@@ -162,12 +169,24 @@ export default {
         suportesHemodinamicos: { type: Array, default: () => [] }
     },
     data: () => ({
-        msgId: 'msgChamadoAnalisar', chamado: null, veiculos: [], equipeSelecionada: null,
+        msgId: 'msgChamadoAnalisar', veiculos: [], equipeSelecionada: null,
         dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false,
         processando: false
     }),
+    created() {
+        this.$store.dispatch('DominioModule/setAtualizacaoClinicaDominios', {
+            prioridades: this.prioridades,
+            tiposChamado: this.tiposChamado,
+            tiposPrecaucao: this.tiposPrecaucao,
+            suportesO2: this.suportesO2,
+            suportesHemodinamicos: this.suportesHemodinamicos,
+            sexos: this.sexos
+        });
+        this.$store.dispatch('AtualizacaoClinicaModule/clear');
+    },
     computed: {
         baseUrl() { return this.$store.getters.getBaseUrl; },
+        chamado() { return this.$store.getters['AtualizacaoClinicaModule/getChamado']; },
         paciente() { return this.chamado ? this.chamado.paciente : null; },
         unidadeSolicitante() { return this.chamado && (this.chamado.unidadeSolicitante || this.chamado.unidade_solicitante); },
         unidadeDestino() { return this.chamado && (this.chamado.unidadeDestino || this.chamado.unidade_destino); },
@@ -176,14 +195,12 @@ export default {
             return situacao ? Number(situacao.TG_SITUACAO_ID) : null;
         },
         situacaoAtual() { return this.descricao(this.situacoesChamado, this.statusId); },
-        tipoSituacao() { return this.statusId === 5 ? 'error' : this.statusId === 4 ? 'success' : 'info'; },
-        corSituacao() { return this.statusId === 5 ? 'red' : this.statusId === 4 ? 'green' : this.statusId === 3 ? 'orange darken-2' : 'primary'; },
+        chamadoEmAnalise() { return this.statusId === SituacaoChamadoEnum.EM_ANALISE; },
+        chamadoEmAtendimento() { return this.statusId === SituacaoChamadoEnum.EM_ATENDIMENTO; },
+        tipoSituacao() { return getSituacaoChamadoAlertType(this.statusId); },
+        corSituacao() { return getSituacaoChamadoColor(this.statusId); },
         corPrioridade() {
-            const valor = this.descricao(this.prioridades, this.chamado && this.chamado.TG_PRIORIDADE_ID).toUpperCase();
-            if (valor.includes('VERMELHO')) return 'red';
-            if (valor.includes('LARANJA')) return 'orange';
-            if (valor.includes('AMARELO')) return 'amber darken-2';
-            return 'green';
+            return obterCorPrioridade(this.chamado && this.chamado.TG_PRIORIDADE_ID);
         },
         idadePaciente() {
             const nascimento = this.paciente && this.paciente.PACIENTE_DT_NASCIMENTO;
@@ -227,8 +244,11 @@ export default {
             const id = new URLSearchParams(window.location.search).get('chamado');
             if (!id) return;
             axios.get(`${this.baseUrl}/chamado_analisar/buscar/${id}`).then(response => {
-                this.chamado = response.data;
-                if (this.statusId === 2) this.carregarVeiculos();
+                this.$store.dispatch('AtualizacaoClinicaModule/setChamado', {
+                    chamado: response.data,
+                    contexto: 'analise'
+                });
+                if (this.chamadoEmAnalise) this.carregarVeiculos();
             }).catch(this.erro);
         },
         carregarVeiculos() {
@@ -261,7 +281,10 @@ export default {
                 .then(response => {
                     this.dialog = false;
                     this.fullScreen = false;
-                    this.chamado = response.data.retorno;
+                    this.$store.dispatch('AtualizacaoClinicaModule/setChamado', {
+                        chamado: response.data.retorno,
+                        contexto: 'analise'
+                    }).then(() => this.$store.dispatch('AtualizacaoClinicaModule/carregar'));
                     this.encaminhadoAgora = acao === 'encaminhar';
                     if (this.encaminhadoAgora) this.veiculos = [];
                     if (acao === 'encaminhar') {

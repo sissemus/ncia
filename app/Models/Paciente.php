@@ -15,6 +15,7 @@ class Paciente extends Model
 
     protected $fillable = [
         "PACIENTE_NOME",
+        "PACIENTE_NOME_SOCIAL",
         "PACIENTE_CPF",
         "PACIENTE_DT_NASCIMENTO",
         "TG_SEXO_ID",
