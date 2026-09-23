@@ -520,7 +520,8 @@ export default {
         suportesHemodinamicos: { type: Array, default: () => [] },
         motivosCancelamento: { type: Array, default: () => [] },
         podeEncerrar: { type: Boolean, default: false },
-        somenteEmAtendimento: { type: Boolean, default: false }
+        somenteEmAtendimento: { type: Boolean, default: false },
+        unidades: { type: Array, default: () => [] }
     },
 
     data() {
@@ -899,14 +900,36 @@ export default {
 
         getUnidadeSolicitanteNome(item) {
             if (!item) return "-";
+            if (item.unidadeSolicitanteNome && item.unidadeSolicitanteNome !== "-") {
+                return item.unidadeSolicitanteNome;
+            }
             let u = item.unidadeSolicitante || item.unidade_solicitante;
-            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+            if (u && (u.UNIDADE_NOME || u.unidade_nome)) {
+                return u.UNIDADE_NOME || u.unidade_nome;
+            }
+            let id = item.UNIDADE_ID_SOLICITANTE || item.unidade_id_solicitante;
+            if (id && this.unidades && this.unidades.length) {
+                let found = this.unidades.find(x => Number(x.UNIDADE_ID) === Number(id));
+                if (found) return found.UNIDADE_NOME || found.unidade_nome;
+            }
+            return "-";
         },
 
         getUnidadeDestinoNome(item) {
             if (!item) return "-";
+            if (item.unidadeDestinoNome && item.unidadeDestinoNome !== "-") {
+                return item.unidadeDestinoNome;
+            }
             let u = item.unidadeDestino || item.unidade_destino;
-            return (u && u.UNIDADE_NOME) ? u.UNIDADE_NOME : "-";
+            if (u && (u.UNIDADE_NOME || u.unidade_nome)) {
+                return u.UNIDADE_NOME || u.unidade_nome;
+            }
+            let id = item.UNIDADE_ID_DESTINO || item.unidade_id_destino;
+            if (id && this.unidades && this.unidades.length) {
+                let found = this.unidades.find(x => Number(x.UNIDADE_ID) === Number(id));
+                if (found) return found.UNIDADE_NOME || found.unidade_nome;
+            }
+            return "-";
         },
 
         getSituacaoAtualId(item) {

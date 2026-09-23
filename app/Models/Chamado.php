@@ -66,6 +66,35 @@ class Chamado extends Model
         "CHAMADO_AMBULANCIA_EXTRA" => "boolean",
     ];
 
+    protected $appends = [
+        "unidadeSolicitanteNome",
+        "unidadeDestinoNome",
+    ];
+
+    public function getUnidadeSolicitanteNomeAttribute()
+    {
+        if ($this->relationLoaded('unidadeSolicitante') && $this->unidadeSolicitante) {
+            return $this->unidadeSolicitante->UNIDADE_NOME;
+        }
+        if ($this->UNIDADE_ID_SOLICITANTE) {
+            $u = Unidade::find($this->UNIDADE_ID_SOLICITANTE);
+            return $u ? $u->UNIDADE_NOME : '-';
+        }
+        return '-';
+    }
+
+    public function getUnidadeDestinoNomeAttribute()
+    {
+        if ($this->relationLoaded('unidadeDestino') && $this->unidadeDestino) {
+            return $this->unidadeDestino->UNIDADE_NOME;
+        }
+        if ($this->UNIDADE_ID_DESTINO) {
+            $u = Unidade::find($this->UNIDADE_ID_DESTINO);
+            return $u ? $u->UNIDADE_NOME : '-';
+        }
+        return '-';
+    }
+
     public function paciente()
     {
         return $this->belongsTo(Paciente::class, "PACIENTE_ID", "PACIENTE_ID");

@@ -16,7 +16,13 @@ class VeiculoUnidadeCreateRequest extends FormRequest
     {
         return [
             "VEICULO_ID" => ["required", "integer", "exists:VEICULO,VEICULO_ID"],
-            "UNIDADE_ID" => ["required", "integer", "exists:UNIDADE,UNIDADE_ID"],
+            "UNIDADE_ID" => [
+                "required",
+                "integer",
+                \Illuminate\Validation\Rule::exists("UNIDADE", "UNIDADE_ID")
+                    ->where("UNIDADE_ATIVO", 1)
+                    ->where("UNIDADE_SOLICITANTE", 1),
+            ],
         ];
     }
 

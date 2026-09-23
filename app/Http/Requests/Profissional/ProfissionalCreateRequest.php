@@ -31,6 +31,7 @@ class ProfissionalCreateRequest extends FormRequest
                 "required",
                 "integer",
             ],
+            "PROFISSIONAL_WHATSAPP" => ["nullable", "string", "max:20"],
             "PROFISSIONAL_ATIVO" => ["required", "integer", "in:0,1"],
         ];
     }
@@ -40,6 +41,7 @@ class ProfissionalCreateRequest extends FormRequest
         return [
             "PROFISSIONAL_NOME" => "<b>NOME</b>",
             "PROFISSIONAL_CPF" => "<b>CPF</b>",
+            "PROFISSIONAL_WHATSAPP" => "<b>CONTATO (WHATSAPP)</b>",
             "PROFISSIONAL_NASCIMENTO" => "<b>DATA DE NASCIMENTO</b>",
             "TG_SEXO_ID" => "<b>SEXO</b>",
             "TG_TIPO_PROFISSIONAL_ID" => "<b>TIPO DE PROFISSIONAL</b>",

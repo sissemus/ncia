@@ -7,6 +7,7 @@ export default {
         paciente: {
             PACIENTE_ID: null,
             PACIENTE_NOME: null,
+            PACIENTE_NOME_SOCIAL: null,
             PACIENTE_CPF: null,
             PACIENTE_DT_NASCIMENTO: null,
             TG_SEXO_ID: null,
@@ -41,6 +42,7 @@ export default {
                 state.paciente = {
                     PACIENTE_ID: null,
                     PACIENTE_NOME: null,
+                    PACIENTE_NOME_SOCIAL: null,
                     PACIENTE_CPF: null,
                     PACIENTE_DT_NASCIMENTO: null,
                     TG_SEXO_ID: null,

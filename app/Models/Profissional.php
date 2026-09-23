@@ -18,6 +18,7 @@ class Profissional extends Model
     protected $fillable = [
         "PROFISSIONAL_NOME",
         "PROFISSIONAL_CPF",
+        "PROFISSIONAL_WHATSAPP",
         "PROFISSIONAL_NASCIMENTO",
         "TG_SEXO_ID",
         "TG_TIPO_PROFISSIONAL_ID",
@@ -28,6 +29,7 @@ class Profissional extends Model
         "PROFISSIONAL_ID" => "integer",
         "PROFISSIONAL_NOME" => "string",
         "PROFISSIONAL_CPF" => Cpf::class,
+        "PROFISSIONAL_WHATSAPP" => "string",
         "PROFISSIONAL_NASCIMENTO" => "date",
         "TG_SEXO_ID" => "integer",
         "TG_TIPO_PROFISSIONAL_ID" => "integer",

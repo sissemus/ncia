@@ -15,7 +15,10 @@ class VeiculoController extends Controller
     {
         $tiposVeiculo = \App\Models\TabelaGenerica::tipoVeiculo();
         $situacoesVeiculo = \App\Models\TabelaGenerica::situacaoVeiculo();
-        $unidades = \App\Models\Unidade::where('UNIDADE_ATIVO', 1)->orderBy('UNIDADE_NOME')->get();
+        $unidades = \App\Models\Unidade::where('UNIDADE_ATIVO', 1)
+            ->where('UNIDADE_SOLICITANTE', 1)
+            ->orderBy('UNIDADE_NOME')
+            ->get();
         return view("veiculo.veiculo_view", compact('tiposVeiculo', 'situacoesVeiculo', 'unidades'));
     }
 
