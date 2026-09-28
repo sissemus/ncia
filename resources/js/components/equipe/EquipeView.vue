@@ -28,7 +28,7 @@
                     </v-col>
                 </v-row>
             </v-card-text>
-            <v-simple-table dense v-show="veiculos.length" class="mb-0">
+            <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
                 <template v-slot:default>
                     <tbody>
                         <tr>
@@ -39,7 +39,7 @@
                         <tr v-for="(veiculo, indexVeiculo) in veiculos">
                             <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ String(veiculo.VEICULO_ID).padStart(5, '0') }}</td>
                             <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td v-if="veiculo.equipe.length > 0">
+                            <td v-if="(veiculo.equipes ? veiculo.equipes.length > 0 : 0)">
                                 <tr>
                                     <td style="font-weight: bold;">Equipe(s)</td>
                                     <td style="text-align: center;font-weight: bold;">Data</td>
@@ -51,7 +51,7 @@
                                         <hr>
                                     </td>
                                 </tr>
-                                <tr v-for="(eqp, idxEqp) in veiculo.equipe">
+                                <tr v-for="(eqp, idxEqp) in veiculo.equipes">
                                     <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width: 78%;padding: 0px 10px 0px 0px;">
                                         <span v-for="(prf, idxPrf) in eqp.equipeProfissional">
                                             {{prf.profissional.PROFISSIONAL_NOME}} - {{ "(" + prf.profissional.tipoProfissional.DESCRICAO + ")" }}
@@ -59,13 +59,13 @@
                                         </span>
                                     </td>
                                     <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 10%;">
-                                        {{formatarData(veiculo.equipe[idxEqp].EQUIPE_DATA)}}
+                                        {{formatarData(veiculo.equipes[idxEqp].EQUIPE_DATA)}}
                                     </td>
                                     <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 7%;">
-                                        {{veiculo.equipe[idxEqp].EQUIPE_TURNO}}
+                                        {{veiculo.equipes[idxEqp].EQUIPE_TURNO}}
                                     </td>
                                     <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 5%;">
-                                        <v-btn icon @click="deletar(veiculo.equipe[idxEqp])" title="Remover Equipes">
+                                        <v-btn icon @click="deletar(veiculo.equipes[idxEqp])" title="Remover Equipes">
                                             <v-icon>mdi-delete</v-icon>
                                         </v-btn>
                                     </td>
@@ -171,8 +171,8 @@ export default {
     },
     methods: {
         search() {
-            // this.$store.dispatch('EquipeViewModule/search', this.msgId);
-            this.$store.dispatch('VeiculoViewModule/search', {
+            
+            this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
                 msgId: this.msgId,
                 TG_SITUACAO_VEICULO_ID: 1,
                 VEICULO_ATIVO: 1

@@ -163,8 +163,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete('deletar', [VeiculoController::class, 'deletar']);
         Route::get('listar', [VeiculoController::class, 'listar']);
         Route::post('pesquisar', [VeiculoController::class, 'pesquisar']);
+        Route::post('pesquisarCadastrar', [VeiculoController::class, 'pesquisarCadastrar']);
         Route::get('buscar/{id}', [VeiculoController::class, 'buscar']);
         Route::get('search', [VeiculoController::class, 'search']);
+        Route::get('searchCadastrar', [VeiculoController::class, 'searchCadastrar']);
         Route::put('alterar_situacao', [VeiculoController::class, 'alterarSituacao']);
     });
 

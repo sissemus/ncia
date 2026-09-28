@@ -216,7 +216,7 @@ export default {
     
     mounted() {
         this.$store.dispatch(
-            'VeiculoViewModule/search',
+            'VeiculoViewModule/searchCadastrar',
             {
                 msgId: this.msgId,
                 VEICULO_ATIVO: 1
@@ -393,7 +393,7 @@ export default {
                         this.msgId
                     );
                     this.$store.dispatch(
-                        'VeiculoViewModule/search',
+                        'VeiculoViewModule/searchCadastrar',
                         this.msgId
                     );
                 });

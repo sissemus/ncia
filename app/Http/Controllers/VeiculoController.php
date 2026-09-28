@@ -55,9 +55,19 @@ class VeiculoController extends Controller
         return response(Veiculo::pesquisar($request));
     }
 
+    public function pesquisarCadastrar(Request $request)
+    {
+        return response(Veiculo::pesquisarCadastrar($request));
+    }
+
     public function search(Request $request)
     {
         return response(Veiculo::pesquisar($request));
+    }
+
+    public function searchCadastrar(Request $request)
+    {
+        return response(Veiculo::pesquisarCadastrar($request));
     }
 
     public function buscar($id)
