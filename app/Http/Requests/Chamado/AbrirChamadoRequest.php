@@ -46,8 +46,8 @@ class AbrirChamadoRequest extends FormRequest
             ],
             "UNIDADE_ID_DESTINO" => ["required", "integer", Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_ATIVO", 1)],
             "CHAMADO_PROFISSIONAL_SOLICITANTE" => ["required", "string", "max:150"],
-            "CHAMADO_CONSELHO_PROFISSIONAL" => ["nullable", "required_with:CHAMADO_NUMERO_CONSELHO", Rule::in(["CRM", "COREN"])],
-            "CHAMADO_NUMERO_CONSELHO" => ["nullable", "required_with:CHAMADO_CONSELHO_PROFISSIONAL", "regex:/^[0-9]{6}$/"],
+            "CHAMADO_CONSELHO_PROFISSIONAL" => ["required", Rule::in(["CRM", "COREN"])],
+            "CHAMADO_NUMERO_CONSELHO" => ["required", "string", "max:50"],
 
             "CHAMADO_HORARIO_ATENDIMENTO" => ["nullable", "date_format:H:i"],
             "CHAMADO_SETOR_SOLICITANTE" => ["required", "string", "max:150"],
@@ -68,7 +68,7 @@ class AbrirChamadoRequest extends FormRequest
             "CHAMADO_FREQUENCIA_CARDIACA" => ["required", "string", "max:20"],
             "CHAMADO_PRESSAO_ARTERIAL" => ["required", "string", "max:20"],
             "CHAMADO_SATURACAO_O2" => ["required", "string", "max:20"],
-            "CHAMADO_ESCALA_GLASGOW" => ["nullable", "string", "max:20"],
+            "CHAMADO_ESCALA_GLASGOW" => ["required", "string", "max:20"],
 
             "CHAMADO_OBSERVACAO" => ["nullable", "string"],
         ];

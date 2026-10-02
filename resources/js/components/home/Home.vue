@@ -33,7 +33,8 @@
                             <th>Nº Chamado</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
-                            <th>Procedimento</th>
+                            <th>Unidade Solicitante</th>
+                            <th>Unidade Destino</th>
                             <th>Prioridade</th>
                             <th v-if="exibeAcaoFila">Ação</th>
                         </tr>
@@ -47,7 +48,8 @@
                                 </span>
                             </td>
                             <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
-                            <td>{{ procedimento(chamado) }}</td>
+                            <td>{{ unidadeSolicitante(chamado) }}</td>
+                            <td>{{ unidadeDestino(chamado) }}</td>
                             <td>
                                 <v-chip x-small dark :color="corPrioridade(chamado.TG_PRIORIDADE_ID)">
                                     {{ descricao(prioridades, chamado.TG_PRIORIDADE_ID) }}
@@ -398,6 +400,22 @@ export default {
             return !!chamado.paciente
                 && !String(chamado.paciente.PACIENTE_NOME || "").trim()
                 && Number(chamado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1;
+        },
+        unidadeSolicitante(chamado) {
+            if (!chamado) return "-";
+            if (chamado.unidadeSolicitanteNome && chamado.unidadeSolicitanteNome !== "-") {
+                return chamado.unidadeSolicitanteNome;
+            }
+            const u = chamado.unidadeSolicitante || chamado.unidade_solicitante;
+            return (u && (u.UNIDADE_NOME || u.unidade_nome)) ? (u.UNIDADE_NOME || u.unidade_nome) : "-";
+        },
+        unidadeDestino(chamado) {
+            if (!chamado) return "-";
+            if (chamado.unidadeDestinoNome && chamado.unidadeDestinoNome !== "-") {
+                return chamado.unidadeDestinoNome;
+            }
+            const u = chamado.unidadeDestino || chamado.unidade_destino;
+            return (u && (u.UNIDADE_NOME || u.unidade_nome)) ? (u.UNIDADE_NOME || u.unidade_nome) : "-";
         },
         procedimento(chamado) {
             return chamado.procedimentos && chamado.procedimentos.length

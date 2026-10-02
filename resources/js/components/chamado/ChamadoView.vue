@@ -185,12 +185,12 @@
                                         hide-details v-model="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE"></v-text-field>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-select label="Conselho" :items="['CRM', 'COREN']" clearable outlined dense
+                                        <v-select label="Conselho*" :items="['CRM', 'COREN']" clearable outlined dense
                                             hide-details v-model="chamado.CHAMADO_CONSELHO_PROFISSIONAL"></v-select>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-text-field label="Nº do Conselho" autocomplete="off" inputmode="numeric"
-                                            maxlength="6" outlined dense hide-details
+                                        <v-text-field label="Nº do Conselho*" autocomplete="off"
+                                            maxlength="50" outlined dense hide-details
                                             v-model="chamado.CHAMADO_NUMERO_CONSELHO"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="6">
@@ -293,7 +293,7 @@
                                     hide-details v-model="chamado.CHAMADO_SATURACAO_O2"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Escala Glasgow" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Escala Glasgow*" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_ESCALA_GLASGOW"></v-text-field>
                             </v-col>
                         </v-row>
@@ -667,13 +667,18 @@ export default {
                 return false;
             }
 
-            if (!!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL !== !!this.chamado.CHAMADO_NUMERO_CONSELHO) {
-                Swal.fire("Atenção", "Informe o conselho profissional e o respectivo número.", "warning");
+            if (!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL) {
+                Swal.fire("Atenção", "Informe o conselho profissional.", "warning");
                 return false;
             }
 
-            if (this.chamado.CHAMADO_NUMERO_CONSELHO && !/^\d{6}$/.test(this.chamado.CHAMADO_NUMERO_CONSELHO)) {
-                Swal.fire("Atenção", "O número do conselho deve conter exatamente 6 dígitos.", "warning");
+            if (!this.chamado.CHAMADO_NUMERO_CONSELHO || !this.chamado.CHAMADO_NUMERO_CONSELHO.toString().trim()) {
+                Swal.fire("Atenção", "Informe o número do conselho.", "warning");
+                return false;
+            }
+
+            if (this.chamado.CHAMADO_NUMERO_CONSELHO && this.chamado.CHAMADO_NUMERO_CONSELHO.length > 50) {
+                Swal.fire("Atenção", "O número do conselho deve conter no máximo 50 caracteres.", "warning");
                 return false;
             }
 
@@ -739,6 +744,11 @@ export default {
 
             if (!this.chamado.CHAMADO_SATURACAO_O2) {
                 Swal.fire("Atenção", "Informe a saturação de O2.", "warning");
+                return false;
+            }
+
+            if (!this.chamado.CHAMADO_ESCALA_GLASGOW || !this.chamado.CHAMADO_ESCALA_GLASGOW.toString().trim()) {
+                Swal.fire("Atenção", "Informe a escala Glasgow.", "warning");
                 return false;
             }
 
