@@ -93,7 +93,7 @@ class Veiculo extends Model
     }
 
     // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
-    public function relacionamentoCadastrar()
+    public static function relacionamentoCadastrar()
     {
         return [
             "tipoVeiculo",

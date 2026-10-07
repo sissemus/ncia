@@ -9,6 +9,7 @@ class SituacaoChamadoEnum
     const EM_ATENDIMENTO = 3;
     const CONCLUIDO = 4;
     const CANCELADO = 5;
+    const EM_FILA = 6;
 
     public static function values()
     {
@@ -18,6 +19,7 @@ class SituacaoChamadoEnum
             self::EM_ATENDIMENTO,
             self::CONCLUIDO,
             self::CANCELADO,
+            self::EM_FILA,
         ];
     }
 }

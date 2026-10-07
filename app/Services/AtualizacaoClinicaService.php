@@ -22,6 +22,7 @@ class AtualizacaoClinicaService
         if (!$situacao || !in_array((int) $situacao->TG_SITUACAO_ID, [
             SituacaoChamadoEnum::ABERTO,
             SituacaoChamadoEnum::EM_ANALISE,
+            SituacaoChamadoEnum::EM_FILA,
             SituacaoChamadoEnum::EM_ATENDIMENTO,
         ], true)) {
             throw ValidationException::withMessages([

@@ -33,6 +33,11 @@ class ChamadoEquipe extends Model
         return $this->hasOne(Chamado::class, 'CHAMADO_ID', 'CHAMADO_ID');
     }
 
+    public function etapasAtendimento()
+    {
+        return $this->hasMany(ChamadoAtendimentoEtapa::class, 'CHAMADO_EQUIPE_ID', 'CHAMADO_EQUIPE_ID');
+    }
+
     public static function pesquisar($requisicao)
     {
         return self::with([

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AplicacaoController;
 use App\Http\Controllers\AtualizacaoClinicaController;
+use App\Http\Controllers\AtendimentoEquipeController;
 use App\Http\Controllers\ChamadoAnalisarController;
 use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
@@ -56,6 +57,12 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
     Route::prefix('atualizacao_clinica')->group(function () {
         Route::get('chamado/{id}', [AtualizacaoClinicaController::class, 'chamado']);
         Route::post('/', [AtualizacaoClinicaController::class, 'store']);
+    });
+
+    Route::prefix('atendimento_equipe')->group(function () {
+        Route::get('/', [AtendimentoEquipeController::class, 'view']);
+        Route::get('fila', [AtendimentoEquipeController::class, 'fila']);
+        Route::post('avancar', [AtendimentoEquipeController::class, 'avancar']);
     });
 
     Route::prefix('perfil')->group(function () {
@@ -223,7 +230,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
         Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
-        Route::post("concluir", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "concluir"]);
         Route::post("cancelar", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "cancelar"]);
     });
 
@@ -235,7 +241,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
         Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
         Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
-        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
         Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
         Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
     });

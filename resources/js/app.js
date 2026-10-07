@@ -45,6 +45,7 @@ Vue.component('paciente-view', require('./components/paciente/PacienteView.vue')
 Vue.component('veiculo-view', require('./components/veiculo/VeiculoView.vue').default);
 Vue.component('chamado-view', require('./components/chamado/ChamadoView.vue').default);
 Vue.component('chamado-acompanhamento-view', require('./components/chamado_acompanhamento/ChamadoAcompanhamentoView.vue').default);
+Vue.component('atendimento-equipe-view', require('./components/atendimento_equipe/AtendimentoEquipeView.vue').default);
 Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);
 Vue.component('chamado-view', require('./components/chamado/ChamadoView.vue').default);
 Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);

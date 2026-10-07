@@ -8,6 +8,7 @@ use App\Models\TabelaGenerica;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
 use App\Services\ChamadoFluxoService;
+use App\Services\EquipeAssistencialService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,11 +16,13 @@ use Illuminate\Support\Facades\DB;
 class ChamadoAcompanhamentoController extends Controller
 {
     private $fluxo;
+    private $acessoEquipe;
 
-    public function __construct(ChamadoFluxoService $fluxo)
+    public function __construct(ChamadoFluxoService $fluxo, EquipeAssistencialService $acessoEquipe)
     {
         $this->middleware('auth');
         $this->fluxo = $fluxo;
+        $this->acessoEquipe = $acessoEquipe;
     }
 
     public function view()
@@ -36,8 +39,7 @@ class ChamadoAcompanhamentoController extends Controller
         $suportesHemodinamicos = TabelaGenerica::suporteHemodinamico();
         $motivosCancelamento = TabelaGenerica::motivoCancelamento();
         $podeEncerrar = $this->podeEncerrar($perfis);
-        $somenteEmAtendimento = $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
-            && !$this->podeVisualizarTodos($perfis);
+        $somenteEmAtendimento = false;
         $unidades = \App\Models\Unidade::all();
 
         return view("chamado_acompanhamento.chamado_acompanhamento_view", compact(
@@ -61,11 +63,12 @@ class ChamadoAcompanhamentoController extends Controller
         $this->autorizarVisualizacao($perfis);
 
         $userUnidades = null;
+        $equipeIds = null;
 
         if ($this->podeVisualizarTodos($perfis)) {
             $userUnidades = null;
         } elseif ($perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)) {
-            $request->merge(['TG_SITUACAO_ID' => SituacaoChamadoEnum::EM_ATENDIMENTO]);
+            $equipeIds = $this->acessoEquipe->equipeIdsDoUsuario(false)->all();
         } elseif ($perfis->contains(PerfilEnum::UNIDADE)) {
             $userUnidades = $this->unidadesDoUsuario();
 
@@ -79,7 +82,7 @@ class ChamadoAcompanhamentoController extends Controller
             }
         }
 
-        $chamados = Chamado::pesquisarAcompanhamento($request, $userUnidades);
+        $chamados = Chamado::pesquisarAcompanhamento($request, $userUnidades, $equipeIds);
 
         return response($chamados);
     }
@@ -127,27 +130,6 @@ class ChamadoAcompanhamentoController extends Controller
         });
     }
 
-    public function concluir(Request $request)
-    {
-        $perfis = $this->perfisAtivos();
-        abort_unless($this->podeEncerrar($perfis), 403);
-
-        $request->validate([
-            'CHAMADO_ID' => 'required|integer'
-        ]);
-
-        return DB::transaction(function () use ($request, $perfis) {
-            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
-            $this->autorizarChamado($chamado, $perfis);
-            $this->fluxo->concluirAtendimento($chamado);
-
-            return response([
-                'cod' => 1,
-                'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)
-            ]);
-        });
-    }
-
     private function carregarChamado($id)
     {
         $chamado = Chamado::with([
@@ -162,6 +144,7 @@ class ChamadoAcompanhamentoController extends Controller
             },
             'situacoes.usuario',
             'atualizacoesClinicas.usuario',
+            'etapasAtendimento.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional'
@@ -198,11 +181,7 @@ class ChamadoAcompanhamentoController extends Controller
         }
 
         if ($perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)) {
-            abort_unless(
-                $chamado->situacaoAtual
-                    && (int) $chamado->situacaoAtual->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO,
-                403
-            );
+            abort_unless($this->acessoEquipe->usuarioPodeConsultarChamado($chamado), 403);
 
             return;
         }
@@ -253,9 +232,9 @@ class ChamadoAcompanhamentoController extends Controller
     private function podeEncerrar($perfis)
     {
         return $perfis->intersect([
+            PerfilEnum::DESENVOLVEDOR,
             PerfilEnum::ADMINISTRADOR,
             PerfilEnum::REGULADOR_CIA,
-            PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
     }
 

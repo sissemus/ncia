@@ -132,6 +132,12 @@ class Chamado extends Model
             ->orderBy("ATUALIZACAO_CLINICA_ID");
     }
 
+    public function etapasAtendimento()
+    {
+        return $this->hasMany(ChamadoAtendimentoEtapa::class, "CHAMADO_ID", "CHAMADO_ID")
+            ->orderBy("ATENDIMENTO_ETAPA_ID");
+    }
+
     public function chamadoProcedimentos()
     {
         return $this->hasMany(ChamadoProcedimento::class, "CHAMADO_ID", "CHAMADO_ID");
@@ -155,13 +161,14 @@ class Chamado extends Model
             ->orderByDesc("CHAMADO_EQUIPE_ID");
     }
 
-    public static function pesquisarParaAnalise($requisicao, $unidadeIds = null)
+    public static function pesquisarParaAnalise($requisicao, $unidadeIds = null, $equipeIds = null)
     {
         $query = self::with([
             'paciente',
             'unidadeSolicitante',
             'unidadeDestino',
-            'situacaoAtual'
+            'situacaoAtual',
+            'etapasAtendimento.usuario'
         ])
         ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
         ->whereNotExists(function ($subquery) {
@@ -182,6 +189,15 @@ class Chamado extends Model
             $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
         }
 
+        if ($equipeIds !== null) {
+            $query->whereExists(function ($subquery) use ($equipeIds) {
+                $subquery->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('CHAMADO_EQUIPE as ce_acompanhamento')
+                    ->whereColumn('ce_acompanhamento.CHAMADO_ID', 'CHAMADO.CHAMADO_ID')
+                    ->whereIn('ce_acompanhamento.EQUIPE_ID', $equipeIds);
+            });
+        }
+
         if ($requisicao->PACIENTE_NOME) {
             $query->whereHas('paciente', function ($q) use ($requisicao) {
                 $q->where('PACIENTE_NOME', 'like', '%' . $requisicao->PACIENTE_NOME . '%');
@@ -198,6 +214,7 @@ class Chamado extends Model
             $query->whereIn('cs.TG_SITUACAO_ID', [
                 SituacaoChamadoEnum::ABERTO,
                 SituacaoChamadoEnum::EM_ANALISE,
+                SituacaoChamadoEnum::EM_FILA,
                 SituacaoChamadoEnum::EM_ATENDIMENTO,
             ]);
         }
@@ -217,9 +234,9 @@ class Chamado extends Model
         return $query->paginate();
     }
 
-    public static function pesquisarAcompanhamento($requisicao, $unidadeIds = null)
+    public static function pesquisarAcompanhamento($requisicao, $unidadeIds = null, $equipeIds = null)
     {
-        return self::pesquisarParaAnalise($requisicao, $unidadeIds);
+        return self::pesquisarParaAnalise($requisicao, $unidadeIds, $equipeIds);
     }
 
     public static function getDadosRelatorioChamadoEmAtendimento($id)
@@ -232,6 +249,7 @@ class Chamado extends Model
             'diagnosticos',
             'situacoes.usuario',
             'atualizacoesClinicas.usuario',
+            'etapasAtendimento.usuario',
             'situacaoAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional',
@@ -304,6 +322,13 @@ class Chamado extends Model
                 'data' => $atualizacao->ATUALIZACAO_CLINICA_DATA,
                 'item' => $atualizacao,
             ];
+        }))->concat($chamado->etapasAtendimento->map(function ($etapa) {
+            return [
+                'tipo' => 'etapa',
+                'id' => $etapa->CHAMADO_ATENDIMENTO_ETAPA_ID,
+                'data' => $etapa->ATENDIMENTO_ETAPA_DATA,
+                'item' => $etapa,
+            ];
         }))->sortBy(function ($evento) {
             return sprintf(
                 '%s-%s-%010d',
@@ -357,6 +382,7 @@ class Chamado extends Model
             $itemHistorico = $evento ? $evento['item'] : null;
             $atualizacao = $evento && $evento['tipo'] === 'atualizacao' ? $itemHistorico : null;
             $situacao = $evento && $evento['tipo'] === 'situacao' ? $itemHistorico : null;
+            $etapaAtendimento = $evento && $evento['tipo'] === 'etapa' ? $itemHistorico : null;
 
             return [
                 'CHAMADO_ID' => (string) $chamado->CHAMADO_ID,
@@ -402,7 +428,9 @@ class Chamado extends Model
                 'ATUALIZACOES_CLINICAS' => self::valorRelatorio($atualizacoesClinicas),
                 'HISTORICO_SITUACAO' => $atualizacao
                     ? 'ATUALIZAÇÃO CLÍNICA Nº ' . $atualizacao->ATUALIZACAO_CLINICA_ID
-                    : ($situacao ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID) : '-'),
+                    : ($etapaAtendimento
+                        ? $etapaAtendimento->ATENDIMENTO_ETAPA_DESCRICAO
+                        : ($situacao ? $descricao(RTG::SITUACAO_CHAMADO, $situacao->TG_SITUACAO_ID) : '-')),
                 'HISTORICO_DATA' => $evento
                     ? self::formatarDataHoraRelatorio($evento['data'])
                     : '-',

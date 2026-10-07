@@ -44,6 +44,7 @@ class CompartilharVariaveis {
             PerfilEnum::UNIDADE,
             PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
+        $podeAtenderEquipe = $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL);
 
         try {
             DB::table('APLICACAO')
@@ -57,9 +58,10 @@ class CompartilharVariaveis {
             if ($aplicacao['APLICACAO_URL'] === 'chamado') {
                 $aplicacao['children'] = array_values(array_filter(
                     $aplicacao['children'],
-                    function ($child) use ($podeAnalisar, $podeAcompanhar) {
+                    function ($child) use ($podeAnalisar, $podeAcompanhar, $podeAtenderEquipe) {
                         if ($child['APLICACAO_URL'] === 'chamado_analisar') return $podeAnalisar;
                         if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') return $podeAcompanhar;
+                        if ($child['APLICACAO_URL'] === 'atendimento_equipe') return $podeAtenderEquipe;
                         return true;
                     }
                 ));
@@ -83,6 +85,14 @@ class CompartilharVariaveis {
                         'APLICACAO_NOME' => 'Acompanhar Chamado',
                         'APLICACAO_URL' => 'chamado_acompanhamento',
                         'APLICACAO_ICONE' => 'mdi-clipboard-list-outline',
+                    ];
+                }
+                if ($podeAtenderEquipe && !$children->contains('APLICACAO_URL', 'atendimento_equipe')) {
+                    $aplicacao['children'][] = [
+                        'APLICACAO_ID' => -3,
+                        'APLICACAO_NOME' => 'Atendimento da Equipe',
+                        'APLICACAO_URL' => 'atendimento_equipe',
+                        'APLICACAO_ICONE' => 'mdi-ambulance',
                     ];
                 }
             }

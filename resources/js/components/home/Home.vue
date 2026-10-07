@@ -170,13 +170,14 @@ export default {
             msgId: "msgHomeChamados",
             msgExpiradosId: "msgHomeChamadosExpirados",
             abaAtiva: null,
-            filas: { abertos: [], analise: [], atendimento: [] },
+            filas: { abertos: [], analise: [], fila: [], atendimento: [] },
             paginacoes: {
                 abertos: { current_page: 1, total: 0, last_page: 1 },
                 analise: { current_page: 1, total: 0, last_page: 1 },
+                fila: { current_page: 1, total: 0, last_page: 1 },
                 atendimento: { current_page: 1, total: 0, last_page: 1 },
             },
-            carregandoFilas: { abertos: false, analise: false, atendimento: false },
+            carregandoFilas: { abertos: false, analise: false, fila: false, atendimento: false },
             chamadosExpirados: [],
             paginacaoExpirados: { current_page: 1, total: 0, last_page: 1 },
             carregandoExpirados: false,
@@ -204,10 +205,10 @@ export default {
             return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         podeVisualizarAtendimento() {
-            return [1, 2, 3, 5].some(id => this.perfilIds.includes(id));
+            return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         podeCancelarPrazo() {
-            return [1, 2, 3, 5].some(id => this.perfilIds.includes(id));
+            return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         abasDisponiveis() {
             const abas = [];
@@ -216,6 +217,7 @@ export default {
             }
             if (this.podeVisualizarAnalise) {
                 abas.push({ id: "analise", texto: "Em análise", icone: "mdi-clipboard-search-outline" });
+                abas.push({ id: "fila", texto: "Em fila", icone: "mdi-timeline-clock-outline" });
             }
             if (this.podeVisualizarAtendimento) {
                 abas.push({ id: "atendimento", texto: "Em atendimento", icone: "mdi-ambulance" });
@@ -244,21 +246,25 @@ export default {
         },
         descricaoFilaVazia() {
             if (this.abaAtiva === "analise") return "em análise";
+            if (this.abaAtiva === "fila") return "em fila";
             if (this.abaAtiva === "atendimento") return "em atendimento";
             return "aberto hoje";
         },
         exibeAcaoFila() {
             return (this.abaAtiva === "abertos" && this.podeAnalisar)
                 || (this.abaAtiva === "analise" && this.podeVisualizarAnalise)
+                || (this.abaAtiva === "fila" && this.podeVisualizarAnalise)
                 || (this.abaAtiva === "atendimento" && this.podeVisualizarAtendimento);
         },
         iconeAcaoFila() {
-            return this.abaAtiva === "atendimento"
-                ? "mdi-clipboard-list-outline" : "mdi-clipboard-search-outline";
+            if (this.abaAtiva === "atendimento") return "mdi-clipboard-list-outline";
+            if (this.abaAtiva === "fila") return "mdi-timeline-clock-outline";
+            return "mdi-clipboard-search-outline";
         },
         tituloAcaoFila() {
-            return this.abaAtiva === "atendimento"
-                ? "Visualizar atendimento" : "Analisar chamado";
+            if (this.abaAtiva === "atendimento") return "Visualizar atendimento";
+            if (this.abaAtiva === "fila") return "Visualizar chamado em fila";
+            return "Analisar chamado";
         },
     },
     watch: {
@@ -291,9 +297,8 @@ export default {
                 : `${this.baseUrl}/home/chamados-operacionais`;
             const params = { page: paginacao.current_page };
             if (aba !== "abertos") {
-                params.situacao = aba === "analise"
-                    ? SituacaoChamadoEnum.EM_ANALISE
-                    : SituacaoChamadoEnum.EM_ATENDIMENTO;
+                params.situacao = aba === "analise" ? SituacaoChamadoEnum.EM_ANALISE
+                    : (aba === "fila" ? SituacaoChamadoEnum.EM_FILA : SituacaoChamadoEnum.EM_ATENDIMENTO);
             }
             this.carregandoFilas[aba] = true;
             return axios.get(url, { params }).then(response => {
@@ -327,7 +332,7 @@ export default {
                 });
         },
         abrirAcaoChamado(chamado) {
-            if (this.abaAtiva === "analise") {
+            if (this.abaAtiva === "analise" || this.abaAtiva === "fila") {
                 window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${chamado.CHAMADO_ID}`;
                 return;
             }

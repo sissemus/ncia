@@ -25,6 +25,16 @@ class HomeController extends Controller
     public function index()
     {
         $usuarioLogado = Usuario::with(['usuarioPerfis.perfil', 'usuarioUnidades.unidade'])->find(Auth::id());
+        $perfisAtivos = $this->perfisAtivos();
+        if ($perfisAtivos->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
+            && $perfisAtivos->intersect([
+                PerfilEnum::DESENVOLVEDOR,
+                PerfilEnum::ADMINISTRADOR,
+                PerfilEnum::REGULADOR_CIA,
+                PerfilEnum::UNIDADE,
+            ])->isEmpty()) {
+            return redirect('/atendimento_equipe');
+        }
         $prioridades = \App\Models\TabelaGenerica::prioridadePaciente();
 
         return view('home', compact('usuarioLogado', 'prioridades'));
@@ -57,14 +67,16 @@ class HomeController extends Controller
     public function chamadosOperacionais(Request $request)
     {
         $request->validate([
-            'situacao' => 'required|integer|in:' . SituacaoChamadoEnum::EM_ANALISE . ',' . SituacaoChamadoEnum::EM_ATENDIMENTO,
+            'situacao' => 'required|integer|in:' . implode(',', [
+                SituacaoChamadoEnum::EM_ANALISE,
+                SituacaoChamadoEnum::EM_FILA,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ]),
         ]);
 
         $situacao = (int) $request->situacao;
         $perfisAtivos = $this->perfisAtivos();
-        $podeVisualizar = $this->podeVisualizarTodos($perfisAtivos)
-            || ($situacao === SituacaoChamadoEnum::EM_ATENDIMENTO
-                && $perfisAtivos->contains(PerfilEnum::EQUIPE_ASSISTENCIAL));
+        $podeVisualizar = $this->podeVisualizarTodos($perfisAtivos);
 
         abort_unless($podeVisualizar, 403);
 
@@ -122,8 +134,8 @@ class HomeController extends Controller
                     });
             })
             ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID')
-            ->orderBy('CHAMADO.CHAMADO_DATA')
             ->orderBy('CHAMADO.TG_PRIORIDADE_ID')
+            ->orderBy('CHAMADO.CHAMADO_DATA')
             ->orderByRaw('(SELECT PACIENTE_NOME FROM PACIENTE WHERE PACIENTE.PACIENTE_ID = CHAMADO.PACIENTE_ID)')
             ->orderBy('CHAMADO.CHAMADO_ID');
     }
@@ -154,7 +166,6 @@ class HomeController extends Controller
             PerfilEnum::DESENVOLVEDOR,
             PerfilEnum::ADMINISTRADOR,
             PerfilEnum::REGULADOR_CIA,
-            PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
     }
 }

@@ -170,37 +170,34 @@ class EquipeController extends Controller
 
     public function deletar(Request $request)
     {
-
-        EquipeProfissional::where('EQUIPE_ID', $request->EQUIPE_ID)
-            ->delete();
-
-        Equipe::where('EQUIPE_ID', $request->EQUIPE_ID)
-            ->delete();
-
-        // $estaEmUso = ChamadoEquipe::where(
-        //     'VEICULO_ID',
-        //     $equipe->VEICULO_ID
-        // )->exists();
-
-        // if ($estaEmUso) {
-        //     // A equipe está vinculada a um chamado:
-        //     // apenas desativa
-        //     $equipe->EQUIPE_ATIVO = 0;
-        //     $equipe->save();
-
-        //     return response()->json([
-        //         'sucesso' => true,
-        //         'mensagem' => 'A equipe está em uso e foi desativada.',
-        //         'dados' => $equipe
-        //     ]);
-        // }
-
-        // Não está vinculada a nenhum chamado:
-        // exclui definitivamente
-
-        return response()->json([
-            'sucesso' => true,
-            'mensagem' => 'Equipe excluída com sucesso.'
+        $request->validate([
+            'EQUIPE_ID' => 'required|integer|exists:EQUIPE,EQUIPE_ID',
         ]);
+
+        return DB::transaction(function () use ($request) {
+            $equipe = Equipe::lockForUpdate()->findOrFail($request->EQUIPE_ID);
+            $chamadoIds = ChamadoEquipe::where('EQUIPE_ID', $equipe->EQUIPE_ID)
+                ->distinct()
+                ->orderBy('CHAMADO_ID')
+                ->pluck('CHAMADO_ID');
+
+            if ($chamadoIds->isNotEmpty()) {
+                return response()->json([
+                    'sucesso' => false,
+                    'mensagem' => 'Não é possível excluir a equipe Nº ' . $equipe->EQUIPE_ID
+                        . ', pois ela possui vínculo com o(s) chamado(s): '
+                        . $chamadoIds->implode(', ')
+                        . '. O histórico do atendimento deve ser preservado.',
+                ], 422);
+            }
+
+            EquipeProfissional::where('EQUIPE_ID', $equipe->EQUIPE_ID)->delete();
+            $equipe->delete();
+
+            return response()->json([
+                'sucesso' => true,
+                'mensagem' => 'Equipe excluída com sucesso.',
+            ]);
+        });
     }
 }

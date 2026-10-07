@@ -65,7 +65,11 @@
                                         {{veiculo.equipes[idxEqp].EQUIPE_TURNO}}
                                     </td>
                                     <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 5%;">
-                                        <v-btn icon @click="deletar(veiculo.equipes[idxEqp])" title="Remover Equipes">
+                                        <v-btn icon
+                                            :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                            :disabled="processandoEquipeId !== null"
+                                            @click="deletar(eqp, veiculo)"
+                                            title="Remover equipe">
                                             <v-icon>mdi-delete</v-icon>
                                         </v-btn>
                                     </td>
@@ -120,6 +124,7 @@ export default {
             msgIdDebug: 'msgEquipeViewDebug',
 
             idxEqp: 0,
+            processandoEquipeId: null,
         }
     },
     mounted() {
@@ -205,29 +210,61 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
-        deletar(veiculo) {
+        deletar(equipe, veiculo) {
+            if (!equipe || !equipe.EQUIPE_ID) {
+                Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
+                return;
+            }
+
             let params = {
-                EQUIPE_ID: veiculo.equipe.EQUIPE_ID
+                EQUIPE_ID: equipe.EQUIPE_ID
             }
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
-                text: `Deseja excluir a equipe do veículo ${veiculo.VEICULO_IDENTIFICACAO} ?`,
+                text: `Deseja excluir a equipe Nº ${equipe.EQUIPE_ID} do veículo ${veiculo.VEICULO_IDENTIFICACAO}?`,
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
                 denyButtonText: `Cancelar`,
             }).then(result => {
-                if (result.isConfirmed)
-                    axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
-                        .then(res => {
-                            Swal.fire('Excluído com sucesso!', '', 'success')
-                                .then(res => {
-                                    this.search();
-                                })
-                        })
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = equipe.EQUIPE_ID;
+                axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
+                    .then(response => {
+                        return Swal.fire(
+                            'Excluído com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Exclusão não permitida',
+                            this.mensagemErroExclusao(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
             })
+        },
+
+        mensagemErroExclusao(error) {
+            const response = error && error.response;
+            const data = response && response.data;
+            if (data && data.mensagem) return data.mensagem;
+            if (data && data.message) return data.message;
+            if (data && data.errors) {
+                const campo = Object.keys(data.errors)[0];
+                if (campo && data.errors[campo] && data.errors[campo][0]) {
+                    return data.errors[campo][0];
+                }
+            }
+            return 'Não foi possível excluir a equipe. Tente novamente.';
         },
 
         truncateText(text, maxLength) {
