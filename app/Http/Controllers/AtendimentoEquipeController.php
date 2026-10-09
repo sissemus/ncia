@@ -61,6 +61,23 @@ class AtendimentoEquipeController extends Controller
         ]);
     }
 
+    public function cancelar(Request $request)
+    {
+        $this->autorizarEquipeAssistencial();
+        $request->merge(['MOTIVO' => trim((string) $request->MOTIVO)]);
+        $request->validate([
+            'CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID',
+            'MOTIVO' => 'required|string|max:2000',
+        ]);
+
+        $this->atendimento->cancelar((int) $request->CHAMADO_ID, $request->MOTIVO);
+
+        return response()->json([
+            'cod' => 1,
+            'msg' => 'Atendimento cancelado com sucesso.',
+        ]);
+    }
+
     private function autorizarEquipeAssistencial()
     {
         $possuiPerfil = DB::table('USUARIO_PERFIL')

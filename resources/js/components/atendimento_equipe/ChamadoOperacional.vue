@@ -5,6 +5,11 @@
             <v-chip x-small dark class="ml-3" :color="corPrioridade">{{ prioridade }}</v-chip>
             <v-chip x-small dark class="ml-2" :color="corSituacao">{{ situacao }}</v-chip>
             <v-spacer></v-spacer>
+            <v-btn color="error" outlined small tile class="mr-2"
+                :disabled="processandoId !== null" @click="$emit('cancelar', chamado)">
+                <v-icon small left>mdi-cancel</v-icon>
+                Cancelar atendimento
+            </v-btn>
             <v-btn color="primary" small tile :loading="processandoId === chamado.CHAMADO_ID"
                 :disabled="processandoId !== null || !podeAvancar" @click="$emit('avancar', chamado)">
                 <v-icon small left>mdi-arrow-right-bold-circle-outline</v-icon>

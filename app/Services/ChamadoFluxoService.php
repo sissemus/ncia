@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Models\Chamado;
+use App\Models\ChamadoAtendimentoEtapa;
 use App\Models\ChamadoEquipe;
 use App\Models\ChamadoSituacao;
 use App\Models\Cancelamento;
 use App\Models\Equipe;
 use App\Models\Veiculo;
+use App\MyLibs\EtapaAtendimentoEnum;
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
 use Carbon\Carbon;
@@ -68,11 +70,39 @@ class ChamadoFluxoService
             SituacaoChamadoEnum::EM_FILA,
             SituacaoChamadoEnum::EM_ATENDIMENTO,
         ], true), 422, 'A situação do chamado foi alterada.');
-        $vinculos = $this->bloquearRecursosAtivos($chamado);
+        $vinculos = $this->bloquearRecursosAtivos($chamado, false);
+        if ($vinculos->isEmpty()) {
+            abort_unless(
+                ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                    ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                    ->exists(),
+                422,
+                'O chamado não possui equipe e veículo vinculados.'
+            );
+        }
         $this->registrarCancelamento($chamado, $motivoId, $motivacao);
         $this->liberarRecursos(
             $vinculos,
             (int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO
+        );
+    }
+
+    public function concluirAtendimento(Chamado $chamado)
+    {
+        $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
+
+        abort_unless(
+            ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                ->lockForUpdate()->exists(),
+            422,
+            'O atendimento somente pode ser concluído após a liberação da ambulância.'
+        );
+
+        $this->registrarSituacao(
+            $chamado,
+            SituacaoChamadoEnum::CONCLUIDO,
+            'Deslocamento finalizado sem intercorrência.'
         );
     }
 
@@ -153,15 +183,16 @@ class ChamadoFluxoService
         ]);
     }
 
-    private function bloquearRecursosAtivos(Chamado $chamado)
+    private function bloquearRecursosAtivos(Chamado $chamado, $obrigatorio = true)
     {
         $vinculos = ChamadoEquipe::where('CHAMADO_ID', $chamado->CHAMADO_ID)
             ->where('CHAMADO_EQUIPE_ATIVO', 1)
             ->lockForUpdate()
             ->get();
 
-        abort_if($vinculos->isEmpty(), 422, 'O chamado não possui equipe e veículo vinculados.');
-
+        if ($obrigatorio) {
+            abort_if($vinculos->isEmpty(), 422, 'O chamado não possui equipe e veículo vinculados.');
+        }
         foreach ($vinculos as $vinculo) {
             $equipe = Equipe::lockForUpdate()->findOrFail($vinculo->EQUIPE_ID);
             Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);

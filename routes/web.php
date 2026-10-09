@@ -63,6 +63,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get('/', [AtendimentoEquipeController::class, 'view']);
         Route::get('fila', [AtendimentoEquipeController::class, 'fila']);
         Route::post('avancar', [AtendimentoEquipeController::class, 'avancar']);
+        Route::post('cancelar', [AtendimentoEquipeController::class, 'cancelar']);
     });
 
     Route::prefix('perfil')->group(function () {
@@ -230,7 +231,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
         Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
-        Route::post("cancelar", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "cancelar"]);
     });
 
     Route::prefix("chamado_analisar")->group(function () {
@@ -243,6 +243,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
         Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
         Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
+        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
     });
     
     Route::prefix("equipe")->group(function () {

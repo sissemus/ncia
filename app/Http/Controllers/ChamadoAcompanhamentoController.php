@@ -38,7 +38,7 @@ class ChamadoAcompanhamentoController extends Controller
         $suportesO2 = TabelaGenerica::suporteO2();
         $suportesHemodinamicos = TabelaGenerica::suporteHemodinamico();
         $motivosCancelamento = TabelaGenerica::motivoCancelamento();
-        $podeEncerrar = $this->podeEncerrar($perfis);
+        $podeEncerrar = false;
         $somenteEmAtendimento = false;
         $unidades = \App\Models\Unidade::all();
 

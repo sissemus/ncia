@@ -247,6 +247,19 @@ class ChamadoAnalisarController extends Controller
         });
     }
 
+    public function concluir(Request $request)
+    {
+        $this->autorizarAtendimento();
+        $request->validate(['CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID']);
+
+        return DB::transaction(function () use ($request) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
+            $this->fluxo->concluirAtendimento($chamado);
+
+            return response(['cod' => 1, 'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)]);
+        });
+    }
+
     private function carregarChamado($id)
     {
         $chamado = Chamado::with([

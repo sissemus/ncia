@@ -9,6 +9,7 @@ use App\Models\ChamadoSituacao;
 use App\Models\Equipe;
 use App\Models\Veiculo;
 use App\MyLibs\EtapaAtendimentoEnum;
+use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +18,14 @@ use Illuminate\Support\Facades\DB;
 class AtendimentoEquipeService
 {
     private $acessoEquipe;
+    private $fluxo;
 
-    public function __construct(EquipeAssistencialService $acessoEquipe)
+    private const MOTIVO_CANCELAMENTO_EQUIPE = 'CANCELAMENTO PELA EQUIPE ASSISTENCIAL';
+
+    public function __construct(EquipeAssistencialService $acessoEquipe, ChamadoFluxoService $fluxo)
     {
         $this->acessoEquipe = $acessoEquipe;
+        $this->fluxo = $fluxo;
     }
 
     public function listarFilaDoUsuario()
@@ -137,7 +142,6 @@ class AtendimentoEquipeService
             }
 
             if ($proximaEtapa === EtapaAtendimentoEnum::AMBULANCIA_LIBERADA) {
-                $this->registrarSituacao($chamado, SituacaoChamadoEnum::CONCLUIDO, 'Ambulância liberada pela equipe assistencial.');
                 $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
                 $vinculo->save();
                 $veiculo->TG_SITUACAO_VEICULO_ID = 1;
@@ -148,6 +152,37 @@ class AtendimentoEquipeService
                 'etapa' => $proximaEtapa,
                 'descricao' => EtapaAtendimentoEnum::descricao($proximaEtapa),
             ];
+        });
+    }
+
+    public function cancelar($chamadoId, $motivacao)
+    {
+        return DB::transaction(function () use ($chamadoId, $motivacao) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($chamadoId);
+            $situacao = $this->situacaoAtual($chamado->CHAMADO_ID, true);
+            abort_unless($situacao && in_array((int) $situacao->TG_SITUACAO_ID, [
+                SituacaoChamadoEnum::EM_FILA,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ], true), 422, 'O chamado não está disponível para cancelamento pela equipe assistencial.');
+
+            abort_if(ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                ->exists(), 422, 'O atendimento não pode ser cancelado pela equipe após a liberação da ambulância.');
+
+            $vinculo = ChamadoEquipe::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('CHAMADO_EQUIPE_ATIVO', 1)->orderByDesc('CHAMADO_EQUIPE_ID')
+                ->lockForUpdate()->first();
+            abort_unless($vinculo, 422, 'O chamado não possui equipe ativa vinculada.');
+            abort_unless($this->acessoEquipe->pertenceEquipe($vinculo->EQUIPE_ID, true), 403);
+
+            $motivoId = DB::table('TABELA_GENERICA')
+                ->where('TABELA_ID', RTG::MOTIVO_CANCELAMENTO)
+                ->where('DESCRICAO', self::MOTIVO_CANCELAMENTO_EQUIPE)
+                ->where('ATIVO', 1)->value('COLUNA_ID');
+            abort_unless($motivoId, 422, 'Motivo de cancelamento da equipe assistencial não cadastrado. Execute o script SQL do subciclo.');
+
+            $this->fluxo->cancelarAtendimento($chamado, $motivoId, $motivacao);
+            return $chamado;
         });
     }
 

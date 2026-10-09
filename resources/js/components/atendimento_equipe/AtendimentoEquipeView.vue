@@ -29,7 +29,7 @@
                     </v-alert>
                     <chamado-operacional v-for="chamado in atendimentos" :key="`atendimento-${chamado.CHAMADO_ID}`"
                         :chamado="chamado" :prioridades="prioridades" :processando-id="processandoId"
-                        :pode-avancar="true" @avancar="confirmarAvanco" />
+                        :pode-avancar="true" @avancar="confirmarAvanco" @cancelar="confirmarCancelamento" />
 
                     <v-divider class="my-5"></v-divider>
                     <div class="subtitle-1 font-weight-bold mb-2">Chamados em fila</div>
@@ -38,7 +38,7 @@
                     </v-alert>
                     <chamado-operacional v-for="chamado in fila" :key="`fila-${chamado.CHAMADO_ID}`"
                         :chamado="chamado" :prioridades="prioridades" :processando-id="processandoId"
-                        :pode-avancar="podeReceber(chamado)" @avancar="confirmarAvanco" />
+                        :pode-avancar="podeReceber(chamado)" @avancar="confirmarAvanco" @cancelar="confirmarCancelamento" />
                 </template>
             </v-card-text>
         </v-card>
@@ -110,6 +110,36 @@ export default {
                 axios.post(`${this.baseUrl}/atendimento_equipe/avancar`, {
                     CHAMADO_ID: chamado.CHAMADO_ID,
                     ETAPA_ESPERADA_ID: chamado.PROXIMA_ETAPA_ID,
+                })
+                    .then(response => this.carregar().then(() => Swal.fire("Sucesso", response.data.msg, "success")))
+                    .catch(this.erro)
+                    .finally(() => { this.processandoId = null; });
+            });
+        },
+        confirmarCancelamento(chamado) {
+            if (this.processandoId !== null) return;
+            Swal.fire({
+                title: "Cancelar atendimento",
+                text: `Informe o motivo do cancelamento do chamado Nº ${chamado.CHAMADO_ID}.`,
+                input: "textarea",
+                inputLabel: "Motivo do cancelamento",
+                inputPlaceholder: "Descreva o motivo...",
+                inputAttributes: { maxlength: 2000 },
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Cancelar atendimento",
+                cancelButtonText: "Voltar",
+                confirmButtonColor: "#d32f2f",
+                inputValidator: valor => {
+                    if (!String(valor || "").trim()) return "Informe o motivo do cancelamento.";
+                    return null;
+                },
+            }).then(resultado => {
+                if (!resultado.isConfirmed) return;
+                this.processandoId = chamado.CHAMADO_ID;
+                axios.post(`${this.baseUrl}/atendimento_equipe/cancelar`, {
+                    CHAMADO_ID: chamado.CHAMADO_ID,
+                    MOTIVO: String(resultado.value || "").trim(),
                 })
                     .then(response => this.carregar().then(() => Swal.fire("Sucesso", response.data.msg, "success")))
                     .catch(this.erro)

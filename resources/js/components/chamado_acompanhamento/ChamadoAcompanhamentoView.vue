@@ -876,6 +876,9 @@ export default {
             const etapas = chamado && (chamado.etapasAtendimento || chamado.etapas_atendimento) || [];
             if (etapas.length) {
                 const ultima = [...etapas].sort((a, b) => Number(b.ATENDIMENTO_ETAPA_ID) - Number(a.ATENDIMENTO_ETAPA_ID))[0];
+                if (Number(ultima.ATENDIMENTO_ETAPA_ID) === 5 && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO) {
+                    return "Ambulância liberada — aguardando encerramento";
+                }
                 return ultima.ATENDIMENTO_ETAPA_DESCRICAO || "-";
             }
             return Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_FILA ? "Aguardando recebimento" : "-";
@@ -981,7 +984,7 @@ export default {
                 case SituacaoChamadoEnum.EM_ATENDIMENTO:
                     return "Equipe assistencial do veículo iniciou os procedimentos para o deslocamento do(s) paciente(s).";
                 case SituacaoChamadoEnum.CONCLUIDO:
-                    return "Deslocamento de ida e volta finalizado sem intercorrência.";
+                    return "Deslocamento finalizado sem intercorrência.";
                 case SituacaoChamadoEnum.CANCELADO:
                     return "Chamado não aprovado na análise do Regulador Cia ou que teve alguma intercorrência que impossibilitou a conclusão satisfatória do chamado.";
                 default:
