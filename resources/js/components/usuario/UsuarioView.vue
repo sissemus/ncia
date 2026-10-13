@@ -61,9 +61,9 @@
                             <th class="text-left">Unidades</th>
 
                             <th class="text-left cursor-pointer"
-                                @click="ordenar('USUARIO_VIGENCIA')">
-                                Vigência
-                                <v-icon small v-text="orderIcon('USUARIO_VIGENCIA')"></v-icon>
+                                @click="ordenar('USUARIO_ULTIMO_ACESSO')">
+                                Inatividade
+                                <v-icon small v-text="orderIcon('USUARIO_ULTIMO_ACESSO')"></v-icon>
                             </th>
 
                             <th class="text-left">Ativo</th>
@@ -97,7 +97,7 @@
                                 <span v-else>-</span>
                             </td>
 
-                            <td>{{ usuario.USUARIO_VIGENCIA ? formatarData(usuario.USUARIO_VIGENCIA, 'DD/MM/YYYY') : "Não expira" }}</td>
+                            <td>{{ usuario.USUARIO_ULTIMO_ACESSO ? formatarData(usuario.USUARIO_ULTIMO_ACESSO, 'DD/MM/YYYY') : "" }}</td>
 
                             <td>
                                 <v-chip x-small v-if="usuario.USUARIO_ATIVO === 1" color="green" dark>Sim</v-chip>
