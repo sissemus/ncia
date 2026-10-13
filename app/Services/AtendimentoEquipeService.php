@@ -128,8 +128,7 @@ class AtendimentoEquipeService
 
                 $motivoBloqueio = null;
                 if ($situacaoId === SituacaoChamadoEnum::EM_FILA && $atendimentoAtual) {
-                    $motivoBloqueio = 'Veículo/equipe em atendimento no chamado Nº '
-                        . $atendimentoAtual->CHAMADO_ID . '. Aguarde a liberação da ambulância.';
+                    $motivoBloqueio = 'Veículo ocupado por outro atendimento. Aguarde a liberação da ambulância.';
                 } elseif ($situacaoId === SituacaoChamadoEnum::EM_FILA && !$podeReceber) {
                     $motivoBloqueio = 'Aguardando o chamado anterior deste veículo, conforme prioridade e antiguidade da fila.';
                 }
@@ -177,7 +176,7 @@ class AtendimentoEquipeService
                 if ((int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA) {
                     $outroChamadoId = $this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID);
                     abort_if($outroChamadoId, 422,
-                        'O veículo/equipe já está em atendimento no chamado Nº ' . $outroChamadoId . '.');
+                        'Veículo ocupado por outro atendimento. Aguarde a liberação da ambulância.');
                     abort_unless($this->primeiroChamadoEmFilaDoVeiculo($veiculo->VEICULO_ID) === (int) $chamado->CHAMADO_ID, 422,
                         'Existe outro chamado com maior prioridade ou mais antigo aguardando recebimento.');
                     abort_unless((int) $veiculo->VEICULO_ATIVO === 1 && (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1, 422,
