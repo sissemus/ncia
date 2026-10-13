@@ -43,7 +43,7 @@ class ChamadoFluxoService
         $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
         abort_unless((int) $veiculo->VEICULO_ATIVO === 1, 422, 'Veículo inativo.');
         abort_unless(
-            (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $this->equipeTemAtendimentoAtivo($equipe->EQUIPE_ID),
+            (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $this->veiculoTemAtendimentoAtivo($veiculo->VEICULO_ID),
             422,
             'Veículo indisponível.'
         );
@@ -225,9 +225,10 @@ class ChamadoFluxoService
             ->first();
     }
 
-    private function equipeTemAtendimentoAtivo($equipeId)
+    private function veiculoTemAtendimentoAtivo($veiculoId)
     {
-        return ChamadoEquipe::where('EQUIPE_ID', $equipeId)
+        return ChamadoEquipe::join('EQUIPE as e_ocupada', 'e_ocupada.EQUIPE_ID', '=', 'CHAMADO_EQUIPE.EQUIPE_ID')
+            ->where('e_ocupada.VEICULO_ID', $veiculoId)
             ->where('CHAMADO_EQUIPE_ATIVO', 1)
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))

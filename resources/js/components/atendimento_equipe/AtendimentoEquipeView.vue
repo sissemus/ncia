@@ -90,10 +90,7 @@ export default {
             return Number(chamado && chamado.situacaoAtual && chamado.situacaoAtual.TG_SITUACAO_ID);
         },
         podeReceber(chamado) {
-            const equipeId = Number(chamado.EQUIPE_FILA_ID);
-            if (this.atendimentos.some(item => Number(item.EQUIPE_FILA_ID) === equipeId)) return false;
-            const primeiro = this.fila.find(item => Number(item.EQUIPE_FILA_ID) === equipeId);
-            return !!primeiro && Number(primeiro.CHAMADO_ID) === Number(chamado.CHAMADO_ID);
+            return chamado && chamado.PODE_RECEBER === true;
         },
         confirmarAvanco(chamado) {
             if (this.processandoId !== null) return;

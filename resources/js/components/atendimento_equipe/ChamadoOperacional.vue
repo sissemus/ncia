@@ -32,7 +32,7 @@
                 </v-chip>
             </div>
             <v-alert v-if="!podeAvancar" dense text type="info" class="mt-3 mb-0">
-                Aguardando a conclusão do atendimento atual ou dos chamados anteriores da fila.
+                {{ chamado.MOTIVO_BLOQUEIO_RECEBIMENTO || 'Aguardando a conclusão do atendimento atual ou dos chamados anteriores da fila.' }}
             </v-alert>
         </v-card-text>
     </v-card>

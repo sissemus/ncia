@@ -92,6 +92,7 @@ class ChamadoAnalisarController extends Controller
             ->get();
 
         $cargas = DB::table('CHAMADO_EQUIPE as ce_carga')
+            ->join('EQUIPE as e_carga', 'e_carga.EQUIPE_ID', '=', 'ce_carga.EQUIPE_ID')
             ->join('CHAMADO_SITUACAO as cs_carga', 'cs_carga.CHAMADO_ID', '=', 'ce_carga.CHAMADO_ID')
             ->where('ce_carga.CHAMADO_EQUIPE_ATIVO', 1)
             ->whereIn('cs_carga.TG_SITUACAO_ID', [
@@ -110,15 +111,14 @@ class ChamadoAnalisarController extends Controller
                             });
                     });
             })
-            ->select('ce_carga.EQUIPE_ID', 'cs_carga.TG_SITUACAO_ID', DB::raw('COUNT(*) as TOTAL'))
-            ->groupBy('ce_carga.EQUIPE_ID', 'cs_carga.TG_SITUACAO_ID')
+            ->select('e_carga.VEICULO_ID', 'cs_carga.TG_SITUACAO_ID', DB::raw('COUNT(*) as TOTAL'))
+            ->groupBy('e_carga.VEICULO_ID', 'cs_carga.TG_SITUACAO_ID')
             ->get()
-            ->groupBy('EQUIPE_ID');
+            ->groupBy('VEICULO_ID');
 
         $veiculos = $veiculos->filter(function ($veiculo) use ($cargas) {
-            $equipeId = $veiculo->equipe ? (int) $veiculo->equipe->EQUIPE_ID : null;
-            $cargaEquipe = $equipeId ? $cargas->get($equipeId, collect()) : collect();
-            $ocupadoEmAtendimento = $cargaEquipe->contains(function ($item) {
+            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
+            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
                 return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
             });
 
@@ -130,11 +130,11 @@ class ChamadoAnalisarController extends Controller
         return response()->json($veiculos->map(function ($veiculo) use ($cargas) {
             $equipe = $veiculo->equipe;
             $vinculo = $veiculo->vinculoAtivo;
-            $cargaEquipe = $equipe ? $cargas->get((int) $equipe->EQUIPE_ID, collect()) : collect();
-            $ocupadoEmAtendimento = $cargaEquipe->contains(function ($item) {
+            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
+            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
                 return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
             });
-            $quantidadeEmFila = (int) optional($cargaEquipe->first(function ($item) {
+            $quantidadeEmFila = (int) optional($cargaVeiculo->first(function ($item) {
                 return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA;
             }))->TOTAL;
 
