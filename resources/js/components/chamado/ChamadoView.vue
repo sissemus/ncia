@@ -97,15 +97,6 @@
                             </v-alert>
 
                             <v-row dense>
-                                <v-col cols="12" md="6">
-                                    <v-text-field label="Nome Completo (opcional)" outlined dense hide-details
-                                        autocomplete="off" v-model="pacienteTemporario.PACIENTE_NOME"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field label="Data de Nascimento (opcional)" type="date" outlined dense
-                                        hide-details autocomplete="off"
-                                        v-model="pacienteTemporario.PACIENTE_DT_NASCIMENTO"></v-text-field>
-                                </v-col>
                                 <v-col cols="12" sm="6" md="3">
                                     <v-select label="Sexo*" :items="sexos" item-value="COLUNA_ID" item-text="DESCRICAO"
                                         outlined dense hide-details v-model="pacienteTemporario.TG_SEXO_ID"></v-select>
@@ -616,8 +607,6 @@ export default {
             this.pacienteVulnerabilidadeSocial = true;
 
             this.pacienteTemporario = {
-                PACIENTE_NOME: "Paciente Vulnerabilidade Teste",
-                PACIENTE_DT_NASCIMENTO: "1985-05-20",
                 TG_SEXO_ID: this.sexos.length ? this.sexos[0].COLUNA_ID : null
             };
 
@@ -767,8 +756,8 @@ export default {
             if (this.pacienteVulnerabilidadeSocial) {
                 payload.PACIENTE_ID = null;
                 payload.PACIENTE_VULNERABILIDADE_SOCIAL = 1;
-                payload.PACIENTE_NOME = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_NOME : null;
-                payload.PACIENTE_DT_NASCIMENTO = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_DT_NASCIMENTO : null;
+                payload.PACIENTE_NOME = null;
+                payload.PACIENTE_DT_NASCIMENTO = null;
                 payload.TG_SEXO_ID = this.pacienteTemporario ? this.pacienteTemporario.TG_SEXO_ID : null;
             } else {
                 // Garante que o PACIENTE_ID venha do objeto paciente localizado
