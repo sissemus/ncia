@@ -129,12 +129,10 @@
                                 <v-col cols="6" md="4"><v-text-field label="Pressão arterial*" maxlength="20" outlined dense v-model="form.ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL" /></v-col>
                                 <v-col cols="6" md="4"><v-text-field label="Frequência cardíaca*" maxlength="20" outlined dense v-model="form.ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" /></v-col>
                                 <v-col cols="6" md="4"><v-text-field label="Saturação O2*" maxlength="20" outlined dense v-model="form.ATUALIZACAO_CLINICA_SATURACAO_O2" /></v-col>
-                                <v-col cols="6" md="4"><v-text-field label="Escala Glasgow" maxlength="20" outlined dense v-model="form.ATUALIZACAO_CLINICA_ESCALA_GLASGOW" /></v-col>
+                                <v-col cols="6" md="4"><v-text-field label="Escala Glasgow*" maxlength="20" outlined dense v-model="form.ATUALIZACAO_CLINICA_ESCALA_GLASGOW" /></v-col>
                                 <v-col cols="12" md="6"><v-text-field label="Profissional responsável*" maxlength="150" outlined dense v-model="form.ATUALIZACAO_CLINICA_PROFISSIONAL" /></v-col>
                                 <v-col cols="6" md="3"><v-select label="Conselho*" :items="['CRM', 'COREN']" outlined dense v-model="form.ATUALIZACAO_CLINICA_CONSELHO" /></v-col>
-                                <v-col cols="6" md="3"><v-text-field label="Nº do conselho*" maxlength="6" inputmode="numeric"
-                                    hint="Informe exatamente 6 dígitos" persistent-hint outlined dense
-                                    :rules="[regraNumeroConselho]" v-model="form.ATUALIZACAO_CLINICA_NUMERO_CONSELHO" /></v-col>
+                                <v-col cols="6" md="3"><v-text-field label="Nº do conselho*" maxlength="50" outlined dense v-model="form.ATUALIZACAO_CLINICA_NUMERO_CONSELHO" /></v-col>
                                 <v-col cols="12"><v-textarea label="Justificativa médica*" outlined rows="4" v-model="form.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" /></v-col>
                             </v-row>
                         </v-card-text>
@@ -230,14 +228,14 @@ export default {
                 "TG_PRIORIDADE_ID", "TG_TIPO_PRECAUCAO_ID", "TG_SUPORTE_O2_ID",
                 "TG_SUPORTE_HEMODINAMICO_ID", "ATUALIZACAO_CLINICA_TEMPERATURA",
                 "ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL", "ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA",
-                "ATUALIZACAO_CLINICA_SATURACAO_O2", "ATUALIZACAO_CLINICA_PROFISSIONAL",
-                "ATUALIZACAO_CLINICA_CONSELHO", "ATUALIZACAO_CLINICA_NUMERO_CONSELHO",
-                "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA",
+                "ATUALIZACAO_CLINICA_SATURACAO_O2", "ATUALIZACAO_CLINICA_ESCALA_GLASGOW",
+                "ATUALIZACAO_CLINICA_PROFISSIONAL", "ATUALIZACAO_CLINICA_CONSELHO",
+                "ATUALIZACAO_CLINICA_NUMERO_CONSELHO", "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA",
             ];
             return obrigatorios.every(campo => this.form[campo] !== undefined
                 && this.form[campo] !== null
                 && String(this.form[campo]).trim())
-                && /^\d{6}$/.test(String(this.form.ATUALIZACAO_CLINICA_NUMERO_CONSELHO || ""));
+                && String(this.form.ATUALIZACAO_CLINICA_NUMERO_CONSELHO || "").trim().length <= 50;
         },
     },
     watch: {
@@ -277,9 +275,6 @@ export default {
         nomeUsuario(item) { return item.usuario && item.usuario.USUARIO_NOME || "-"; },
         conselho(item) { return `${item.ATUALIZACAO_CLINICA_CONSELHO || "-"} ${item.ATUALIZACAO_CLINICA_NUMERO_CONSELHO || "-"}`; },
         simNao(valor) { return Number(valor) === 1 ? "Sim" : "Não"; },
-        regraNumeroConselho(valor) {
-            return /^\d{6}$/.test(String(valor || "")) || "Informe exatamente 6 dígitos.";
-        },
         formatarDataHora(data) { return data ? moment(data).format("DD/MM/YYYY HH:mm:ss") : "-"; },
     },
 };

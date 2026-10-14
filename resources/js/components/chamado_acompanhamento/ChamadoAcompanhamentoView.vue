@@ -3,7 +3,7 @@
         <v-card class="elevation-2 rounded-lg">
             <v-toolbar flat dense class="elevation-1">
                 <v-icon class="mr-2" color="primary">mdi-clipboard-list-outline</v-icon>
-                <v-toolbar-title class="font-weight-bold">Acompanhamento de Chamados</v-toolbar-title>
+                <v-toolbar-title class="font-weight-bold">Acompanhar Chamado</v-toolbar-title>
                 <v-spacer></v-spacer>
             </v-toolbar>
 

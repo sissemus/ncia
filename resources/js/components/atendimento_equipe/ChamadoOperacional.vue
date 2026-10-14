@@ -2,7 +2,8 @@
     <v-card outlined class="mb-3">
         <v-card-title class="py-2 subtitle-2 blue-grey lighten-5">
             <span class="font-weight-bold">Chamado Nº {{ chamado.CHAMADO_ID }}</span>
-            <v-chip x-small dark class="ml-3" :color="corPrioridade">{{ prioridade }}</v-chip>
+            <v-chip x-small outlined color="primary" class="ml-3 font-weight-bold">{{ tipoChamado }}</v-chip>
+            <v-chip x-small dark class="ml-2" :color="corPrioridade">{{ prioridade }}</v-chip>
             <v-chip x-small dark class="ml-2" :color="corSituacao">{{ situacao }}</v-chip>
             <v-spacer></v-spacer>
             <v-btn color="error" outlined small tile class="mr-2"
@@ -47,6 +48,7 @@ export default {
     props: {
         chamado: { type: Object, required: true },
         prioridades: { type: Array, default: () => [] },
+        tiposChamado: { type: Array, default: () => [] },
         processandoId: { default: null },
         podeAvancar: { type: Boolean, default: false },
     },
@@ -55,6 +57,10 @@ export default {
             const paciente = this.chamado.paciente || {};
             return paciente.PACIENTE_NOME || (Number(paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1
                 ? "PACIENTE EM VULNERABILIDADE SOCIAL" : "-");
+        },
+        tipoChamado() {
+            const item = (this.tiposChamado || []).find(t => Number(t.COLUNA_ID) === Number(this.chamado.TG_CHAMADO_ID));
+            return item ? item.DESCRICAO : "-";
         },
         prioridade() {
             const item = this.prioridades.find(p => Number(p.COLUNA_ID) === Number(this.chamado.TG_PRIORIDADE_ID));

@@ -28,7 +28,7 @@
                         Nenhum chamado está em atendimento no momento.
                     </v-alert>
                     <chamado-operacional v-for="chamado in atendimentos" :key="`atendimento-${chamado.CHAMADO_ID}`"
-                        :chamado="chamado" :prioridades="prioridades" :processando-id="processandoId"
+                        :chamado="chamado" :prioridades="prioridades" :tipos-chamado="listaTiposChamado" :processando-id="processandoId"
                         :pode-avancar="true" @avancar="confirmarAvanco" @cancelar="confirmarCancelamento" />
 
                     <v-divider class="my-5"></v-divider>
@@ -37,7 +37,7 @@
                         Nenhum chamado aguardando recebimento.
                     </v-alert>
                     <chamado-operacional v-for="chamado in fila" :key="`fila-${chamado.CHAMADO_ID}`"
-                        :chamado="chamado" :prioridades="prioridades" :processando-id="processandoId"
+                        :chamado="chamado" :prioridades="prioridades" :tipos-chamado="listaTiposChamado" :processando-id="processandoId"
                         :pode-avancar="podeReceber(chamado)" @avancar="confirmarAvanco" @cancelar="confirmarCancelamento" />
                 </template>
             </v-card-text>
@@ -55,7 +55,11 @@ import { mapGetters } from "vuex";
 export default {
     name: "AtendimentoEquipeView",
     components: { TratarErroAjax, ChamadoOperacional },
-    props: { prioridades: { type: Array, default: () => [] } },
+    props: {
+        prioridades: { type: Array, default: () => [] },
+        tiposChamado: { type: Array, default: () => [] },
+        tipos_chamado: { type: Array, default: () => [] },
+    },
     data() {
         return {
             msgId: "msgAtendimentoEquipe",
@@ -67,6 +71,11 @@ export default {
     },
     computed: {
         ...mapGetters({ baseUrl: "getBaseUrl" }),
+        listaTiposChamado() {
+            return (this.tiposChamado && this.tiposChamado.length)
+                ? this.tiposChamado
+                : (this.tipos_chamado || []);
+        },
         atendimentos() {
             return this.chamados.filter(item => this.situacaoId(item) === SituacaoChamadoEnum.EM_ATENDIMENTO);
         },

@@ -31,6 +31,7 @@
                     <thead>
                         <tr>
                             <th>Nº Chamado</th>
+                            <th>Tipo de Chamado</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
                             <th>Unidade Solicitante</th>
@@ -42,6 +43,7 @@
                     <tbody>
                         <tr v-for="chamado in chamadosAtuais" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
+                            <td>{{ tipoChamado(chamado) }}</td>
                             <td>
                                 <span :class="{ 'font-weight-bold': pacienteVulneravelSemNome(chamado) }">
                                     {{ nomePaciente(chamado) }}
@@ -108,6 +110,7 @@
                     <thead>
                         <tr>
                             <th>Nº Chamado</th>
+                            <th>Tipo de Chamado</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
                             <th>Tempo em aberto</th>
@@ -118,6 +121,7 @@
                     <tbody>
                         <tr v-for="chamado in chamadosExpirados" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
+                            <td>{{ tipoChamado(chamado) }}</td>
                             <td>
                                 <span :class="{ 'font-weight-bold primary--text': pacienteVulneravelSemNome(chamado) }">
                                     {{ nomePaciente(chamado) }}
@@ -163,6 +167,8 @@ export default {
     props: {
         usuario_logado: { type: Object },
         prioridades: { type: Array, default: () => [] },
+        tiposChamado: { type: Array, default: () => [] },
+        tipos_chamado: { type: Array, default: () => [] },
         alerta_analise: { type: Object },
     },
     data() {
@@ -188,6 +194,11 @@ export default {
     },
     computed: {
         ...mapGetters({ baseUrl: "getBaseUrl" }),
+        listaTiposChamado() {
+            return (this.tiposChamado && this.tiposChamado.length)
+                ? this.tiposChamado
+                : (this.tipos_chamado || []);
+        },
         perfilIds() {
             const perfis = this.usuario_logado && this.usuario_logado.usuarioPerfis
                 ? this.usuario_logado.usuarioPerfis : [];
@@ -434,6 +445,10 @@ export default {
             const dias = Math.floor(horas / 24);
             const horasRestantes = horas % 24;
             return dias ? `${dias}d ${horasRestantes}h` : `${horas}h`;
+        },
+        tipoChamado(chamado) {
+            if (!chamado || !chamado.TG_CHAMADO_ID) return "-";
+            return this.descricao(this.listaTiposChamado, chamado.TG_CHAMADO_ID);
         },
         descricao(lista, id) {
             const item = (lista || []).find(x => Number(x.COLUNA_ID) === Number(id));

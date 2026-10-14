@@ -48,7 +48,7 @@ class CompartilharVariaveis {
 
         try {
             DB::table('APLICACAO')
-                ->where('APLICACAO_URL', 'chamado_acompanhamento')
+                ->whereIn('APLICACAO_URL', ['chamado_acompanhamento', 'chamado_acompanhamento/view'])
                 ->where('APLICACAO_NOME', '!=', 'Acompanhar Chamado')
                 ->update(['APLICACAO_NOME' => 'Acompanhar Chamado']);
         } catch (\Throwable $th) {
@@ -59,14 +59,14 @@ class CompartilharVariaveis {
                 $aplicacao['children'] = array_values(array_filter(
                     $aplicacao['children'],
                     function ($child) use ($podeAnalisar, $podeAcompanhar, $podeAtenderEquipe) {
-                        if ($child['APLICACAO_URL'] === 'chamado_analisar') return $podeAnalisar;
-                        if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') return $podeAcompanhar;
-                        if ($child['APLICACAO_URL'] === 'atendimento_equipe') return $podeAtenderEquipe;
+                        if ($child['APLICACAO_URL'] === 'chamado_analisar' || $child['APLICACAO_URL'] === 'chamado_analisar/view') return $podeAnalisar;
+                        if ($child['APLICACAO_URL'] === 'chamado_acompanhamento' || $child['APLICACAO_URL'] === 'chamado_acompanhamento/view') return $podeAcompanhar;
+                        if ($child['APLICACAO_URL'] === 'atendimento_equipe' || $child['APLICACAO_URL'] === 'atendimento_equipe/view') return $podeAtenderEquipe;
                         return true;
                     }
                 ));
                 foreach ($aplicacao['children'] as &$child) {
-                    if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') {
+                    if ($child['APLICACAO_URL'] === 'chamado_acompanhamento' || $child['APLICACAO_URL'] === 'chamado_acompanhamento/view') {
                         $child['APLICACAO_NOME'] = 'Acompanhar Chamado';
                     }
                 }

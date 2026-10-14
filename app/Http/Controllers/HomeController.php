@@ -36,8 +36,9 @@ class HomeController extends Controller
             return redirect('/atendimento_equipe');
         }
         $prioridades = \App\Models\TabelaGenerica::prioridadePaciente();
+        $tiposChamado = \App\Models\TabelaGenerica::tipoChamado();
 
-        return view('home', compact('usuarioLogado', 'prioridades'));
+        return view('home', compact('usuarioLogado', 'prioridades', 'tiposChamado'));
     }
 
     public function chamadosAbertos(Request $request)

@@ -28,6 +28,7 @@ class AtendimentoEquipeController extends Controller
 
         return view('atendimento_equipe.atendimento_equipe_view', [
             'prioridades' => TabelaGenerica::prioridadePaciente(),
+            'tiposChamado' => TabelaGenerica::tipoChamado(),
         ]);
     }
 

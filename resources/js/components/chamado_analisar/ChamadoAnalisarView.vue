@@ -14,6 +14,9 @@
                 <v-alert prominent outlined :type="tipoSituacao" class="mb-4">
                     <div class="status-content">
                         <span>Chamado Nº {{ chamado.CHAMADO_ID }}</span>
+                        <v-chip small outlined color="primary" class="font-weight-medium">
+                            {{ tipoChamadoDescricao }}
+                        </v-chip>
                         <v-chip small dark :color="corSituacao">{{ situacaoAtual }}</v-chip>
                     </div>
                 </v-alert>
@@ -200,6 +203,11 @@ export default {
         statusId() {
             const situacao = this.chamado && (this.chamado.situacaoAtual || this.chamado.situacao_atual);
             return situacao ? Number(situacao.TG_SITUACAO_ID) : null;
+        },
+        tipoChamadoDescricao() {
+            return this.chamado && this.chamado.TG_CHAMADO_ID
+                ? this.descricao(this.tiposChamado, this.chamado.TG_CHAMADO_ID)
+                : '-';
         },
         situacaoAtual() { return this.descricao(this.situacoesChamado, this.statusId); },
         chamadoEmAnalise() { return this.statusId === SituacaoChamadoEnum.EM_ANALISE; },

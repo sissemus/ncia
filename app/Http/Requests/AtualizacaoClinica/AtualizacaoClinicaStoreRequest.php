@@ -40,10 +40,10 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
             "ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL" => ["required", "string", "max:20"],
             "ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" => ["required", "string", "max:20"],
             "ATUALIZACAO_CLINICA_SATURACAO_O2" => ["required", "string", "max:20"],
-            "ATUALIZACAO_CLINICA_ESCALA_GLASGOW" => ["nullable", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_ESCALA_GLASGOW" => ["required", "string", "max:20"],
             "ATUALIZACAO_CLINICA_PROFISSIONAL" => ["required", "string", "max:150"],
             "ATUALIZACAO_CLINICA_CONSELHO" => ["required", Rule::in(["CRM", "COREN"])],
-            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => ["required", "regex:/^[0-9]{6}$/"],
+            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => ["required", "string", "max:50"],
             "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => ["required", "string"],
         ];
     }
@@ -59,6 +59,7 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
             "ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL" => "<b>PRESSÃO ARTERIAL</b>",
             "ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" => "<b>FREQUÊNCIA CARDÍACA</b>",
             "ATUALIZACAO_CLINICA_SATURACAO_O2" => "<b>SATURAÇÃO O2</b>",
+            "ATUALIZACAO_CLINICA_ESCALA_GLASGOW" => "<b>ESCALA GLASGOW</b>",
             "ATUALIZACAO_CLINICA_PROFISSIONAL" => "<b>PROFISSIONAL RESPONSÁVEL</b>",
             "ATUALIZACAO_CLINICA_CONSELHO" => "<b>CONSELHO</b>",
             "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => "<b>NÚMERO DO CONSELHO</b>",
