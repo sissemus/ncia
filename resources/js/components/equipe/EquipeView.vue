@@ -31,62 +31,74 @@
             <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
                 <template v-slot:default>
                     <tbody>
-<<<<<<< Updated upstream
                         <tr>
                             <td class="text-left">Id</td>
                             <td class="text-left">Veículo</td>
                             <td colspan="4">&nbsp;</td>
                         </tr>
-                        <tr v-for="(veiculo, indexVeiculo) in veiculos">
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ String(veiculo.VEICULO_ID).padStart(5, '0') }}</td>
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td v-if="(veiculo.equipes ? veiculo.equipes.length > 0 : 0)">
-                                <tr>
-                                    <td style="font-weight: bold;">Equipe(s)</td>
-                                    <td style="text-align: center;font-weight: bold;">Data</td>
-                                    <td style="text-align: center;font-weight: bold;">Turno</td>
-                                    <td style="text-align: center;font-weight: bold;">Ação</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4">
-                                        <hr>
-                                    </td>
-                                </tr>
-                                <tr v-for="(eqp, idxEqp) in veiculo.equipes">
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width: 78%;padding: 0px 10px 0px 0px;">
-                                        <span v-for="(prf, idxPrf) in eqp.equipeProfissional">
-                                            {{prf.profissional.PROFISSIONAL_NOME}} - {{ "(" + prf.profissional.tipoProfissional.DESCRICAO + ")" }}
-                                            <br>
-                                        </span>
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 10%;">
-                                        {{formatarData(veiculo.equipes[idxEqp].EQUIPE_DATA)}}
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 7%;">
-                                        {{veiculo.equipes[idxEqp].EQUIPE_TURNO}}
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 5%;">
-                                        <v-btn icon
-                                            :loading="processandoEquipeId === eqp.EQUIPE_ID"
-                                            :disabled="processandoEquipeId !== null"
-                                            @click="deletar(eqp, veiculo)"
-                                            title="Remover equipe">
-                                            <v-icon>mdi-delete</v-icon>
-                                        </v-btn>
-                                    </td>
-=======
-                        <tr v-for="veiculo in veiculos">
-                            <td>{{ veiculo.VEICULO_ID }}</td>
-                            <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td>
-                                <tr v-for="equipe in veiculo.equipes">
-                                    <td>{{ equipe && equipe.equipeProfissional && equipe.equipeProfissional.profissional ? equipe.equipeProfissional.profissional.PROFISSIONAL_NOME : '' }} - 
-                                    {{ equipe && equipe.equipeProfissional && equipe.equipeProfissional.profissional && equipe.equipeProfissional.profissional.tipoProfissional ? equipe.equipeProfissional.profissional.tipoProfissional.DESCRICAO : '' }}</td>
->>>>>>> Stashed changes
-                                </tr>
+
+                        <tr v-for="(veiculo, indexVeiculo) in veiculos" :key="veiculo.VEICULO_ID">
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ String(veiculo.VEICULO_ID).padStart(5, '0') }}
                             </td>
-                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">&nbsp;</td>
+
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ veiculo.VEICULO_IDENTIFICACAO }}
+                            </td>
+
+                            <td v-if="veiculo.equipes && veiculo.equipes.length > 0">
+                                <table width="100%">
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">Equipe(s)</td>
+                                            <td style="text-align: center;font-weight: bold;">Data</td>
+                                            <td style="text-align: center;font-weight: bold;">Turno</td>
+                                            <td style="text-align: center;font-weight: bold;">Ação</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="4"><hr></td>
+                                        </tr>
+
+                                        <tr v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:78%;padding:0 10px 0 0;">
+                                                <span v-for="(prf, idxPrf) in eqp.equipeProfissional" :key="idxPrf">
+                                                    {{ prf.profissional.PROFISSIONAL_NOME }}
+                                                    - ({{ prf.profissional.tipoProfissional.DESCRICAO }})
+                                                    <br>
+                                                </span>
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
+                                                {{ formatarData(eqp.EQUIPE_DATA) }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:7%;">
+                                                {{ eqp.EQUIPE_TURNO }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:5%;">
+                                                <v-btn
+                                                    icon
+                                                    :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                                    :disabled="processandoEquipeId !== null"
+                                                    @click="deletar(eqp, veiculo)"
+                                                    title="Remover equipe"
+                                                >
+                                                    <v-icon>mdi-delete</v-icon>
+                                                </v-btn>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                &nbsp;
+                            </td>
+
                         </tr>
+            
                     </tbody>
                 </template>
             </v-simple-table>
@@ -220,7 +232,6 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
-<<<<<<< Updated upstream
         deletar(equipe, veiculo) {
             if (!equipe || !equipe.EQUIPE_ID) {
                 Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
@@ -230,14 +241,7 @@ export default {
             let params = {
                 EQUIPE_ID: equipe.EQUIPE_ID
             }
-=======
-        deletar(veiculo) {
 
-            let params = {
-                VEICULO_ID: veiculo.VEICULO_ID,
-                EQUIPE_ATIVO: veiculo.equipes[0].EQUIPE_ATIVO
-            };
->>>>>>> Stashed changes
 
             Swal.fire({
                 icon: 'warning',
