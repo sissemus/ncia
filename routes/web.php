@@ -41,7 +41,33 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
+// // --- ROTA PARA VERIFICAR SE É O PRIMEIRO ACESSO ---
+// Route::middleware(['auth'])->group(function () {
+//     // Exibe a blade usuario.alteracaosenha
+//     Route::get('/alterar-senha', [UsuarioController::class, 'alterarSenhaView'])
+//         ->name('alterarSenhaView');
+//     // Processa a nova senha
+//     Route::post('/alterar-senha', [UsuarioController::class, 'alterarSenha'])
+//         ->name('alterarSenha');
+// });
+
+Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->group(function () {
+    // --- ROTAS DE SENHA (Ficam livres do 'primeiro.acesso' para não dar loop) ---
+    Route::prefix('usuario')->group(function () {
+        Route::get('/', [UsuarioController::class, "view"]);
+        Route::get('view', [UsuarioController::class, "view"])->name("usuario.view");
+        Route::get('alteracao-senha', [UsuarioController::class, 'alteracaoSenha'])->name('alteracao-senha');
+        Route::put('alterar-senha', [UsuarioController::class, "alterarSenha"])->name("alterar-senha");
+        // Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
+        Route::post('inserir', [UsuarioController::class, "inserir"]);
+        Route::put('alterar', [UsuarioController::class, "alterar"]);
+        // Route::put('alteracao-senha', [UsuarioController::class, 'alterarSenha'])->name('alterar-senha');
+        Route::delete('deletar', [UsuarioController::class, "deletar"]);
+        Route::match(['get', 'post'], 'listar', [UsuarioController::class, "listar"]);
+        Route::post('pesquisar', [UsuarioController::class, "pesquisar"]);
+        Route::get('buscar/{id}', [UsuarioController::class, "buscar"]);
+    });
+
     Route::prefix('home')->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
         Route::get('chamados-abertos', [HomeController::class, 'chamadosAbertos']);
@@ -74,19 +100,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete('delete', [PerfilController::class, "delete"]);
         Route::get('list', [PerfilController::class, "list"]);
         Route::get('search', [PerfilController::class, "search"]);
-    });
-
-    Route::prefix('usuario')->group(function () {
-        Route::get('/', [UsuarioController::class, "view"]);
-        Route::get('view', [UsuarioController::class, "view"])->name("usuario.view");
-        Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
-        Route::post('inserir', [UsuarioController::class, "inserir"]);
-        Route::put('alterar', [UsuarioController::class, "alterar"]);
-        Route::put('alterar_senha', [UsuarioController::class, "alterarSenha"])->name("usuario.alterar_senha");
-        Route::delete('deletar', [UsuarioController::class, "deletar"]);
-        Route::match(['get', 'post'], 'listar', [UsuarioController::class, "listar"]);
-        Route::post('pesquisar', [UsuarioController::class, "pesquisar"]);
-        Route::get('buscar/{id}', [UsuarioController::class, "buscar"]);
     });
 
     Route::prefix('usuario_perfil')->group(function () {
