@@ -51,7 +51,8 @@ class Veiculo extends Model
     public function equipes()
     {
         return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
-            ->where('EQUIPE_DATA', now()->format('Y-m-d'));
+            ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+            ->where('EQUIPE_ATIVO', '=', 1);
     }
 
     public function vinculoAtivo()
@@ -65,11 +66,18 @@ class Veiculo extends Model
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
+<<<<<<< Updated upstream
             "equipe",
             "equipe.equipeProfissional.profissional",
             "equipe.equipeProfissional.profissional.tipoProfissional",
             "vinculoAtivo",
             "vinculoAtivo.unidade",
+=======
+            "equipes",
+            "equipes.equipeProfissional",
+            "equipes.equipeProfissional.profissional",
+            "equipes.equipeProfissional.profissional.tipoProfissional"
+>>>>>>> Stashed changes
         ];
     }
 

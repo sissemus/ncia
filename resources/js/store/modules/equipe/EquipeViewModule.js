@@ -10,10 +10,17 @@ export default {
         equipePesquisa: {
             EQUIPE_ID: null,
             VEICULO_ID: null,
+<<<<<<< Updated upstream
             EQUIPE_ATIVO: null,
             EQUIPE_DATA: null,
             EQUIPE_TURNO: null,
         },
+=======
+            EQUIPE_DATA: null,
+            EQUIPE_TURNO: null,
+            EQUIPE_ATIVO: null,
+        }
+>>>>>>> Stashed changes
     },
     getters: {
         getEquipePesquisa(state) {
@@ -34,9 +41,15 @@ export default {
                 state.equipePesquisa = {
                     EQUIPE_ID: null,
                     VEICULO_ID: null,
+<<<<<<< Updated upstream
                     EQUIPE_ATIVO: null,
                     EQUIPE_DATA: null,
                     EQUIPE_TURNO: null,
+=======
+                    EQUIPE_DATA: null,
+                    EQUIPE_TURNO: null,
+                    EQUIPE_ATIVO: null,
+>>>>>>> Stashed changes
                 }
             }
         },

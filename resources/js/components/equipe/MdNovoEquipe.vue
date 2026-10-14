@@ -92,21 +92,32 @@
                         <v-row>
                             <v-col cols="11">
                                 <v-select
+<<<<<<< Updated upstream
                                     label="Profissionais Selecionados*"
                                     :items="profissionalEspecifico"
                                     item-value="value"
                                     item-text="text"
+=======
+                                    label="Profissional*"
+                                    :items="profissionais"
+                                    item-value="PROFISSIONAL_ID"
+                                    item-text="PROFISSIONAL_NOME"
+>>>>>>> Stashed changes
                                     v-model="PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
                             <v-col cols="1" style="text-align: right;">
-                                <v-btn title="Adicionar profissional" fab small elevation="3" color="success" dark @click="novoProfissional">
+                                <v-btn title="Adicionar profissional" fab small elevation="3" color="success" dark @click="novaEquipeProfissional">
                                     <v-icon>mdi-plus</v-icon>
                                 </v-btn>
                             </v-col>
                         </v-row>
                     </v-card-text>
+<<<<<<< Updated upstream
                         <v-simple-table dense v-show="equipeProfissionais.length" class="mb-0">
+=======
+                        <v-simple-table dense v-show="equipes.length" class="mb-0">
+>>>>>>> Stashed changes
                             <template v-slot:default>
                                 <thead>
                                     <tr>
@@ -117,6 +128,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+<<<<<<< Updated upstream
                                     <tr v-for="row in equipeProfissionais" :key="equipe['EQUIPE_ID']">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
@@ -125,10 +137,20 @@
                                         </td>
                                         <td>
                                             {{ row['PROFISSIONAL_TIPO'] }}
+=======
+                                    <tr v-for="row in equipes" :key="row['EQUIPE_ID']">
+                                        <td>{{ row.equipeProfissional && row['EQUIPE_PROFISSIONAL_ID'] }}</td>
+
+                                        <td>
+                                            {{ row.profissional ? row.profissional.PROFISSIONAL_NOME : ''}}
+                                        </td>
+                                        <td>
+                                            {{ row.profissional && row.profissional.tipoProfissional ? row.profissional.tipoProfissional.DESCRICAO : '' }}
+>>>>>>> Stashed changes
                                         </td>                            
 
                                         <td>
-                                            <v-btn icon @click="deletarProfissional(row)" title="Remover">
+                                            <v-btn icon @click="deletarEquipeProfissional(row)" title="Remover">
                                                 <v-icon>mdi-delete</v-icon>
                                             </v-btn>
                                         </td>
@@ -192,7 +214,7 @@ export default {
                     text: 'Não'
                 }
             ],
-
+            
             opcoesTurno: [
                 { 
                     text: 'SD', 
@@ -203,6 +225,7 @@ export default {
                     value: 'SN' 
                 }
             ],
+<<<<<<< Updated upstream
             equipeProfissionais:[],
             VEICULO_ID: null,
             EQUIPE_ID: null,
@@ -211,6 +234,10 @@ export default {
             TABELA_ID: 7,
             TG_TIPO_PROFISSIONAL_ID: null,
             COLUNA_ID: null,
+=======
+            profissionaisSelecionados:[],
+            PROFISSIONAL_ID : null,
+>>>>>>> Stashed changes
         }
     },
     
@@ -293,6 +320,17 @@ export default {
                 profissional.TG_TIPO_PROFISSIONAL_ID == this.TG_TIPO_PROFISSIONAL_ID
             );
         },
+<<<<<<< Updated upstream
+=======
+        equipes() {
+            return this.$store.getters[
+                'EquipeViewModule/getEquipes']
+                .filter(equipe => 
+                equipe.EQUIPE_ATIVO == 1
+            );
+        },
+
+>>>>>>> Stashed changes
         dataFormatada: {
             get() {
                 return this.formatarDataParaInput(
@@ -308,16 +346,16 @@ export default {
                 );
             }
         },
-        profissionalEspecifico() {
+        equipeProfissionalEspecifico() {
             // Verifica se a lista existe e não está vazia
-            if (!this.profissionais || !Array.isArray(this.profissionais)) {
+            if (!this.equipeProfissionais || !Array.isArray(this.equipeProfissionais)) {
                 return [];
             }
 
             // Transforma a lista antiga no formato que o Vuetify precisa
-            return this.profissionais.map(item => {
+            return this.equipeProfissionais.map(item => {
                 // Monta o texto unindo Nome + Descrição (se a descrição existir)
-                const descricao = item.tipoProfissional ? ` (${item.tipoProfissional.DESCRICAO})` : '';
+                const descricao = item.profissional.tipoProfissional ? ` (${item.profissional.tipoProfissional.DESCRICAO})` : '';
                 
                 return {
                     value: item.PROFISSIONAL_ID,
@@ -333,6 +371,7 @@ export default {
             this.resetarFormulario();
 
             this.showModal = false;
+            this.equipeProfissionaisSelecionados = [];
         },
         salvar() {
             this.$store.dispatch(
@@ -344,13 +383,18 @@ export default {
             //     return;
             // }
 
+<<<<<<< Updated upstream
             if (!this.equipeProfissionais) {
+=======
+            if (!this.equipeProfissionaisSelecionados) {
+>>>>>>> Stashed changes
                 return;
             }
 
             // const equipe = this.equipe
             const equipeProfissionais = this.equipeProfissionais
 
+<<<<<<< Updated upstream
             const equipe = {
                 EQUIPE_ID : this.EQUIPE_ID
                 , VEICULO_ID: this.VEICULO_ID
@@ -362,6 +406,12 @@ export default {
                         
             const dados = {
                 ...equipe
+=======
+            const equipeProfissionaisSelecionados = this.equipeProfissionaisSelecionados
+
+            const dados = {
+                ...equipeProfissionaisSelecionados
+>>>>>>> Stashed changes
                 
             };
 
@@ -413,7 +463,6 @@ export default {
                 );
             });
         },
-
         formatarDataParaInput(valor) {
             if (!valor) {
                 return '';
@@ -489,7 +538,6 @@ export default {
 
             return `${ano}-${mes}-${dia}`;
         },
-
         atualizarData(campo, data) {
             if (!this.equipe || !data) {
                 return;
@@ -512,13 +560,14 @@ export default {
             this.equipe[campo] =
                 `${data} ${horaAtual}:00`;
         },
-        novoProfissional() {
+        novaEquipeProfissional() {
             
             const id = this.PROFISSIONAL_ID;
             // se o id estiver null
             if (id == null)
                 return '' 
 
+<<<<<<< Updated upstream
             // informações desse profissional selecionado
             const profissional = this.profissionais.find(
                 item => item.PROFISSIONAL_ID === id
@@ -527,6 +576,17 @@ export default {
             //verifica se esse profissional já foi adicionado a lista de profissionais selecionados
             const profissionalExiste = this.equipeProfissionais.find(
                 item => item.PROFISSIONAL_ID === id
+=======
+            //verifica se o  profissional já está adicionado a lista
+            if (this.equipe && this.equipeProfissionais)
+                const equipeProfissionalExiste = this.equipe.equipeProfissionais.find(
+                    item => item.PROFISSIONAL_ID === id
+                );
+
+            //verifica se esse profissional já foi adicionado a lista
+            const equipeProfissionalExiste = this.equipeProfissionaisSelecionados.find(
+                item => item.EQUIPE_PROFISSIONAL_ID === id
+>>>>>>> Stashed changes
             )
 
             if(profissionalExiste){
@@ -534,6 +594,7 @@ export default {
                 return
             }
 
+<<<<<<< Updated upstream
             //adiciona à lista, o profissional e suas características
             // this.equipeProfissionais.push(
             //     {
@@ -560,19 +621,38 @@ export default {
             
         },
         async deletarProfissional(profissional) {
+=======
+            if (equipeProfissional) {
+                this.equipeProfissionaisSelecionados.push(
+                    {
+                        EQUIPE_PROFISSIONAL_ID: equipeProfissional.EQUIPE_PROFISSIONAL_ID,
+                        equipeProfissional: equipeProfissional,
+                    }
+                );
+            }
+      
+            // console.log(this.profissionaisSelecionados)
+        },
+        deletarEquipeProfissional(equipeProfissional) {
+>>>>>>> Stashed changes
 
-            let id = profissional.PROFISSIONAL_ID
+            let id = equipeProfissional.EQUIPE_PROFISSIONAL_ID
 
             const result = await Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
+<<<<<<< Updated upstream
                 text: `Deseja excluir o profissional ${profissional.PROFISSIONAL_NOME} ?`,
+=======
+                text: `Deseja excluir o profissional ${equipeProfissional.profissional.PROFISSIONAL_NOME} ?`,
+>>>>>>> Stashed changes
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
                 denyButtonText: 'Cancelar',
             })
 
+<<<<<<< Updated upstream
             // Só remove se o usuário clicou em Confirmar
             if (result.isConfirmed) {
                 const index = this.equipeProfissionais.findIndex(
@@ -582,6 +662,14 @@ export default {
                 if (index !== -1) {
                     this.equipeProfissionais.splice(index, 1)
                 }
+=======
+            const index = this.equipe.equipeProfissionaisSelecionados.findIndex(
+            item => item.EQUIPE_PROFISSIONAL_ID == id
+            );
+
+            if (index !== -1) {
+                this.equipe.equipeProfissionaisSelecionados.splice(index, 1);
+>>>>>>> Stashed changes
             }
         },
         resetarFormulario() {

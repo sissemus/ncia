@@ -31,6 +31,7 @@
             <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
                 <template v-slot:default>
                     <tbody>
+<<<<<<< Updated upstream
                         <tr>
                             <td class="text-left">Id</td>
                             <td class="text-left">Veículo</td>
@@ -73,6 +74,15 @@
                                             <v-icon>mdi-delete</v-icon>
                                         </v-btn>
                                     </td>
+=======
+                        <tr v-for="veiculo in veiculos">
+                            <td>{{ veiculo.VEICULO_ID }}</td>
+                            <td>{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
+                            <td>
+                                <tr v-for="equipe in veiculo.equipes">
+                                    <td>{{ equipe && equipe.equipeProfissional && equipe.equipeProfissional.profissional ? equipe.equipeProfissional.profissional.PROFISSIONAL_NOME : '' }} - 
+                                    {{ equipe && equipe.equipeProfissional && equipe.equipeProfissional.profissional && equipe.equipeProfissional.profissional.tipoProfissional ? equipe.equipeProfissional.profissional.tipoProfissional.DESCRICAO : '' }}</td>
+>>>>>>> Stashed changes
                                 </tr>
                             </td>
                             <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">&nbsp;</td>
@@ -210,6 +220,7 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
+<<<<<<< Updated upstream
         deletar(equipe, veiculo) {
             if (!equipe || !equipe.EQUIPE_ID) {
                 Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
@@ -219,6 +230,14 @@ export default {
             let params = {
                 EQUIPE_ID: equipe.EQUIPE_ID
             }
+=======
+        deletar(veiculo) {
+
+            let params = {
+                VEICULO_ID: veiculo.VEICULO_ID,
+                EQUIPE_ATIVO: veiculo.equipes[0].EQUIPE_ATIVO
+            };
+>>>>>>> Stashed changes
 
             Swal.fire({
                 icon: 'warning',

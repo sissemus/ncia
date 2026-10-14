@@ -170,8 +170,50 @@ class EquipeController extends Controller
 
     public function deletar(Request $request)
     {
+<<<<<<< Updated upstream
         $request->validate([
             'EQUIPE_ID' => 'required|integer|exists:EQUIPE,EQUIPE_ID',
+=======
+        $EQUIPE_ATIVO = isset($request['EQUIPE_ATIVO']) ? $request['EQUIPE_ATIVO'] : null;
+        $VEICULO_ID = isset($request['VEICULO_ID']) ? $request['VEICULO_ID'] : null;
+
+        //VERIFICAR SE A EQUIPE JÁ FOI UTILIZADA
+
+        Equipe::
+            when($EQUIPE_ATIVO, 
+                function($q, $c) {
+                    return $q->where('EQUIPE_ATIVO', '=', $c);
+                }
+            )
+            ->where('VEICULO_ID', $VEICULO_ID)
+            ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+            ->delete();
+
+        // $estaEmUso = ChamadoEquipe::where(
+        //     'VEICULO_ID',
+        //     $equipe->VEICULO_ID
+        // )->exists();
+
+        // if ($estaEmUso) {
+        //     // A equipe está vinculada a um chamado:
+        //     // apenas desativa
+        //     $equipe->EQUIPE_ATIVO = 0;
+        //     $equipe->save();
+
+        //     return response()->json([
+        //         'sucesso' => true,
+        //         'mensagem' => 'A equipe está em uso e foi desativada.',
+        //         'dados' => $equipe
+        //     ]);
+        // }
+
+        // Não está vinculada a nenhum chamado:
+        // exclui definitivamente
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Equipe excluída com sucesso.'
+>>>>>>> Stashed changes
         ]);
 
         return DB::transaction(function () use ($request) {

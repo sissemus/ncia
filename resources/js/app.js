@@ -49,6 +49,7 @@ Vue.component('atendimento-equipe-view', require('./components/atendimento_equip
 Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);
 Vue.component('chamado-view', require('./components/chamado/ChamadoView.vue').default);
 Vue.component('equipe-view', require('./components/equipe/EquipeView.vue').default);
+// Vue.component('equipe-profissional-view', require('./components/equipeProfissional/EquipeProfissionalView.vue').default);
 
 
 /**

@@ -19,8 +19,11 @@ use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\EquipeProfissionalController;
+<<<<<<< Updated upstream
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RelatorioController;
+=======
+>>>>>>> Stashed changes
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -281,7 +284,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::post("pesquisar", [EquipeProfissionalController::class, "pesquisar"]);
         Route::get("buscar/{id}", [EquipeProfissionalController::class, "buscar"]);
         Route::get('search', [EquipeProfissionalController::class, 'search']);
+<<<<<<< Updated upstream
         Route::get('searchNUsado', [EquipeProfissionalController::class, 'searchNUsado']);
+=======
+>>>>>>> Stashed changes
     });
     
 });
