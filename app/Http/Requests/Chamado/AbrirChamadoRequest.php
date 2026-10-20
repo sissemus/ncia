@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Chamado;
 
 use App\MyLibs\RTG;
+use App\Services\TipoChamadoService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -72,6 +73,15 @@ class AbrirChamadoRequest extends FormRequest
 
             "CHAMADO_OBSERVACAO" => ["nullable", "string"],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->TG_CHAMADO_ID && TipoChamadoService::retorno($this->TG_CHAMADO_ID)) {
+                $validator->errors()->add('TG_CHAMADO_ID', 'Use a consulta de chamado conclu?do para abrir um retorno.');
+            }
+        });
     }
 
     public function attributes()

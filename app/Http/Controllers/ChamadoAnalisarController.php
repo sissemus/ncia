@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chamado;
+use App\Models\ChamadoSituacao;
 use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Veiculo;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\MyLibs\RTG;
+use App\Services\TipoChamadoService;
 use App\Services\ChamadoFluxoService;
 use App\Services\EquipeAssistencialService;
 use Carbon\Carbon;
@@ -186,6 +189,49 @@ class ChamadoAnalisarController extends Controller
         });
     }
 
+    public function alterarTipo(Request $request)
+    {
+        $this->autorizarAnalise();
+        $request->validate([
+            'CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID',
+            'TG_CHAMADO_ID' => [
+                'required', 'integer',
+                \Illuminate\Validation\Rule::exists('TABELA_GENERICA', 'COLUNA_ID')
+                    ->where('TABELA_ID', RTG::TIPO_CHAMADO)->where('ATIVO', 1),
+            ],
+        ]);
+        return DB::transaction(function () use ($request) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
+            $this->fluxo->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ANALISE]);
+            $viagem = $chamado->viagemAtual()->lockForUpdate()->firstOrFail();
+            $novoTipo = (int) $request->TG_CHAMADO_ID;
+            abort_if(TipoChamadoService::retorno($novoTipo) && !$viagem->RETORNO,
+                422, 'Retorno exige uma ida concluída e deve ser aberto pela consulta.');
+            if ((int) $chamado->TG_CHAMADO_ID !== $novoTipo) {
+                $anterior = $chamado->TG_CHAMADO_ID;
+                $tipos = TabelaGenerica::tipoChamado()->keyBy('COLUNA_ID');
+                $descricaoAnterior = $tipos->get($anterior)->DESCRICAO ?? (string) $anterior;
+                $descricaoNova = $tipos->get($novoTipo)->DESCRICAO ?? (string) $novoTipo;
+                $chamado->TG_CHAMADO_ID = $novoTipo;
+                $chamado->save();
+                $viagem->TG_CHAMADO_ID = $novoTipo;
+                $dados = $viagem->DADOS;
+                $dados['TG_CHAMADO_ID'] = $novoTipo;
+                $viagem->DADOS = $dados;
+                $viagem->save();
+                ChamadoSituacao::create([
+                    'CHAMADO_ID' => $chamado->CHAMADO_ID,
+                    'TG_SITUACAO_ID' => SituacaoChamadoEnum::EM_ANALISE,
+                    'CHAMADO_SITUACAO_DATA' => Carbon::now(),
+                    'CHAMADO_SITUACAO_OBSERVACAO' => 'Tipo de chamado alterado pela Regulação CIA de '
+                        . $descricaoAnterior . ' para ' . $descricaoNova . '.',
+                    'USUARIO_ID' => Auth::id(),
+                ]);
+            }
+            return response(['cod' => 1, 'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)]);
+        });
+    }
+
     public function encaminhar(Request $request)
     {
         $this->autorizarAnalise();
@@ -272,6 +318,7 @@ class ChamadoAnalisarController extends Controller
             'atualizacoesClinicas.usuario',
             'etapasAtendimento.usuario',
             'situacaoAtual',
+            'viagens.situacoes.usuario', 'viagens.etapasAtendimento.usuario', 'viagemAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional',
         ])->findOrFail($id);

@@ -12,6 +12,7 @@ use App\Models\Veiculo;
 use App\MyLibs\EtapaAtendimentoEnum;
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\Services\TipoChamadoService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,7 +75,10 @@ class ChamadoFluxoService
         if ($vinculos->isEmpty()) {
             abort_unless(
                 ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
-                    ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                    ->where('CHAMADO_VIAGEM_ID', $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID'))
+                    ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::liberacao(
+                        TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                    ))
                     ->exists(),
                 422,
                 'O chamado não possui equipe e veículo vinculados.'
@@ -93,7 +97,10 @@ class ChamadoFluxoService
 
         abort_unless(
             ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
-                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                ->where('CHAMADO_VIAGEM_ID', $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID'))
+                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::liberacao(
+                    TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                ))
                 ->lockForUpdate()->exists(),
             422,
             'O atendimento somente pode ser concluído após a liberação da ambulância.'

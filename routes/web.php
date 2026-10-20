@@ -238,6 +238,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::get("/", [ChamadoController::class, "view"]);
         Route::get("view", [ChamadoController::class, "view"]);
         Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
+        Route::get("consultar-retorno/{id}", [ChamadoController::class, "consultarRetorno"]);
+        Route::post("abrir-retorno", [ChamadoController::class, "abrirRetorno"]);
         Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
 
@@ -256,6 +258,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
         Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
         Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
+        Route::post("alterar-tipo", [ChamadoAnalisarController::class, "alterarTipo"]);
         Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
         Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
         Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);

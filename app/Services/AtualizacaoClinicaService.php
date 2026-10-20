@@ -52,6 +52,13 @@ class AtualizacaoClinicaService
 
         $chamado->TG_PRIORIDADE_ID = $dados["TG_PRIORIDADE_ID"];
         $chamado->save();
+        $viagem = $chamado->viagemAtual()->first();
+        if ($viagem) {
+            $dadosViagem = $viagem->DADOS;
+            $dadosViagem['TG_PRIORIDADE_ID'] = $chamado->TG_PRIORIDADE_ID;
+            $viagem->DADOS = $dadosViagem;
+            $viagem->save();
+        }
 
         return $atualizacao->load("usuario");
     }

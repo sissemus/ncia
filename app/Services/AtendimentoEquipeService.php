@@ -11,6 +11,7 @@ use App\Models\Veiculo;
 use App\MyLibs\EtapaAtendimentoEnum;
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\Services\TipoChamadoService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +38,7 @@ class AtendimentoEquipeService
 
         $query = Chamado::with([
             'paciente', 'unidadeSolicitante', 'unidadeDestino', 'situacaoAtual',
-            'etapasAtendimento.usuario', 'vinculosEquipe.equipe.veiculo',
+            'etapasAtendimento.usuario', 'vinculosEquipe.equipe.veiculo', 'viagemAtual',
         ])
             ->join('CHAMADO_EQUIPE as ce_fila', 'ce_fila.CHAMADO_ID', '=', 'CHAMADO.CHAMADO_ID')
             ->join('EQUIPE as e_fila', 'e_fila.EQUIPE_ID', '=', 'ce_fila.EQUIPE_ID')
@@ -109,13 +110,19 @@ class AtendimentoEquipeService
 
         return $chamados
             ->map(function ($chamado) use ($atendimentosPorVeiculo, $primeirosDaFilaPorVeiculo) {
-                $ultima = $chamado->etapasAtendimento->last();
-                $proxima = $ultima ? (int) $ultima->ATENDIMENTO_ETAPA_ID + 1 : EtapaAtendimentoEnum::RECEBIDO;
+                $viagemId = $chamado->viagemAtual ? $chamado->viagemAtual->CHAMADO_VIAGEM_ID : null;
+                $etapas = $chamado->etapasAtendimento->where('CHAMADO_VIAGEM_ID', $viagemId);
+                $ultima = $etapas->last();
+                $proxima = EtapaAtendimentoEnum::proxima(
+                    $ultima ? (int) $ultima->ATENDIMENTO_ETAPA_ID : null,
+                    TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                );
                 $chamado->setAttribute('ETAPA_ATUAL_ID', $ultima ? (int) $ultima->ATENDIMENTO_ETAPA_ID : null);
                 $chamado->setAttribute('ETAPA_ATUAL_DESCRICAO', $ultima ? $ultima->ATENDIMENTO_ETAPA_DESCRICAO : 'Aguardando recebimento');
-                $chamado->setAttribute('PROXIMA_ETAPA_ID', $proxima <= EtapaAtendimentoEnum::AMBULANCIA_LIBERADA ? $proxima : null);
-                $chamado->setAttribute('PROXIMA_ETAPA_DESCRICAO', $proxima <= EtapaAtendimentoEnum::AMBULANCIA_LIBERADA
+                $chamado->setAttribute('PROXIMA_ETAPA_ID', $proxima);
+                $chamado->setAttribute('PROXIMA_ETAPA_DESCRICAO', $proxima
                     ? EtapaAtendimentoEnum::descricao($proxima) : null);
+                $chamado->setRelation('etapasAtendimento', $etapas->values());
 
                 $veiculoId = (int) $chamado->VEICULO_FILA_ID;
                 $situacaoId = $chamado->situacaoAtual ? (int) $chamado->situacaoAtual->TG_SITUACAO_ID : null;
@@ -160,13 +167,16 @@ class AtendimentoEquipeService
 
             $equipe = Equipe::lockForUpdate()->findOrFail($vinculo->EQUIPE_ID);
             $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
+            $viagemId = $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID');
             $ultimaEtapa = ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('CHAMADO_VIAGEM_ID', $viagemId)
                 ->orderByDesc('ATENDIMENTO_ETAPA_ID')
                 ->lockForUpdate()
                 ->first();
-            $proximaEtapa = $ultimaEtapa
-                ? (int) $ultimaEtapa->ATENDIMENTO_ETAPA_ID + 1
-                : EtapaAtendimentoEnum::RECEBIDO;
+            $proximaEtapa = EtapaAtendimentoEnum::proxima(
+                $ultimaEtapa ? (int) $ultimaEtapa->ATENDIMENTO_ETAPA_ID : null,
+                TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+            );
 
             abort_unless(in_array($proximaEtapa, EtapaAtendimentoEnum::values(), true), 422, 'Todas as etapas já foram registradas.');
             abort_unless($proximaEtapa === (int) $etapaEsperadaId, 422,
@@ -202,7 +212,9 @@ class AtendimentoEquipeService
                 $this->registrarSituacao($chamado, SituacaoChamadoEnum::EM_ATENDIMENTO, 'Atendimento recebido pela equipe assistencial.');
             }
 
-            if ($proximaEtapa === EtapaAtendimentoEnum::AMBULANCIA_LIBERADA) {
+            if ($proximaEtapa === EtapaAtendimentoEnum::liberacao(
+                TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+            )) {
                 $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
                 $vinculo->save();
                 $veiculo->TG_SITUACAO_VEICULO_ID = 1;
@@ -227,7 +239,10 @@ class AtendimentoEquipeService
             ], true), 422, 'O chamado não está disponível para cancelamento pela equipe assistencial.');
 
             abort_if(ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
-                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::AMBULANCIA_LIBERADA)
+                ->where('CHAMADO_VIAGEM_ID', $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID'))
+                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::liberacao(
+                    TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                ))
                 ->exists(), 422, 'O atendimento não pode ser cancelado pela equipe após a liberação da ambulância.');
 
             $vinculo = ChamadoEquipe::where('CHAMADO_ID', $chamado->CHAMADO_ID)

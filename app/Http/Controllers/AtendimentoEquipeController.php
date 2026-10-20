@@ -47,7 +47,7 @@ class AtendimentoEquipeController extends Controller
         $this->autorizarEquipeAssistencial();
         $request->validate([
             'CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID',
-            'ETAPA_ESPERADA_ID' => 'required|integer|between:1,5',
+            'ETAPA_ESPERADA_ID' => 'required|integer|between:1,9',
         ]);
 
         $resultado = $this->atendimento->avancar(

@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PertenceAViagem;
 use App\MyLibs\RTG;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class ChamadoEquipe extends Model
 {
+    use PertenceAViagem;
     protected $table = "CHAMADO_EQUIPE";
     protected $primaryKey = "CHAMADO_EQUIPE_ID";
     public $timestamps = false;
 
     protected $fillable = [
         "CHAMADO_ID",
+        "CHAMADO_VIAGEM_ID",
         "EQUIPE_ID",
         "CHAMADO_EQUIPE_ATIVO",
     ];
@@ -21,6 +24,7 @@ class ChamadoEquipe extends Model
     protected $casts = [
         "CHAMADO_EQUIPE_ID" => "integer",
         "CHAMADO_ID" => "integer",
+        "CHAMADO_VIAGEM_ID" => "integer",
         "EQUIPE_ID" => "integer",
         "CHAMADO_EQUIPE_ATIVO" => "integer",
     ];

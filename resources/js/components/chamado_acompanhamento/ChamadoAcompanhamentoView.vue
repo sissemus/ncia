@@ -152,6 +152,23 @@
                 </v-toolbar>
 
                 <v-card-text class="pt-4">
+                    <v-card v-if="viagens.length" outlined class="mb-4">
+                        <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
+                            Viagens do chamado ({{ viagensContabilizadas }} contabilizadas)
+                        </v-card-title>
+                        <v-card-text class="pt-3">
+                            <div v-for="viagem in viagens" :key="viagem.CHAMADO_VIAGEM_ID" class="mb-3">
+                                <strong>{{ viagem.RETORNO ? 'Volta' : 'Ida' }} #{{ viagem.NUMERO }}</strong>
+                                - {{ descricaoTabelaGenerica(tiposChamado, viagem.TG_CHAMADO_ID) }}
+                                - {{ descricaoTabelaGenerica(situacoesChamado, viagem.TG_SITUACAO_ID) }}
+                                <div class="caption">
+                                    {{ nomeUnidadeViagem(viagem.DADOS && viagem.DADOS.UNIDADE_ID_SOLICITANTE) }}
+                                    - {{ nomeUnidadeViagem(viagem.DADOS && viagem.DADOS.UNIDADE_ID_DESTINO) }}
+                                </div>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+
                     <!-- Informações do Paciente -->
                     <v-card outlined class="mb-4">
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
@@ -382,6 +399,7 @@
                                                 {{ descricaoTabelaGenerica(situacoesChamado, evento.item.TG_SITUACAO_ID) }}
                                             </div>
                                             <div class="caption grey--text text--darken-2">
+                                                {{ nomeViagemEvento(evento.item.CHAMADO_VIAGEM_ID) }} -
                                                 <v-icon x-small>mdi-clock-outline</v-icon>
                                                 {{ formatarDataHora(evento.data) }}
                                             </div>
@@ -678,6 +696,12 @@ export default {
                 .join(", ") || "-";
         },
 
+        viagens() {
+            return this.chamadoSelecionado && this.chamadoSelecionado.viagens || [];
+        },
+        viagensContabilizadas() {
+            return this.viagens.filter(viagem => Number(viagem.TG_SITUACAO_ID) !== 5).length;
+        },
         situacoesOrdenadas() {
             if (!this.chamadoSelecionado || !this.chamadoSelecionado.situacoes) {
                 return [];
@@ -742,6 +766,15 @@ export default {
     },
 
     methods: {
+        nomeViagemEvento(id) {
+            const viagem = this.viagens.find(item => Number(item.CHAMADO_VIAGEM_ID) === Number(id));
+            return viagem ? (viagem.RETORNO ? 'Volta' : 'Ida') + ' #' + viagem.NUMERO : 'Ida';
+        },
+        nomeUnidadeViagem(id) {
+            const unidade = (this.unidades || []).find(item => Number(item.UNIDADE_ID) === Number(id));
+            return unidade ? unidade.UNIDADE_NOME : '-';
+        },
+
         pesquisar() {
             this.pagination.current_page = 1;
             return this.$store.dispatch("ChamadoAcompanhamentoViewModule/search", this.msgId);
@@ -873,10 +906,12 @@ export default {
         },
 
         etapaAtualDescricao(chamado) {
-            const etapas = chamado && (chamado.etapasAtendimento || chamado.etapas_atendimento) || [];
+            const todas = chamado && (chamado.etapasAtendimento || chamado.etapas_atendimento) || [];
+            const viagemId = chamado && chamado.viagemAtual && chamado.viagemAtual.CHAMADO_VIAGEM_ID;
+            const etapas = todas.filter(item => Number(item.CHAMADO_VIAGEM_ID) === Number(viagemId));
             if (etapas.length) {
                 const ultima = [...etapas].sort((a, b) => Number(b.ATENDIMENTO_ETAPA_ID) - Number(a.ATENDIMENTO_ETAPA_ID))[0];
-                if (Number(ultima.ATENDIMENTO_ETAPA_ID) === 5 && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO) {
+                if ([5, 9].includes(Number(ultima.ATENDIMENTO_ETAPA_ID)) && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO) {
                     return "Ambulância liberada — aguardando encerramento";
                 }
                 return ultima.ATENDIMENTO_ETAPA_DESCRICAO || "-";

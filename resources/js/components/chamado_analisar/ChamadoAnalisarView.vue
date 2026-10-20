@@ -30,6 +30,20 @@
                 </v-alert>
 
 
+                <v-card v-if="chamadoEmAnalise" outlined class="mb-4">
+                    <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Tipo de chamado definido pela Regula??o CIA</v-card-title>
+                    <v-card-text class="pt-3">
+                        <v-row dense align="center">
+                            <v-col cols="12" md="5"><v-select label="Tipo de chamado" :items="tiposChamado"
+                                item-value="COLUNA_ID" item-text="DESCRICAO" v-model="tipoRegulacao"
+                                outlined dense hide-details /></v-col>
+                            <v-col cols="12" md="3"><v-btn color="primary" :loading="processando"
+                                :disabled="Number(tipoRegulacao) === Number(chamado.TG_CHAMADO_ID)"
+                                @click="alterarTipo">Salvar tipo</v-btn></v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+
                 <v-card outlined class="mb-4">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Paciente</v-card-title>
                     <v-card-text class="pt-3">
@@ -181,7 +195,7 @@ export default {
     data: () => ({
         msgId: 'msgChamadoAnalisar', veiculos: [], equipeSelecionada: null,
         dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false,
-        processando: false
+        tipoRegulacao: null, processando: false
     }),
     created() {
         this.$store.dispatch('DominioModule/setAtualizacaoClinicaDominios', {
@@ -219,7 +233,10 @@ export default {
             return this.chamado && (this.chamado.etapasAtendimento || this.chamado.etapas_atendimento) || [];
         },
         ambulanciaLiberada() {
-            return this.etapasAtendimento.some(etapa => Number(etapa.ATENDIMENTO_ETAPA_ID) === 5);
+            const viagemId = this.chamado && this.chamado.viagemAtual && this.chamado.viagemAtual.CHAMADO_VIAGEM_ID;
+            return this.etapasAtendimento.some(etapa =>
+                Number(etapa.CHAMADO_VIAGEM_ID) === Number(viagemId)
+                && [5, 9].includes(Number(etapa.ATENDIMENTO_ETAPA_ID)));
         },
         aguardandoEncerramento() {
             return this.chamadoEmAtendimento && this.ambulanciaLiberada;
@@ -273,8 +290,13 @@ export default {
                     chamado: response.data,
                     contexto: 'analise'
                 });
+                this.tipoRegulacao = this.chamado.TG_CHAMADO_ID;
                 if (this.chamadoEmAnalise) this.carregarVeiculos();
             }).catch(this.erro);
+        },
+        alterarTipo() {
+            if (!this.chamado || !this.tipoRegulacao) return;
+            this.executar('alterar-tipo', { TG_CHAMADO_ID: this.tipoRegulacao });
         },
         carregarVeiculos() {
             axios.get(`${this.baseUrl}/chamado_analisar/veiculos-disponiveis`)

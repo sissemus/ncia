@@ -2,24 +2,27 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PertenceAViagem;
 use App\MyLibs\EtapaAtendimentoEnum;
 use Illuminate\Database\Eloquent\Model;
 
 class ChamadoAtendimentoEtapa extends Model
 {
+    use PertenceAViagem;
     protected $table = 'CHAMADO_ATENDIMENTO_ETAPA';
     protected $primaryKey = 'CHAMADO_ATENDIMENTO_ETAPA_ID';
     public $timestamps = false;
     public static $snakeAttributes = false;
 
     protected $fillable = [
-        'CHAMADO_ID', 'CHAMADO_EQUIPE_ID', 'ATENDIMENTO_ETAPA_ID',
+        'CHAMADO_ID', 'CHAMADO_VIAGEM_ID', 'CHAMADO_EQUIPE_ID', 'ATENDIMENTO_ETAPA_ID',
         'ATENDIMENTO_ETAPA_DATA', 'USUARIO_ID',
     ];
 
     protected $casts = [
         'CHAMADO_ATENDIMENTO_ETAPA_ID' => 'integer',
         'CHAMADO_ID' => 'integer',
+        'CHAMADO_VIAGEM_ID' => 'integer',
         'CHAMADO_EQUIPE_ID' => 'integer',
         'ATENDIMENTO_ETAPA_ID' => 'integer',
         'ATENDIMENTO_ETAPA_DATA' => 'datetime',

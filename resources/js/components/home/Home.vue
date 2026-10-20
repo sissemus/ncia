@@ -32,6 +32,7 @@
                         <tr>
                             <th>Nº Chamado</th>
                             <th>Tipo de Chamado</th>
+                            <th>Viagens</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
                             <th>Unidade Solicitante</th>
@@ -44,6 +45,7 @@
                         <tr v-for="chamado in chamadosAtuais" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
                             <td>{{ tipoChamado(chamado) }}</td>
+                            <td>{{ chamado.VIAGENS_CONTABILIZADAS }}</td>
                             <td>
                                 <span :class="{ 'font-weight-bold': pacienteVulneravelSemNome(chamado) }">
                                     {{ nomePaciente(chamado) }}

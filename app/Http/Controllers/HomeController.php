@@ -59,7 +59,15 @@ class HomeController extends Controller
                 ->where('USUARIO_ID', Auth::id())
                 ->pluck('UNIDADE_ID');
 
-            $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+            $query->where(function ($unidades) use ($unidadeIds) {
+                $unidades->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds)
+                    ->orWhereExists(function ($ida) use ($unidadeIds) {
+                        $ida->select(DB::raw(1))->from('CHAMADO_VIAGEM as cv_unidade')
+                            ->whereColumn('cv_unidade.CHAMADO_ID', 'CHAMADO.CHAMADO_ID')
+                            ->where('cv_unidade.NUMERO', 1)
+                            ->whereIn('cv_unidade.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+                    });
+            });
         }
 
         return response($query->paginate($request->get('per_page', 15)));
@@ -135,6 +143,9 @@ class HomeController extends Controller
                     });
             })
             ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID')
+            ->withCount(['viagens as VIAGENS_CONTABILIZADAS' => function ($viagens) {
+                $viagens->where('TG_SITUACAO_ID', '!=', \App\MyLibs\SituacaoChamadoEnum::CANCELADO);
+            }])
             ->orderBy('CHAMADO.TG_PRIORIDADE_ID')
             ->orderBy('CHAMADO.CHAMADO_DATA')
             ->orderByRaw('(SELECT PACIENTE_NOME FROM PACIENTE WHERE PACIENTE.PACIENTE_ID = CHAMADO.PACIENTE_ID)')

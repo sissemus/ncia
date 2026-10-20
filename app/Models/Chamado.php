@@ -120,6 +120,16 @@ class Chamado extends Model
         return $this->belongsToMany(Diagnostico::class, "CHAMADO_DIAGNOSTICO", "CHAMADO_ID", "DIAGNOSTICO_ID");
     }
 
+    public function viagens()
+    {
+        return $this->hasMany(ChamadoViagem::class, 'CHAMADO_ID', 'CHAMADO_ID')->orderBy('NUMERO');
+    }
+
+    public function viagemAtual()
+    {
+        return $this->hasOne(ChamadoViagem::class, 'CHAMADO_ID', 'CHAMADO_ID')->orderByDesc('NUMERO');
+    }
+
     public function situacoes()
     {
         return $this->hasMany(ChamadoSituacao::class, "CHAMADO_ID", "CHAMADO_ID");
@@ -168,7 +178,8 @@ class Chamado extends Model
             'unidadeSolicitante',
             'unidadeDestino',
             'situacaoAtual',
-            'etapasAtendimento.usuario'
+            'etapasAtendimento.usuario',
+            'viagemAtual'
         ])
         ->join('CHAMADO_SITUACAO as cs', 'CHAMADO.CHAMADO_ID', '=', 'cs.CHAMADO_ID')
         ->whereNotExists(function ($subquery) {
@@ -183,10 +194,22 @@ class Chamado extends Model
                         });
                 });
         })
-        ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID');
+        ->select('CHAMADO.*', 'cs.TG_SITUACAO_ID')
+        ->withCount(['viagens as VIAGENS_CONTABILIZADAS' => function ($viagens) {
+            $viagens->where('TG_SITUACAO_ID', '!=', SituacaoChamadoEnum::CANCELADO);
+        }]);
 
         if ($unidadeIds !== null) {
-            $query->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+            $query->where(function ($unidades) use ($unidadeIds) {
+                $unidades->whereIn('CHAMADO.UNIDADE_ID_SOLICITANTE', $unidadeIds)
+                    ->orWhereExists(function ($ida) use ($unidadeIds) {
+                        $ida->select(\Illuminate\Support\Facades\DB::raw(1))
+                            ->from('CHAMADO_VIAGEM as cv_unidade')
+                            ->whereColumn('cv_unidade.CHAMADO_ID', 'CHAMADO.CHAMADO_ID')
+                            ->where('cv_unidade.NUMERO', 1)
+                            ->whereIn('cv_unidade.UNIDADE_ID_SOLICITANTE', $unidadeIds);
+                    });
+            });
         }
 
         if ($equipeIds !== null) {

@@ -146,6 +146,7 @@ class ChamadoAcompanhamentoController extends Controller
             'atualizacoesClinicas.usuario',
             'etapasAtendimento.usuario',
             'situacaoAtual',
+            'viagens.situacoes.usuario', 'viagens.etapasAtendimento.usuario', 'viagemAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional'
         ])->findOrFail($id);
@@ -188,7 +189,9 @@ class ChamadoAcompanhamentoController extends Controller
 
         if ($perfis->contains(PerfilEnum::UNIDADE)) {
             abort_unless(
-                in_array((int) $chamado->UNIDADE_ID_SOLICITANTE, $this->unidadesDoUsuario(), true),
+                (in_array((int) $chamado->UNIDADE_ID_SOLICITANTE, $this->unidadesDoUsuario(), true)
+                    || $chamado->viagens()->where('NUMERO', 1)
+                        ->whereIn('UNIDADE_ID_SOLICITANTE', $this->unidadesDoUsuario())->exists()),
                 403
             );
 
