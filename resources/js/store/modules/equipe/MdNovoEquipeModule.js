@@ -6,10 +6,7 @@ export default {
         equipe: {
             EQUIPE_ID: null,
             VEICULO_ID: null,
-<<<<<<< Updated upstream
-=======
             EQUIPE_DATA: null,
->>>>>>> Stashed changes
             EQUIPE_TURNO: null,
             EQUIPE_ATIVO: null,
 
@@ -34,10 +31,7 @@ export default {
                 state.equipe = {
                     EQUIPE_ID: null,
                     VEICULO_ID: null,
-<<<<<<< Updated upstream
-=======
                     EQUIPE_DATA: null,
->>>>>>> Stashed changes
                     EQUIPE_TURNO: null,
                     EQUIPE_ATIVO: null,
                 }

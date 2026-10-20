@@ -34,11 +34,8 @@ import MdNovoPacienteModule from "./modules/paciente/MdNovoPacienteModule";
 import EquipeViewModule from "./modules/equipe/EquipeViewModule";
 import MdNovoEquipeModule from "./modules/equipe/MdNovoEquipeModule";
 import ChamadoViewModule from "./modules/chamado/ChamadoViewModule";
-<<<<<<< Updated upstream
 import ChamadoAcompanhamentoViewModule from "./modules/chamado_acompanhamento/ChamadoAcompanhamentoViewModule";
 import AtualizacaoClinicaModule from "./modules/atualizacao_clinica/AtualizacaoClinicaModule";
-=======
->>>>>>> Stashed changes
 import EquipeProfissionalViewModule from "./modules/equipeProfissional/EquipeProfissionalViewModule";
 import MdNovoEquipeProfissionalModule from "./modules/equipeProfissional/MdNovoEquipeProfissionalModule";
 
@@ -97,14 +94,10 @@ export default new Vuex.Store({
         MdNovoEquipeModule,
         EquipeViewModule,
         ChamadoViewModule,
-<<<<<<< Updated upstream
         ChamadoAcompanhamentoViewModule,
         AtualizacaoClinicaModule,
         MdNovoEquipeProfissionalModule,
         EquipeProfissionalViewModule,
-=======
-        EquipeProfissionalViewModule,
         MdNovoEquipeProfissionalModule,
->>>>>>> Stashed changes
     }
 });

@@ -58,8 +58,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
     Route::prefix('usuario')->group(function () {
         Route::get('/', [UsuarioController::class, "view"]);
         Route::get('view', [UsuarioController::class, "view"])->name("usuario.view");
-        Route::get('alteracao-senha', [UsuarioController::class, 'alteracaoSenha'])->name('alteracao-senha');
-        Route::put('alterar-senha', [UsuarioController::class, "alterarSenha"])->name("alterar-senha");
+        Route::get('alteracao_senha', [UsuarioController::class, 'alteracaoSenha'])->name('alteracao-senha');
+        Route::put('alterar_senha', [UsuarioController::class, "alterarSenha"])->name("alterar-senha");
         // Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
         Route::post('inserir', [UsuarioController::class, "inserir"]);
         Route::put('alterar', [UsuarioController::class, "alterar"]);

@@ -18,8 +18,8 @@ class UsuarioController extends Controller
 
     public function alteracaoSenha()
     {
-        $usuario = Auth::user(); 
-        return view('usuario.alteracao_senha', compact('usuario'));
+        // $usuario = Auth::user(); 
+        return view('usuario.alteracao_senha');
     }
 
     public function inserir(UsuarioCreateRequest $request)

@@ -35,11 +35,8 @@ class Equipe extends Model
     }
 
     public function equipeProfissional(){
-<<<<<<< Updated upstream
         return $this->hasMany(EquipeProfissional::class, 'EQUIPE_ID', 'EQUIPE_ID');
-=======
         return $this->hasOne(EquipeProfissional::class, 'EQUIPE_ID', 'EQUIPE_ID');
->>>>>>> Stashed changes
     }
 
     public static function pesquisar($requisicao)

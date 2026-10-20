@@ -66,18 +66,10 @@ class Veiculo extends Model
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
-<<<<<<< Updated upstream
-            "equipe",
-            "equipe.equipeProfissional.profissional",
-            "equipe.equipeProfissional.profissional.tipoProfissional",
-            "vinculoAtivo",
-            "vinculoAtivo.unidade",
-=======
             "equipes",
             "equipes.equipeProfissional",
             "equipes.equipeProfissional.profissional",
             "equipes.equipeProfissional.profissional.tipoProfissional"
->>>>>>> Stashed changes
         ];
     }
 

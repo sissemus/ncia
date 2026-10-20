@@ -92,17 +92,10 @@
                         <v-row>
                             <v-col cols="11">
                                 <v-select
-<<<<<<< Updated upstream
-                                    label="Profissionais Selecionados*"
-                                    :items="profissionalEspecifico"
-                                    item-value="value"
-                                    item-text="text"
-=======
                                     label="Profissional*"
                                     :items="profissionais"
                                     item-value="PROFISSIONAL_ID"
                                     item-text="PROFISSIONAL_NOME"
->>>>>>> Stashed changes
                                     v-model="PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
@@ -113,11 +106,7 @@
                             </v-col>
                         </v-row>
                     </v-card-text>
-<<<<<<< Updated upstream
                         <v-simple-table dense v-show="equipeProfissionais.length" class="mb-0">
-=======
-                        <v-simple-table dense v-show="equipes.length" class="mb-0">
->>>>>>> Stashed changes
                             <template v-slot:default>
                                 <thead>
                                     <tr>
@@ -128,25 +117,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-<<<<<<< Updated upstream
-                                    <tr v-for="row in equipeProfissionais" :key="equipe['EQUIPE_ID']">
+                                    <tr v-for="row in equipeProfissionais" :key="row['EQUIPE_ID']">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
                                         <td>
                                             {{ row['PROFISSIONAL_NOME'] }}
                                         </td>
                                         <td>
-                                            {{ row['PROFISSIONAL_TIPO'] }}
-=======
-                                    <tr v-for="row in equipes" :key="row['EQUIPE_ID']">
-                                        <td>{{ row.equipeProfissional && row['EQUIPE_PROFISSIONAL_ID'] }}</td>
-
-                                        <td>
-                                            {{ row.profissional ? row.profissional.PROFISSIONAL_NOME : ''}}
-                                        </td>
-                                        <td>
-                                            {{ row.profissional && row.profissional.tipoProfissional ? row.profissional.tipoProfissional.DESCRICAO : '' }}
->>>>>>> Stashed changes
+                                            {{ row.tipoProfissional ? row.tipoProfissional['DESCRICAO'] : "" }}
                                         </td>                            
 
                                         <td>
@@ -225,7 +203,6 @@ export default {
                     value: 'SN' 
                 }
             ],
-<<<<<<< Updated upstream
             equipeProfissionais:[],
             VEICULO_ID: null,
             EQUIPE_ID: null,
@@ -234,10 +211,6 @@ export default {
             TABELA_ID: 7,
             TG_TIPO_PROFISSIONAL_ID: null,
             COLUNA_ID: null,
-=======
-            profissionaisSelecionados:[],
-            PROFISSIONAL_ID : null,
->>>>>>> Stashed changes
         }
     },
     
@@ -320,8 +293,6 @@ export default {
                 profissional.TG_TIPO_PROFISSIONAL_ID == this.TG_TIPO_PROFISSIONAL_ID
             );
         },
-<<<<<<< Updated upstream
-=======
         equipes() {
             return this.$store.getters[
                 'EquipeViewModule/getEquipes']
@@ -330,7 +301,6 @@ export default {
             );
         },
 
->>>>>>> Stashed changes
         dataFormatada: {
             get() {
                 return this.formatarDataParaInput(
@@ -383,18 +353,13 @@ export default {
             //     return;
             // }
 
-<<<<<<< Updated upstream
             if (!this.equipeProfissionais) {
-=======
-            if (!this.equipeProfissionaisSelecionados) {
->>>>>>> Stashed changes
                 return;
             }
 
             // const equipe = this.equipe
             const equipeProfissionais = this.equipeProfissionais
 
-<<<<<<< Updated upstream
             const equipe = {
                 EQUIPE_ID : this.EQUIPE_ID
                 , VEICULO_ID: this.VEICULO_ID
@@ -406,12 +371,6 @@ export default {
                         
             const dados = {
                 ...equipe
-=======
-            const equipeProfissionaisSelecionados = this.equipeProfissionaisSelecionados
-
-            const dados = {
-                ...equipeProfissionaisSelecionados
->>>>>>> Stashed changes
                 
             };
 
@@ -562,31 +521,22 @@ export default {
         },
         novaEquipeProfissional() {
             
+            // console.log('id: ' + this.PROFISSIONAL_ID);
             const id = this.PROFISSIONAL_ID;
             // se o id estiver null
             if (id == null)
                 return '' 
 
-<<<<<<< Updated upstream
             // informações desse profissional selecionado
             const profissional = this.profissionais.find(
                 item => item.PROFISSIONAL_ID === id
             );
 
+            // console.log('profissional: ' + JSON.stringify(profissional, null, 4));
+
             //verifica se esse profissional já foi adicionado a lista de profissionais selecionados
             const profissionalExiste = this.equipeProfissionais.find(
                 item => item.PROFISSIONAL_ID === id
-=======
-            //verifica se o  profissional já está adicionado a lista
-            if (this.equipe && this.equipeProfissionais)
-                const equipeProfissionalExiste = this.equipe.equipeProfissionais.find(
-                    item => item.PROFISSIONAL_ID === id
-                );
-
-            //verifica se esse profissional já foi adicionado a lista
-            const equipeProfissionalExiste = this.equipeProfissionaisSelecionados.find(
-                item => item.EQUIPE_PROFISSIONAL_ID === id
->>>>>>> Stashed changes
             )
 
             if(profissionalExiste){
@@ -594,7 +544,8 @@ export default {
                 return
             }
 
-<<<<<<< Updated upstream
+            // console.log(profissional.tipoProfissional);
+
             //adiciona à lista, o profissional e suas características
             // this.equipeProfissionais.push(
             //     {
@@ -609,50 +560,32 @@ export default {
             //         PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão
             //     }
             // );
-            
+           
             this.equipeProfissionais.push(
                 {
                     EQUIPE_ID: null,
                     TG_TIPO_PROFISSIONAL_ID: this.TG_TIPO_PROFISSIONAL_ID,
                     PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
                     PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
+                    tipoProfissional: profissional.tipoProfissional
                 }
             );
             
         },
         async deletarProfissional(profissional) {
-=======
-            if (equipeProfissional) {
-                this.equipeProfissionaisSelecionados.push(
-                    {
-                        EQUIPE_PROFISSIONAL_ID: equipeProfissional.EQUIPE_PROFISSIONAL_ID,
-                        equipeProfissional: equipeProfissional,
-                    }
-                );
-            }
-      
-            // console.log(this.profissionaisSelecionados)
-        },
-        deletarEquipeProfissional(equipeProfissional) {
->>>>>>> Stashed changes
 
             let id = equipeProfissional.EQUIPE_PROFISSIONAL_ID
 
             const result = await Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
-<<<<<<< Updated upstream
                 text: `Deseja excluir o profissional ${profissional.PROFISSIONAL_NOME} ?`,
-=======
-                text: `Deseja excluir o profissional ${equipeProfissional.profissional.PROFISSIONAL_NOME} ?`,
->>>>>>> Stashed changes
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
                 denyButtonText: 'Cancelar',
             })
 
-<<<<<<< Updated upstream
             // Só remove se o usuário clicou em Confirmar
             if (result.isConfirmed) {
                 const index = this.equipeProfissionais.findIndex(
@@ -662,14 +595,6 @@ export default {
                 if (index !== -1) {
                     this.equipeProfissionais.splice(index, 1)
                 }
-=======
-            const index = this.equipe.equipeProfissionaisSelecionados.findIndex(
-            item => item.EQUIPE_PROFISSIONAL_ID == id
-            );
-
-            if (index !== -1) {
-                this.equipe.equipeProfissionaisSelecionados.splice(index, 1);
->>>>>>> Stashed changes
             }
         },
         resetarFormulario() {

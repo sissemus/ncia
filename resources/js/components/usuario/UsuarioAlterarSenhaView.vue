@@ -76,7 +76,7 @@
                 this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
                 axios({
                     method: 'PUT',
-                    url: `${this.baseUrl}/usuario/alterar-senha`,
+                    url: `${this.baseUrl}/usuario/alterar_senha`,
                     data: this.usuario
                 })
                     .then(r => {
