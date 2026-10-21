@@ -22,7 +22,7 @@
                 <v-col cols="12" md="4"><strong>Paciente:</strong> {{ paciente }}</v-col>
                 <v-col cols="12" md="4"><strong>Origem:</strong> {{ unidade(chamado.unidadeSolicitante) }}</v-col>
                 <v-col cols="12" md="4"><strong>Destino:</strong> {{ unidade(chamado.unidadeDestino) }}</v-col>
-                <v-col cols="12" md="4"><strong>Equipe:</strong> Nº {{ chamado.EQUIPE_FILA_ID }}</v-col>
+                <v-col cols="12" md="4"><strong>Equipe:</strong> Nº {{ chamado.EQUIPE_FILA_ID }} <strong class="ml-2">Veículo:</strong> {{ veiculo }}</v-col>
                 <v-col cols="12" md="4"><strong>Etapa atual:</strong> {{ chamado.ETAPA_ATUAL_DESCRICAO }}</v-col>
                 <v-col cols="12" md="4"><strong>Abertura:</strong> {{ formatarData(chamado.CHAMADO_DATA) }}</v-col>
             </v-row>
@@ -57,6 +57,14 @@ export default {
             const paciente = this.chamado.paciente || {};
             return paciente.PACIENTE_NOME || (Number(paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1
                 ? "PACIENTE EM VULNERABILIDADE SOCIAL" : "-");
+        },
+        veiculo() {
+            const vinculos = this.chamado.vinculosEquipe || [];
+            const vinculo = vinculos.find(item =>
+                Number(item.CHAMADO_EQUIPE_ID) === Number(this.chamado.CHAMADO_EQUIPE_ID));
+            const veiculo = vinculo && vinculo.equipe && vinculo.equipe.veiculo;
+            return veiculo && veiculo.VEICULO_IDENTIFICACAO
+                ? veiculo.VEICULO_IDENTIFICACAO : `Nº ${this.chamado.VEICULO_FILA_ID}`;
         },
         tipoChamado() {
             const item = (this.tiposChamado || []).find(t => Number(t.COLUNA_ID) === Number(this.chamado.TG_CHAMADO_ID));
