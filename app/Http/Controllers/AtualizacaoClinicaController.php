@@ -9,17 +9,20 @@ use App\Models\Profissional;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
 use App\Services\AtualizacaoClinicaService;
+use App\Services\EquipeAssistencialService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AtualizacaoClinicaController extends Controller
 {
     private $service;
+    private $acessoEquipe;
 
-    public function __construct(AtualizacaoClinicaService $service)
+    public function __construct(AtualizacaoClinicaService $service, EquipeAssistencialService $acessoEquipe)
     {
         $this->middleware("auth");
         $this->service = $service;
+        $this->acessoEquipe = $acessoEquipe;
     }
 
     public function chamado($id)
@@ -142,7 +145,7 @@ class AtualizacaoClinicaController extends Controller
         }
 
         if ($perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)) {
-            abort_unless($this->situacaoAtualId($chamado) === SituacaoChamadoEnum::EM_ATENDIMENTO, 403);
+            abort_unless($this->acessoEquipe->usuarioPodeConsultarChamado($chamado), 403);
             return;
         }
 
@@ -154,6 +157,7 @@ class AtualizacaoClinicaController extends Controller
         return $this->perfilPodeCriar($perfis) && in_array($this->situacaoAtualId($chamado), [
             SituacaoChamadoEnum::ABERTO,
             SituacaoChamadoEnum::EM_ANALISE,
+            SituacaoChamadoEnum::EM_FILA,
             SituacaoChamadoEnum::EM_ATENDIMENTO,
         ], true);
     }

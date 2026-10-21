@@ -34,9 +34,9 @@ export default {
                 state.equipePesquisa = {
                     EQUIPE_ID: null,
                     VEICULO_ID: null,
-                    EQUIPE_ATIVO: null,
                     EQUIPE_DATA: null,
                     EQUIPE_TURNO: null,
+                    EQUIPE_ATIVO: null,
                 }
             }
         },

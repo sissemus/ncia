@@ -14,14 +14,35 @@
                 <v-alert prominent outlined :type="tipoSituacao" class="mb-4">
                     <div class="status-content">
                         <span>Chamado Nº {{ chamado.CHAMADO_ID }}</span>
+                        <v-chip small outlined color="primary" class="font-weight-medium">
+                            {{ tipoChamadoDescricao }}
+                        </v-chip>
                         <v-chip small dark :color="corSituacao">{{ situacaoAtual }}</v-chip>
                     </div>
                 </v-alert>
 
-                <v-alert v-if="chamadoEmAtendimento" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
-                    <strong>{{ encaminhadoAgora ? 'Encaminhamento realizado.' : 'Chamado em atendimento.' }}</strong>
+                <v-alert v-if="chamadoEmFila || chamadoEmAtendimento" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
+                    <strong>{{ encaminhadoAgora ? 'Encaminhamento realizado.' : (chamadoEmFila ? 'Chamado em fila.' : 'Chamado em atendimento.') }}</strong>
                     O chamado está vinculado ao veículo e à equipe informados abaixo.
                 </v-alert>
+                <v-alert v-if="aguardandoEncerramento" type="success" outlined class="mb-4">
+                    <strong>Ambulância liberada — aguardando encerramento.</strong>
+                </v-alert>
+
+
+                <v-card v-if="chamadoEmAnalise" outlined class="mb-4">
+                    <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Tipo de chamado definido pela Regula??o CIA</v-card-title>
+                    <v-card-text class="pt-3">
+                        <v-row dense align="center">
+                            <v-col cols="12" md="5"><v-select label="Tipo de chamado" :items="tiposChamado"
+                                item-value="COLUNA_ID" item-text="DESCRICAO" v-model="tipoRegulacao"
+                                outlined dense hide-details /></v-col>
+                            <v-col cols="12" md="3"><v-btn color="primary" :loading="processando"
+                                :disabled="Number(tipoRegulacao) === Number(chamado.TG_CHAMADO_ID)"
+                                @click="alterarTipo">Salvar tipo</v-btn></v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
 
                 <v-card outlined class="mb-4">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">Paciente</v-card-title>
@@ -100,8 +121,10 @@
                 <v-divider class="my-3"></v-divider>
                 <v-btn v-if="chamadoEmAnalise" color="primary" tile :disabled="!veiculos.length" @click="abrirEncaminhar">Encaminhar para atendimento</v-btn>
                 <v-btn v-if="chamadoEmAnalise" color="error" dark tile class="ml-2" @click="abrirCancelar">Cancelar análise</v-btn>
-                <v-btn v-if="chamadoEmAtendimento" color="success" tile :disabled="processando" @click="abrirConcluir">Concluir Atendimento</v-btn>
-                <v-btn v-if="chamadoEmAtendimento" color="error" dark tile class="ml-2" :disabled="processando" @click="abrirCancelarAtendimento">Cancelar Atendimento</v-btn>
+                <v-btn v-if="podeCancelarAtendimento && aguardandoEncerramento" color="success" dark tile class="mr-2"
+                    :disabled="processando" @click="abrirConcluir">Concluir Atendimento</v-btn>
+                <v-btn v-if="podeCancelarAtendimento && (chamadoEmFila || chamadoEmAtendimento)" color="error" dark tile
+                    :disabled="processando" @click="abrirCancelarAtendimento">Cancelar Atendimento</v-btn>
                 <v-alert v-if="chamadoEmAnalise && !veiculos.length" class="mt-3" type="warning" outlined>Não há veículo/equipe disponível para encaminhamento.</v-alert>
             </v-card-text>
 
@@ -125,10 +148,10 @@
                         <legend class="custom-legend">VEÍCULO E EQUIPE</legend>
                         <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" return-object v-model="equipeSelecionada" outlined dense />
                     </fieldset>
-                    <v-alert v-else-if="acao === 'concluir'" type="warning" outlined>
-                        Confirma que o transporte, somente ida ou ida e volta, foi concluído sem intercorrência?
+                    <v-alert v-if="acao === 'concluir'" type="info" outlined>
+                        Confirme a conclusão do atendimento após a liberação da ambulância.
                     </v-alert>
-                    <fieldset v-else class="custom-fieldset">
+                    <fieldset v-if="acao !== 'encaminhar' && acao !== 'concluir'" class="custom-fieldset">
                         <legend class="custom-legend">MOTIVAÇÃO DO CANCELAMENTO</legend>
                         <v-select label="Motivo*" :items="motivosCancelamento" item-text="DESCRICAO" item-value="COLUNA_ID" v-model="motivo" outlined dense />
                         <v-textarea label="Motivação*" v-model="observacao" outlined rows="4" />
@@ -166,12 +189,13 @@ export default {
         tiposChamado: { type: Array, default: () => [] },
         tiposPrecaucao: { type: Array, default: () => [] },
         suportesO2: { type: Array, default: () => [] },
-        suportesHemodinamicos: { type: Array, default: () => [] }
+        suportesHemodinamicos: { type: Array, default: () => [] },
+        podeCancelarAtendimento: { type: Boolean, default: false }
     },
     data: () => ({
         msgId: 'msgChamadoAnalisar', veiculos: [], equipeSelecionada: null,
         dialog: false, fullScreen: false, acao: null, motivo: null, observacao: '', encaminhadoAgora: false,
-        processando: false
+        tipoRegulacao: null, processando: false
     }),
     created() {
         this.$store.dispatch('DominioModule/setAtualizacaoClinicaDominios', {
@@ -194,11 +218,29 @@ export default {
             const situacao = this.chamado && (this.chamado.situacaoAtual || this.chamado.situacao_atual);
             return situacao ? Number(situacao.TG_SITUACAO_ID) : null;
         },
+        tipoChamadoDescricao() {
+            return this.chamado && this.chamado.TG_CHAMADO_ID
+                ? this.descricao(this.tiposChamado, this.chamado.TG_CHAMADO_ID)
+                : '-';
+        },
         situacaoAtual() { return this.descricao(this.situacoesChamado, this.statusId); },
         chamadoEmAnalise() { return this.statusId === SituacaoChamadoEnum.EM_ANALISE; },
+        chamadoEmFila() { return this.statusId === SituacaoChamadoEnum.EM_FILA; },
         chamadoEmAtendimento() { return this.statusId === SituacaoChamadoEnum.EM_ATENDIMENTO; },
         tipoSituacao() { return getSituacaoChamadoAlertType(this.statusId); },
         corSituacao() { return getSituacaoChamadoColor(this.statusId); },
+        etapasAtendimento() {
+            return this.chamado && (this.chamado.etapasAtendimento || this.chamado.etapas_atendimento) || [];
+        },
+        ambulanciaLiberada() {
+            const viagemId = this.chamado && this.chamado.viagemAtual && this.chamado.viagemAtual.CHAMADO_VIAGEM_ID;
+            return this.etapasAtendimento.some(etapa =>
+                Number(etapa.CHAMADO_VIAGEM_ID) === Number(viagemId)
+                && [5, 9].includes(Number(etapa.ATENDIMENTO_ETAPA_ID)));
+        },
+        aguardandoEncerramento() {
+            return this.chamadoEmAtendimento && this.ambulanciaLiberada;
+        },
         corPrioridade() {
             return obterCorPrioridade(this.chamado && this.chamado.TG_PRIORIDADE_ID);
         },
@@ -228,13 +270,13 @@ export default {
         },
         podeConfirmar() {
             if (this.processando) return false;
+            if (this.acao === 'concluir') return this.aguardandoEncerramento;
             if (this.acao === 'encaminhar') return !!this.equipeSelecionada;
-            if (this.acao === 'concluir') return true;
             return !!this.motivo && !!String(this.observacao || '').trim();
         },
         tituloDialog() {
-            if (this.acao === 'encaminhar') return 'Encaminhar para atendimento';
             if (this.acao === 'concluir') return 'Concluir Atendimento';
+            if (this.acao === 'encaminhar') return 'Encaminhar para atendimento';
             return this.acao === 'cancelar-atendimento' ? 'Cancelar Atendimento' : 'Cancelar análise';
         }
     },
@@ -248,8 +290,13 @@ export default {
                     chamado: response.data,
                     contexto: 'analise'
                 });
+                this.tipoRegulacao = this.chamado.TG_CHAMADO_ID;
                 if (this.chamadoEmAnalise) this.carregarVeiculos();
             }).catch(this.erro);
+        },
+        alterarTipo() {
+            if (!this.chamado || !this.tipoRegulacao) return;
+            this.executar('alterar-tipo', { TG_CHAMADO_ID: this.tipoRegulacao });
         },
         carregarVeiculos() {
             axios.get(`${this.baseUrl}/chamado_analisar/veiculos-disponiveis`)
@@ -257,17 +304,17 @@ export default {
         },
         abrirEncaminhar() { this.carregarVeiculos(); this.acao = 'encaminhar'; this.equipeSelecionada = null; this.dialog = true; this.fullScreen = false; },
         abrirCancelar() { this.acao = 'cancelar'; this.motivo = null; this.observacao = ''; this.dialog = true; this.fullScreen = false; },
-        abrirConcluir() { this.acao = 'concluir'; this.dialog = true; this.fullScreen = false; },
         abrirCancelarAtendimento() { this.acao = 'cancelar-atendimento'; this.motivo = null; this.observacao = ''; this.dialog = true; this.fullScreen = false; },
+        abrirConcluir() { this.acao = 'concluir'; this.dialog = true; this.fullScreen = false; },
         confirmar() {
             if (!this.podeConfirmar) return;
+            if (this.acao === 'concluir') {
+                this.executar('concluir');
+                return;
+            }
             if (this.acao === 'encaminhar') {
                 const equipe = this.equipeSelecionada && this.equipeSelecionada.equipe;
                 this.executar('encaminhar', { EQUIPE_ID: equipe ? equipe.EQUIPE_ID : null });
-                return;
-            }
-            if (this.acao === 'concluir') {
-                this.executar('concluir');
                 return;
             }
             this.executar(this.acao, { MOTIVO_CANCELAMENTO_ID: this.motivo, CHAMADO_SITUACAO_OBSERVACAO: this.observacao });
@@ -291,7 +338,7 @@ export default {
                         redirecionando = true;
                         return Swal.fire({
                             title: 'Encaminhamento realizado',
-                            text: 'Veículo e equipe vinculados. O chamado passou para Em Atendimento.',
+                            text: 'Veículo e equipe vinculados. O chamado passou para Em Fila.',
                             icon: 'success',
                             confirmButtonText: 'Voltar para Home',
                             allowOutsideClick: false,
@@ -300,8 +347,11 @@ export default {
                             window.location.href = `${this.baseUrl}/home`;
                         });
                     }
-                    if (acao === 'concluir' || acao === 'cancelar-atendimento') {
-                        Swal.fire('Sucesso', acao === 'concluir' ? 'Atendimento concluído com sucesso.' : 'Atendimento cancelado com sucesso.', 'success');
+                    if (acao === 'concluir') {
+                        Swal.fire('Sucesso', 'Atendimento concluído com sucesso.', 'success');
+                    }
+                    if (acao === 'cancelar-atendimento') {
+                        Swal.fire('Sucesso', 'Atendimento cancelado com sucesso.', 'success');
                     }
                 }).catch(this.erro).finally(() => {
                     if (!redirecionando) this.processando = false;
@@ -309,7 +359,9 @@ export default {
         },
         descricaoVeiculoEquipe(veiculo) {
             if (!veiculo) return '-';
-            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)}`;
+            const situacao = veiculo.OCUPADO_EM_ATENDIMENTO ? 'EM ATENDIMENTO' : 'DISPONÍVEL';
+            const fila = Number(veiculo.QUANTIDADE_EM_FILA || 0);
+            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)} — ${situacao} — ${fila} em fila`;
         },
         descricaoEquipe(equipe) { return equipe ? `Equipe Nº ${equipe.EQUIPE_ID}${equipe.EQUIPE_TURNO ? ` - ${equipe.EQUIPE_TURNO}` : ''}` : '-'; },
         valor(obj, campo) { return obj && obj[campo] ? obj[campo] : '-'; },

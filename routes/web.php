@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AplicacaoController;
 use App\Http\Controllers\AtualizacaoClinicaController;
+use App\Http\Controllers\AtendimentoEquipeController;
 use App\Http\Controllers\ChamadoAnalisarController;
 use App\Http\Controllers\ChamadoController;
 use App\Http\Controllers\ProcedimentoController;
@@ -18,8 +19,10 @@ use App\Http\Controllers\UsuarioPerfilController;
 use App\Http\Controllers\UsuarioUnidadeController;
 use App\Http\Controllers\EquipeController;
 use App\Http\Controllers\EquipeProfissionalController;
+
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\RelatorioController;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -40,7 +43,33 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
+// // --- ROTA PARA VERIFICAR SE É O PRIMEIRO ACESSO ---
+// Route::middleware(['auth'])->group(function () {
+//     // Exibe a blade usuario.alteracaosenha
+//     Route::get('/alterar-senha', [UsuarioController::class, 'alterarSenhaView'])
+//         ->name('alterarSenhaView');
+//     // Processa a nova senha
+//     Route::post('/alterar-senha', [UsuarioController::class, 'alterarSenha'])
+//         ->name('alterarSenha');
+// });
+
+Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->group(function () {
+    // --- ROTAS DE SENHA (Ficam livres do 'primeiro.acesso' para não dar loop) ---
+    Route::prefix('usuario')->group(function () {
+        Route::get('/', [UsuarioController::class, "view"]);
+        Route::get('view', [UsuarioController::class, "view"])->name("usuario.view");
+        Route::get('alteracao_senha', [UsuarioController::class, 'alteracaoSenha'])->name('alteracao-senha');
+        Route::put('alterar_senha', [UsuarioController::class, "alterarSenha"])->name("alterar-senha");
+        // Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
+        Route::post('inserir', [UsuarioController::class, "inserir"]);
+        Route::put('alterar', [UsuarioController::class, "alterar"]);
+        // Route::put('alteracao-senha', [UsuarioController::class, 'alterarSenha'])->name('alterar-senha');
+        Route::delete('deletar', [UsuarioController::class, "deletar"]);
+        Route::match(['get', 'post'], 'listar', [UsuarioController::class, "listar"]);
+        Route::post('pesquisar', [UsuarioController::class, "pesquisar"]);
+        Route::get('buscar/{id}', [UsuarioController::class, "buscar"]);
+    });
+
     Route::prefix('home')->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
         Route::get('chamados-abertos', [HomeController::class, 'chamadosAbertos']);
@@ -58,6 +87,13 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post('/', [AtualizacaoClinicaController::class, 'store']);
     });
 
+    Route::prefix('atendimento_equipe')->group(function () {
+        Route::get('/', [AtendimentoEquipeController::class, 'view']);
+        Route::get('fila', [AtendimentoEquipeController::class, 'fila']);
+        Route::post('avancar', [AtendimentoEquipeController::class, 'avancar']);
+        Route::post('cancelar', [AtendimentoEquipeController::class, 'cancelar']);
+    });
+
     Route::prefix('perfil')->group(function () {
         Route::get('/', [PerfilController::class, "view"]);
         Route::get('view', [PerfilController::class, "view"]);
@@ -66,19 +102,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete('delete', [PerfilController::class, "delete"]);
         Route::get('list', [PerfilController::class, "list"]);
         Route::get('search', [PerfilController::class, "search"]);
-    });
-
-    Route::prefix('usuario')->group(function () {
-        Route::get('/', [UsuarioController::class, "view"]);
-        Route::get('view', [UsuarioController::class, "view"])->name("usuario.view");
-        Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
-        Route::post('inserir', [UsuarioController::class, "inserir"]);
-        Route::put('alterar', [UsuarioController::class, "alterar"]);
-        Route::put('alterar_senha', [UsuarioController::class, "alterarSenha"])->name("usuario.alterar_senha");
-        Route::delete('deletar', [UsuarioController::class, "deletar"]);
-        Route::match(['get', 'post'], 'listar', [UsuarioController::class, "listar"]);
-        Route::post('pesquisar', [UsuarioController::class, "pesquisar"]);
-        Route::get('buscar/{id}', [UsuarioController::class, "buscar"]);
     });
 
     Route::prefix('usuario_perfil')->group(function () {
@@ -163,8 +186,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::delete('deletar', [VeiculoController::class, 'deletar']);
         Route::get('listar', [VeiculoController::class, 'listar']);
         Route::post('pesquisar', [VeiculoController::class, 'pesquisar']);
+        Route::post('pesquisarCadastrar', [VeiculoController::class, 'pesquisarCadastrar']);
         Route::get('buscar/{id}', [VeiculoController::class, 'buscar']);
         Route::get('search', [VeiculoController::class, 'search']);
+        Route::get('searchCadastrar', [VeiculoController::class, 'searchCadastrar']);
         Route::put('alterar_situacao', [VeiculoController::class, 'alterarSituacao']);
     });
 
@@ -213,6 +238,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("/", [ChamadoController::class, "view"]);
         Route::get("view", [ChamadoController::class, "view"]);
         Route::get("verificar-duplicidade", [ChamadoController::class, "verificarDuplicidade"]);
+        Route::get("consultar-retorno/{id}", [ChamadoController::class, "consultarRetorno"]);
+        Route::post("abrir-retorno", [ChamadoController::class, "abrirRetorno"]);
         Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
 
@@ -221,8 +248,6 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
         Route::get("buscar/{id}", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "buscar"]);
-        Route::post("concluir", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "concluir"]);
-        Route::post("cancelar", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "cancelar"]);
     });
 
     Route::prefix("chamado_analisar")->group(function () {
@@ -233,9 +258,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
         Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
         Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
-        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
+        Route::post("alterar-tipo", [ChamadoAnalisarController::class, "alterarTipo"]);
         Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
         Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
+        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
     });
     
     Route::prefix("equipe")->group(function () {
@@ -260,7 +286,9 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis'])->group(function () {
         Route::post("pesquisar", [EquipeProfissionalController::class, "pesquisar"]);
         Route::get("buscar/{id}", [EquipeProfissionalController::class, "buscar"]);
         Route::get('search', [EquipeProfissionalController::class, 'search']);
+
         Route::get('searchNUsado', [EquipeProfissionalController::class, 'searchNUsado']);
+
     });
     
 });

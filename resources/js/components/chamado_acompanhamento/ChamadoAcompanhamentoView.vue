@@ -3,7 +3,7 @@
         <v-card class="elevation-2 rounded-lg">
             <v-toolbar flat dense class="elevation-1">
                 <v-icon class="mr-2" color="primary">mdi-clipboard-list-outline</v-icon>
-                <v-toolbar-title class="font-weight-bold">Acompanhamento de Chamados</v-toolbar-title>
+                <v-toolbar-title class="font-weight-bold">Acompanhar Chamado</v-toolbar-title>
                 <v-spacer></v-spacer>
             </v-toolbar>
 
@@ -68,6 +68,7 @@
                                 <th class="text-left font-weight-bold">Origem/Destino</th>
                                 <th class="text-left font-weight-bold">Prioridade</th>
                                 <th class="text-left font-weight-bold">Situação</th>
+                                <th class="text-left font-weight-bold">Etapa do atendimento</th>
                                 <th class="text-center font-weight-bold">Ações</th>
                             </tr>
                         </thead>
@@ -93,6 +94,7 @@
                                         {{ descricaoTabelaGenerica(situacoesChamado, chamado.TG_SITUACAO_ID) }}
                                     </v-chip>
                                 </td>
+                                <td>{{ etapaAtualDescricao(chamado) }}</td>
                                 <td class="text-center">
                                     <v-btn icon color="primary" @click="verDetalhes(chamado.CHAMADO_ID)" title="Visualizar Detalhes">
                                         <v-icon>mdi-eye</v-icon>
@@ -150,6 +152,23 @@
                 </v-toolbar>
 
                 <v-card-text class="pt-4">
+                    <v-card v-if="viagens.length" outlined class="mb-4">
+                        <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
+                            Viagens do chamado ({{ viagensContabilizadas }} contabilizadas)
+                        </v-card-title>
+                        <v-card-text class="pt-3">
+                            <div v-for="viagem in viagens" :key="viagem.CHAMADO_VIAGEM_ID" class="mb-3">
+                                <strong>{{ viagem.RETORNO ? 'Volta' : 'Ida' }} #{{ viagem.NUMERO }}</strong>
+                                - {{ descricaoTabelaGenerica(tiposChamado, viagem.TG_CHAMADO_ID) }}
+                                - {{ descricaoTabelaGenerica(situacoesChamado, viagem.TG_SITUACAO_ID) }}
+                                <div class="caption">
+                                    {{ nomeUnidadeViagem(viagem.DADOS && viagem.DADOS.UNIDADE_ID_SOLICITANTE) }}
+                                    - {{ nomeUnidadeViagem(viagem.DADOS && viagem.DADOS.UNIDADE_ID_DESTINO) }}
+                                </div>
+                            </div>
+                        </v-card-text>
+                    </v-card>
+
                     <!-- Informações do Paciente -->
                     <v-card outlined class="mb-4">
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
@@ -366,17 +385,21 @@
                                 <v-timeline-item
                                     v-for="evento in historicoOrdenado"
                                     :key="evento.chave"
-                                    :color="evento.tipo === 'atualizacao' ? 'purple' : getSituacaoColor(evento.item.TG_SITUACAO_ID)"
+                                    :color="evento.tipo === 'atualizacao' ? 'purple' : (evento.tipo === 'etapa' ? 'primary' : getSituacaoColor(evento.item.TG_SITUACAO_ID))"
                                     small>
                                     <v-row dense>
                                         <v-col cols="12" sm="4" md="3">
                                             <div v-if="evento.tipo === 'atualizacao'" class="font-weight-bold purple--text">
                                                 Atualização Clínica Nº {{ evento.item.ATUALIZACAO_CLINICA_ID }}
                                             </div>
+                                            <div v-else-if="evento.tipo === 'etapa'" class="font-weight-bold primary--text">
+                                                {{ evento.item.ATENDIMENTO_ETAPA_DESCRICAO }}
+                                            </div>
                                             <div v-else class="font-weight-bold" :class="getSituacaoTextColor(evento.item.TG_SITUACAO_ID)">
                                                 {{ descricaoTabelaGenerica(situacoesChamado, evento.item.TG_SITUACAO_ID) }}
                                             </div>
                                             <div class="caption grey--text text--darken-2">
+                                                {{ nomeViagemEvento(evento.item.CHAMADO_VIAGEM_ID) }} -
                                                 <v-icon x-small>mdi-clock-outline</v-icon>
                                                 {{ formatarDataHora(evento.data) }}
                                             </div>
@@ -396,6 +419,13 @@
                                                 <div class="caption mt-1 font-italic grey lighten-4 pa-2 rounded">
                                                     <v-icon x-small>mdi-information-outline</v-icon>
                                                     {{ evento.item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA }}
+                                                </div>
+                                            </template>
+                                            <template v-else-if="evento.tipo === 'etapa'">
+                                                <div class="caption mb-1">
+                                                    <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
+                                                    <span class="font-weight-medium">Registrado por:</span>
+                                                    {{ evento.item.usuario ? evento.item.usuario.USUARIO_NOME : '-' }}
                                                 </div>
                                             </template>
                                             <template v-else>
@@ -426,10 +456,6 @@
 
                 <v-divider></v-divider>
                 <v-card-actions>
-                    <v-btn v-if="podeEncerrarSelecionado" color="success" tile
-                        :disabled="processandoEncerramento" @click="abrirEncerramento('concluir')">
-                        Concluir Atendimento
-                    </v-btn>
                     <v-btn v-if="podeEncerrarSelecionado" color="error" dark tile
                         :disabled="processandoEncerramento" @click="abrirEncerramento('cancelar')">
                         Cancelar Atendimento
@@ -448,7 +474,7 @@
             <v-card v-if="showEncerramentoModal">
                 <v-toolbar color="primary" dark>
                     <v-toolbar-title>
-                        {{ acaoEncerramento === 'concluir' ? 'Concluir Atendimento' : 'Cancelar Atendimento' }}
+                        Cancelar Atendimento
                     </v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn icon v-if="!fullScreen" @click="fullScreen = true">
@@ -465,10 +491,7 @@
                 <tratar-erro-ajax :id="msgEncerramentoId"></tratar-erro-ajax>
 
                 <v-card-text class="pt-5">
-                    <v-alert v-if="acaoEncerramento === 'concluir'" type="warning" outlined>
-                        Confirma que o transporte, somente ida ou ida e volta, foi concluído sem intercorrência?
-                    </v-alert>
-                    <template v-else>
+                    <template>
                         <v-select label="Motivo*" :items="motivosCancelamento" item-text="DESCRICAO"
                             item-value="COLUNA_ID" v-model="motivoCancelamento" outlined dense></v-select>
                         <v-textarea label="Motivação*" v-model="motivacaoCancelamento"
@@ -611,7 +634,7 @@ export default {
 
         podeEncerrarSelecionado() {
             return this.podeEncerrar
-                && this.statusSelecionado === SituacaoChamadoEnum.EM_ATENDIMENTO;
+                && [SituacaoChamadoEnum.EM_FILA, SituacaoChamadoEnum.EM_ATENDIMENTO].includes(this.statusSelecionado);
         },
 
         procedimentosSelecionados() {
@@ -673,6 +696,12 @@ export default {
                 .join(", ") || "-";
         },
 
+        viagens() {
+            return this.chamadoSelecionado && this.chamadoSelecionado.viagens || [];
+        },
+        viagensContabilizadas() {
+            return this.viagens.filter(viagem => Number(viagem.TG_SITUACAO_ID) !== 5).length;
+        },
         situacoesOrdenadas() {
             if (!this.chamadoSelecionado || !this.chamadoSelecionado.situacoes) {
                 return [];
@@ -708,6 +737,16 @@ export default {
                 item
             }));
 
+            let etapas = this.chamadoSelecionado
+                ? this.chamadoSelecionado.etapasAtendimento || this.chamadoSelecionado.etapas_atendimento || []
+                : [];
+            etapas.forEach(item => eventos.push({
+                tipo: "etapa",
+                chave: `etapa-${item.CHAMADO_ATENDIMENTO_ETAPA_ID}`,
+                data: item.ATENDIMENTO_ETAPA_DATA,
+                item
+            }));
+
             return eventos.sort((a, b) => {
                 let dataA = new Date(a.data || 0).getTime();
                 let dataB = new Date(b.data || 0).getTime();
@@ -721,16 +760,21 @@ export default {
                 return false;
             }
 
-            if (this.acaoEncerramento === "concluir") {
-                return true;
-            }
-
             return !!this.motivoCancelamento
                 && !!String(this.motivacaoCancelamento || "").trim();
         }
     },
 
     methods: {
+        nomeViagemEvento(id) {
+            const viagem = this.viagens.find(item => Number(item.CHAMADO_VIAGEM_ID) === Number(id));
+            return viagem ? (viagem.RETORNO ? 'Volta' : 'Ida') + ' #' + viagem.NUMERO : 'Ida';
+        },
+        nomeUnidadeViagem(id) {
+            const unidade = (this.unidades || []).find(item => Number(item.UNIDADE_ID) === Number(id));
+            return unidade ? unidade.UNIDADE_NOME : '-';
+        },
+
         pesquisar() {
             this.pagination.current_page = 1;
             return this.$store.dispatch("ChamadoAcompanhamentoViewModule/search", this.msgId);
@@ -812,9 +856,7 @@ export default {
                 }).then(() => {
                     Swal.fire(
                         "Sucesso",
-                        acao === "concluir"
-                            ? "Atendimento concluído com sucesso."
-                            : "Atendimento cancelado com sucesso.",
+                        "Atendimento cancelado com sucesso.",
                         "success"
                     );
                 });
@@ -855,8 +897,26 @@ export default {
         },
 
         podeImprimir(chamado) {
-            return !!chamado
-                && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO;
+            return !!chamado && [
+                SituacaoChamadoEnum.EM_FILA,
+                SituacaoChamadoEnum.EM_ATENDIMENTO,
+                SituacaoChamadoEnum.CONCLUIDO,
+                SituacaoChamadoEnum.CANCELADO,
+            ].includes(Number(this.getSituacaoAtualId(chamado)));
+        },
+
+        etapaAtualDescricao(chamado) {
+            const todas = chamado && (chamado.etapasAtendimento || chamado.etapas_atendimento) || [];
+            const viagemId = chamado && chamado.viagemAtual && chamado.viagemAtual.CHAMADO_VIAGEM_ID;
+            const etapas = todas.filter(item => Number(item.CHAMADO_VIAGEM_ID) === Number(viagemId));
+            if (etapas.length) {
+                const ultima = [...etapas].sort((a, b) => Number(b.ATENDIMENTO_ETAPA_ID) - Number(a.ATENDIMENTO_ETAPA_ID))[0];
+                if ([5, 9].includes(Number(ultima.ATENDIMENTO_ETAPA_ID)) && Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_ATENDIMENTO) {
+                    return "Ambulância liberada — aguardando encerramento";
+                }
+                return ultima.ATENDIMENTO_ETAPA_DESCRICAO || "-";
+            }
+            return Number(this.getSituacaoAtualId(chamado)) === SituacaoChamadoEnum.EM_FILA ? "Aguardando recebimento" : "-";
         },
 
         baixarPdf(chamado) {
@@ -954,10 +1014,12 @@ export default {
                     return "Chamado feito e salvo pela unidade, mas não validado pelo Regulador Cia.";
                 case SituacaoChamadoEnum.EM_ANALISE:
                     return "Chamado recebido e sendo analisado pelo Regulador Cia.";
+                case SituacaoChamadoEnum.EM_FILA:
+                    return "Chamado vinculado à equipe assistencial e aguardando recebimento.";
                 case SituacaoChamadoEnum.EM_ATENDIMENTO:
                     return "Equipe assistencial do veículo iniciou os procedimentos para o deslocamento do(s) paciente(s).";
                 case SituacaoChamadoEnum.CONCLUIDO:
-                    return "Deslocamento de ida e volta finalizado sem intercorrência.";
+                    return "Deslocamento finalizado sem intercorrência.";
                 case SituacaoChamadoEnum.CANCELADO:
                     return "Chamado não aprovado na análise do Regulador Cia ou que teve alguma intercorrência que impossibilitou a conclusão satisfatória do chamado.";
                 default:

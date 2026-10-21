@@ -92,15 +92,15 @@
                         <v-row>
                             <v-col cols="11">
                                 <v-select
-                                    label="Profissionais Selecionados*"
-                                    :items="profissionalEspecifico"
-                                    item-value="value"
-                                    item-text="text"
+                                    label="Profissional*"
+                                    :items="profissionais"
+                                    item-value="PROFISSIONAL_ID"
+                                    item-text="PROFISSIONAL_NOME"
                                     v-model="PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
                             <v-col cols="1" style="text-align: right;">
-                                <v-btn title="Adicionar profissional" fab small elevation="3" color="success" dark @click="novoProfissional">
+                                <v-btn title="Adicionar profissional" fab small elevation="3" color="success" dark @click="novaEquipeProfissional">
                                     <v-icon>mdi-plus</v-icon>
                                 </v-btn>
                             </v-col>
@@ -117,18 +117,18 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="row in equipeProfissionais" :key="equipe['EQUIPE_ID']">
+                                    <tr v-for="row in equipeProfissionais" :key="row['EQUIPE_ID']">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
                                         <td>
                                             {{ row['PROFISSIONAL_NOME'] }}
                                         </td>
                                         <td>
-                                            {{ row['PROFISSIONAL_TIPO'] }}
+                                            {{ row.tipoProfissional ? row.tipoProfissional['DESCRICAO'] : "" }}
                                         </td>                            
 
                                         <td>
-                                            <v-btn icon @click="deletarProfissional(row)" title="Remover">
+                                            <v-btn icon @click="deletarEquipeProfissional(row)" title="Remover">
                                                 <v-icon>mdi-delete</v-icon>
                                             </v-btn>
                                         </td>
@@ -192,7 +192,7 @@ export default {
                     text: 'Não'
                 }
             ],
-
+            
             opcoesTurno: [
                 { 
                     text: 'SD', 
@@ -216,7 +216,7 @@ export default {
     
     mounted() {
         this.$store.dispatch(
-            'VeiculoViewModule/search',
+            'VeiculoViewModule/searchCadastrar',
             {
                 msgId: this.msgId,
                 VEICULO_ATIVO: 1
@@ -293,6 +293,14 @@ export default {
                 profissional.TG_TIPO_PROFISSIONAL_ID == this.TG_TIPO_PROFISSIONAL_ID
             );
         },
+        equipes() {
+            return this.$store.getters[
+                'EquipeViewModule/getEquipes']
+                .filter(equipe => 
+                equipe.EQUIPE_ATIVO == 1
+            );
+        },
+
         dataFormatada: {
             get() {
                 return this.formatarDataParaInput(
@@ -308,16 +316,16 @@ export default {
                 );
             }
         },
-        profissionalEspecifico() {
+        equipeProfissionalEspecifico() {
             // Verifica se a lista existe e não está vazia
-            if (!this.profissionais || !Array.isArray(this.profissionais)) {
+            if (!this.equipeProfissionais || !Array.isArray(this.equipeProfissionais)) {
                 return [];
             }
 
             // Transforma a lista antiga no formato que o Vuetify precisa
-            return this.profissionais.map(item => {
+            return this.equipeProfissionais.map(item => {
                 // Monta o texto unindo Nome + Descrição (se a descrição existir)
-                const descricao = item.tipoProfissional ? ` (${item.tipoProfissional.DESCRICAO})` : '';
+                const descricao = item.profissional.tipoProfissional ? ` (${item.profissional.tipoProfissional.DESCRICAO})` : '';
                 
                 return {
                     value: item.PROFISSIONAL_ID,
@@ -333,6 +341,7 @@ export default {
             this.resetarFormulario();
 
             this.showModal = false;
+            this.equipeProfissionaisSelecionados = [];
         },
         salvar() {
             this.$store.dispatch(
@@ -393,7 +402,7 @@ export default {
                         this.msgId
                     );
                     this.$store.dispatch(
-                        'VeiculoViewModule/search',
+                        'VeiculoViewModule/searchCadastrar',
                         this.msgId
                     );
                 });
@@ -413,7 +422,6 @@ export default {
                 );
             });
         },
-
         formatarDataParaInput(valor) {
             if (!valor) {
                 return '';
@@ -489,7 +497,6 @@ export default {
 
             return `${ano}-${mes}-${dia}`;
         },
-
         atualizarData(campo, data) {
             if (!this.equipe || !data) {
                 return;
@@ -512,8 +519,9 @@ export default {
             this.equipe[campo] =
                 `${data} ${horaAtual}:00`;
         },
-        novoProfissional() {
+        novaEquipeProfissional() {
             
+            // console.log('id: ' + this.PROFISSIONAL_ID);
             const id = this.PROFISSIONAL_ID;
             // se o id estiver null
             if (id == null)
@@ -524,6 +532,8 @@ export default {
                 item => item.PROFISSIONAL_ID === id
             );
 
+            // console.log('profissional: ' + JSON.stringify(profissional, null, 4));
+
             //verifica se esse profissional já foi adicionado a lista de profissionais selecionados
             const profissionalExiste = this.equipeProfissionais.find(
                 item => item.PROFISSIONAL_ID === id
@@ -533,6 +543,8 @@ export default {
                 console.log('Profissional já adicionado a lista')
                 return
             }
+
+            // console.log(profissional.tipoProfissional);
 
             //adiciona à lista, o profissional e suas características
             // this.equipeProfissionais.push(
@@ -548,20 +560,21 @@ export default {
             //         PROFISSIONAL_TIPO: profissional.tipoProfissional.DESCRICAO, //para facilitar a exclusão
             //     }
             // );
-            
+           
             this.equipeProfissionais.push(
                 {
                     EQUIPE_ID: null,
                     TG_TIPO_PROFISSIONAL_ID: this.TG_TIPO_PROFISSIONAL_ID,
                     PROFISSIONAL_ID: this.PROFISSIONAL_ID, //para facilitar a exclusão
                     PROFISSIONAL_NOME: profissional.PROFISSIONAL_NOME, //para facilitar a exclusão
+                    tipoProfissional: profissional.tipoProfissional
                 }
             );
             
         },
         async deletarProfissional(profissional) {
 
-            let id = profissional.PROFISSIONAL_ID
+            let id = equipeProfissional.EQUIPE_PROFISSIONAL_ID
 
             const result = await Swal.fire({
                 icon: 'warning',

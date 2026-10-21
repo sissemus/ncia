@@ -28,7 +28,7 @@
                     </v-col>
                 </v-row>
             </v-card-text>
-            <v-simple-table dense v-show="veiculos.length" class="mb-0">
+            <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
                 <template v-slot:default>
                     <tbody>
                         <tr>
@@ -36,43 +36,69 @@
                             <td class="text-left">Veículo</td>
                             <td colspan="4">&nbsp;</td>
                         </tr>
-                        <tr v-for="(veiculo, indexVeiculo) in veiculos">
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ String(veiculo.VEICULO_ID).padStart(5, '0') }}</td>
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">{{ veiculo.VEICULO_IDENTIFICACAO }}</td>
-                            <td v-if="veiculo.equipe.length > 0">
-                                <tr>
-                                    <td style="font-weight: bold;">Equipe(s)</td>
-                                    <td style="text-align: center;font-weight: bold;">Data</td>
-                                    <td style="text-align: center;font-weight: bold;">Turno</td>
-                                    <td style="text-align: center;font-weight: bold;">Ação</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="4">
-                                        <hr>
-                                    </td>
-                                </tr>
-                                <tr v-for="(eqp, idxEqp) in veiculo.equipe">
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width: 78%;padding: 0px 10px 0px 0px;">
-                                        <span v-for="(prf, idxPrf) in eqp.equipeProfissional">
-                                            {{prf.profissional.PROFISSIONAL_NOME}} - {{ "(" + prf.profissional.tipoProfissional.DESCRICAO + ")" }}
-                                            <br>
-                                        </span>
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 10%;">
-                                        {{formatarData(veiculo.equipe[idxEqp].EQUIPE_DATA)}}
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 7%;">
-                                        {{veiculo.equipe[idxEqp].EQUIPE_TURNO}}
-                                    </td>
-                                    <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align: center;vertical-align: middle!important;width: 5%;">
-                                        <v-btn icon @click="deletar(veiculo.equipe[idxEqp])" title="Remover Equipes">
-                                            <v-icon>mdi-delete</v-icon>
-                                        </v-btn>
-                                    </td>
-                                </tr>
+
+                        <tr v-for="(veiculo, indexVeiculo) in veiculos" :key="veiculo.VEICULO_ID">
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ String(veiculo.VEICULO_ID).padStart(5, '0') }}
                             </td>
-                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">&nbsp;</td>
+
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ veiculo.VEICULO_IDENTIFICACAO }}
+                            </td>
+
+                            <td v-if="veiculo.equipes && veiculo.equipes.length > 0">
+                                <table width="100%">
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">Equipe(s)</td>
+                                            <td style="text-align: center;font-weight: bold;">Data</td>
+                                            <td style="text-align: center;font-weight: bold;">Turno</td>
+                                            <td style="text-align: center;font-weight: bold;">Ação</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="4"><hr></td>
+                                        </tr>
+
+                                        <tr v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:78%;padding:0 10px 0 0;">
+                                                <span v-for="(prf, idxPrf) in eqp.equipeProfissional" :key="idxPrf">
+                                                    {{ prf.profissional.PROFISSIONAL_NOME }}
+                                                    - ({{ prf.profissional.tipoProfissional.DESCRICAO }})
+                                                    <br>
+                                                </span>
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
+                                                {{ formatarData(eqp.EQUIPE_DATA) }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:7%;">
+                                                {{ eqp.EQUIPE_TURNO }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:5%;">
+                                                <v-btn
+                                                    icon
+                                                    :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                                    :disabled="processandoEquipeId !== null"
+                                                    @click="deletar(eqp, veiculo)"
+                                                    title="Remover equipe"
+                                                >
+                                                    <v-icon>mdi-delete</v-icon>
+                                                </v-btn>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                &nbsp;
+                            </td>
+
                         </tr>
+            
                     </tbody>
                 </template>
             </v-simple-table>
@@ -120,6 +146,7 @@ export default {
             msgIdDebug: 'msgEquipeViewDebug',
 
             idxEqp: 0,
+            processandoEquipeId: null,
         }
     },
     mounted() {
@@ -171,8 +198,8 @@ export default {
     },
     methods: {
         search() {
-            // this.$store.dispatch('EquipeViewModule/search', this.msgId);
-            this.$store.dispatch('VeiculoViewModule/search', {
+            
+            this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
                 msgId: this.msgId,
                 TG_SITUACAO_VEICULO_ID: 1,
                 VEICULO_ATIVO: 1
@@ -205,29 +232,62 @@ export default {
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
 
-        deletar(veiculo) {
-            let params = {
-                EQUIPE_ID: veiculo.equipe.EQUIPE_ID
+        deletar(equipe, veiculo) {
+            if (!equipe || !equipe.EQUIPE_ID) {
+                Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
+                return;
             }
+
+            let params = {
+                EQUIPE_ID: equipe.EQUIPE_ID
+            }
+
 
             Swal.fire({
                 icon: 'warning',
                 title: 'Alerta',
-                text: `Deseja excluir a equipe do veículo ${veiculo.VEICULO_IDENTIFICACAO} ?`,
+                text: `Deseja excluir a equipe Nº ${equipe.EQUIPE_ID} do veículo ${veiculo.VEICULO_IDENTIFICACAO}?`,
                 showDenyButton: true,
                 showCancelButton: false,
                 confirmButtonText: 'Confirmar',
                 denyButtonText: `Cancelar`,
             }).then(result => {
-                if (result.isConfirmed)
-                    axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
-                        .then(res => {
-                            Swal.fire('Excluído com sucesso!', '', 'success')
-                                .then(res => {
-                                    this.search();
-                                })
-                        })
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = equipe.EQUIPE_ID;
+                axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
+                    .then(response => {
+                        return Swal.fire(
+                            'Excluído com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Exclusão não permitida',
+                            this.mensagemErroExclusao(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
             })
+        },
+
+        mensagemErroExclusao(error) {
+            const response = error && error.response;
+            const data = response && response.data;
+            if (data && data.mensagem) return data.mensagem;
+            if (data && data.message) return data.message;
+            if (data && data.errors) {
+                const campo = Object.keys(data.errors)[0];
+                if (campo && data.errors[campo] && data.errors[campo][0]) {
+                    return data.errors[campo][0];
+                }
+            }
+            return 'Não foi possível excluir a equipe. Tente novamente.';
         },
 
         truncateText(text, maxLength) {

@@ -31,9 +31,12 @@
                     <thead>
                         <tr>
                             <th>Nº Chamado</th>
+                            <th>Tipo de Chamado</th>
+                            <th>Viagens</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
-                            <th>Procedimento</th>
+                            <th>Unidade Solicitante</th>
+                            <th>Unidade Destino</th>
                             <th>Prioridade</th>
                             <th v-if="exibeAcaoFila">Ação</th>
                         </tr>
@@ -41,13 +44,16 @@
                     <tbody>
                         <tr v-for="chamado in chamadosAtuais" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
+                            <td>{{ tipoChamado(chamado) }}</td>
+                            <td>{{ chamado.VIAGENS_CONTABILIZADAS }}</td>
                             <td>
                                 <span :class="{ 'font-weight-bold': pacienteVulneravelSemNome(chamado) }">
                                     {{ nomePaciente(chamado) }}
                                 </span>
                             </td>
                             <td>{{ formatarDataHora(chamado.CHAMADO_DATA) }}</td>
-                            <td>{{ procedimento(chamado) }}</td>
+                            <td>{{ unidadeSolicitante(chamado) }}</td>
+                            <td>{{ unidadeDestino(chamado) }}</td>
                             <td>
                                 <v-chip x-small dark :color="corPrioridade(chamado.TG_PRIORIDADE_ID)">
                                     {{ descricao(prioridades, chamado.TG_PRIORIDADE_ID) }}
@@ -106,6 +112,7 @@
                     <thead>
                         <tr>
                             <th>Nº Chamado</th>
+                            <th>Tipo de Chamado</th>
                             <th>Paciente</th>
                             <th>Data/Hora</th>
                             <th>Tempo em aberto</th>
@@ -116,6 +123,7 @@
                     <tbody>
                         <tr v-for="chamado in chamadosExpirados" :key="chamado.CHAMADO_ID">
                             <td>{{ chamado.CHAMADO_ID }}</td>
+                            <td>{{ tipoChamado(chamado) }}</td>
                             <td>
                                 <span :class="{ 'font-weight-bold primary--text': pacienteVulneravelSemNome(chamado) }">
                                     {{ nomePaciente(chamado) }}
@@ -161,6 +169,8 @@ export default {
     props: {
         usuario_logado: { type: Object },
         prioridades: { type: Array, default: () => [] },
+        tiposChamado: { type: Array, default: () => [] },
+        tipos_chamado: { type: Array, default: () => [] },
         alerta_analise: { type: Object },
     },
     data() {
@@ -168,13 +178,14 @@ export default {
             msgId: "msgHomeChamados",
             msgExpiradosId: "msgHomeChamadosExpirados",
             abaAtiva: null,
-            filas: { abertos: [], analise: [], atendimento: [] },
+            filas: { abertos: [], analise: [], fila: [], atendimento: [] },
             paginacoes: {
                 abertos: { current_page: 1, total: 0, last_page: 1 },
                 analise: { current_page: 1, total: 0, last_page: 1 },
+                fila: { current_page: 1, total: 0, last_page: 1 },
                 atendimento: { current_page: 1, total: 0, last_page: 1 },
             },
-            carregandoFilas: { abertos: false, analise: false, atendimento: false },
+            carregandoFilas: { abertos: false, analise: false, fila: false, atendimento: false },
             chamadosExpirados: [],
             paginacaoExpirados: { current_page: 1, total: 0, last_page: 1 },
             carregandoExpirados: false,
@@ -185,6 +196,11 @@ export default {
     },
     computed: {
         ...mapGetters({ baseUrl: "getBaseUrl" }),
+        listaTiposChamado() {
+            return (this.tiposChamado && this.tiposChamado.length)
+                ? this.tiposChamado
+                : (this.tipos_chamado || []);
+        },
         perfilIds() {
             const perfis = this.usuario_logado && this.usuario_logado.usuarioPerfis
                 ? this.usuario_logado.usuarioPerfis : [];
@@ -202,10 +218,10 @@ export default {
             return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         podeVisualizarAtendimento() {
-            return [1, 2, 3, 5].some(id => this.perfilIds.includes(id));
+            return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         podeCancelarPrazo() {
-            return [1, 2, 3, 5].some(id => this.perfilIds.includes(id));
+            return [1, 2, 3].some(id => this.perfilIds.includes(id));
         },
         abasDisponiveis() {
             const abas = [];
@@ -214,6 +230,7 @@ export default {
             }
             if (this.podeVisualizarAnalise) {
                 abas.push({ id: "analise", texto: "Em análise", icone: "mdi-clipboard-search-outline" });
+                abas.push({ id: "fila", texto: "Em fila", icone: "mdi-timeline-clock-outline" });
             }
             if (this.podeVisualizarAtendimento) {
                 abas.push({ id: "atendimento", texto: "Em atendimento", icone: "mdi-ambulance" });
@@ -242,21 +259,25 @@ export default {
         },
         descricaoFilaVazia() {
             if (this.abaAtiva === "analise") return "em análise";
+            if (this.abaAtiva === "fila") return "em fila";
             if (this.abaAtiva === "atendimento") return "em atendimento";
             return "aberto hoje";
         },
         exibeAcaoFila() {
             return (this.abaAtiva === "abertos" && this.podeAnalisar)
                 || (this.abaAtiva === "analise" && this.podeVisualizarAnalise)
+                || (this.abaAtiva === "fila" && this.podeVisualizarAnalise)
                 || (this.abaAtiva === "atendimento" && this.podeVisualizarAtendimento);
         },
         iconeAcaoFila() {
-            return this.abaAtiva === "atendimento"
-                ? "mdi-clipboard-list-outline" : "mdi-clipboard-search-outline";
+            if (this.abaAtiva === "atendimento") return "mdi-clipboard-list-outline";
+            if (this.abaAtiva === "fila") return "mdi-timeline-clock-outline";
+            return "mdi-clipboard-search-outline";
         },
         tituloAcaoFila() {
-            return this.abaAtiva === "atendimento"
-                ? "Visualizar atendimento" : "Analisar chamado";
+            if (this.abaAtiva === "atendimento") return "Visualizar atendimento";
+            if (this.abaAtiva === "fila") return "Visualizar chamado em fila";
+            return "Analisar chamado";
         },
     },
     watch: {
@@ -289,9 +310,8 @@ export default {
                 : `${this.baseUrl}/home/chamados-operacionais`;
             const params = { page: paginacao.current_page };
             if (aba !== "abertos") {
-                params.situacao = aba === "analise"
-                    ? SituacaoChamadoEnum.EM_ANALISE
-                    : SituacaoChamadoEnum.EM_ATENDIMENTO;
+                params.situacao = aba === "analise" ? SituacaoChamadoEnum.EM_ANALISE
+                    : (aba === "fila" ? SituacaoChamadoEnum.EM_FILA : SituacaoChamadoEnum.EM_ATENDIMENTO);
             }
             this.carregandoFilas[aba] = true;
             return axios.get(url, { params }).then(response => {
@@ -325,7 +345,7 @@ export default {
                 });
         },
         abrirAcaoChamado(chamado) {
-            if (this.abaAtiva === "analise") {
+            if (this.abaAtiva === "analise" || this.abaAtiva === "fila") {
                 window.location.href = `${this.baseUrl}/chamado_analisar?chamado=${chamado.CHAMADO_ID}`;
                 return;
             }
@@ -399,6 +419,22 @@ export default {
                 && !String(chamado.paciente.PACIENTE_NOME || "").trim()
                 && Number(chamado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL) === 1;
         },
+        unidadeSolicitante(chamado) {
+            if (!chamado) return "-";
+            if (chamado.unidadeSolicitanteNome && chamado.unidadeSolicitanteNome !== "-") {
+                return chamado.unidadeSolicitanteNome;
+            }
+            const u = chamado.unidadeSolicitante || chamado.unidade_solicitante;
+            return (u && (u.UNIDADE_NOME || u.unidade_nome)) ? (u.UNIDADE_NOME || u.unidade_nome) : "-";
+        },
+        unidadeDestino(chamado) {
+            if (!chamado) return "-";
+            if (chamado.unidadeDestinoNome && chamado.unidadeDestinoNome !== "-") {
+                return chamado.unidadeDestinoNome;
+            }
+            const u = chamado.unidadeDestino || chamado.unidade_destino;
+            return (u && (u.UNIDADE_NOME || u.unidade_nome)) ? (u.UNIDADE_NOME || u.unidade_nome) : "-";
+        },
         procedimento(chamado) {
             return chamado.procedimentos && chamado.procedimentos.length
                 ? chamado.procedimentos[0].PROCEDIMENTO_DESCRICAO : "-";
@@ -411,6 +447,10 @@ export default {
             const dias = Math.floor(horas / 24);
             const horasRestantes = horas % 24;
             return dias ? `${dias}d ${horasRestantes}h` : `${horas}h`;
+        },
+        tipoChamado(chamado) {
+            if (!chamado || !chamado.TG_CHAMADO_ID) return "-";
+            return this.descricao(this.listaTiposChamado, chamado.TG_CHAMADO_ID);
         },
         descricao(lista, id) {
             const item = (lista || []).find(x => Number(x.COLUNA_ID) === Number(id));

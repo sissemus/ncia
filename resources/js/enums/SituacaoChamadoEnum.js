@@ -3,7 +3,8 @@ const SituacaoChamadoEnum = Object.freeze({
     EM_ANALISE: 2,
     EM_ATENDIMENTO: 3,
     CONCLUIDO: 4,
-    CANCELADO: 5
+    CANCELADO: 5,
+    EM_FILA: 6
 });
 
 const SituacaoChamadoCor = Object.freeze({
@@ -11,7 +12,8 @@ const SituacaoChamadoCor = Object.freeze({
     [SituacaoChamadoEnum.EM_ANALISE]: "blue darken-2",
     [SituacaoChamadoEnum.EM_ATENDIMENTO]: "orange darken-3",
     [SituacaoChamadoEnum.CONCLUIDO]: "green darken-2",
-    [SituacaoChamadoEnum.CANCELADO]: "red darken-2"
+    [SituacaoChamadoEnum.CANCELADO]: "red darken-2",
+    [SituacaoChamadoEnum.EM_FILA]: "blue-grey darken-1"
 });
 
 const SituacaoChamadoCorTexto = Object.freeze({
@@ -19,7 +21,8 @@ const SituacaoChamadoCorTexto = Object.freeze({
     [SituacaoChamadoEnum.EM_ANALISE]: "blue--text text--darken-3",
     [SituacaoChamadoEnum.EM_ATENDIMENTO]: "orange--text text--darken-4",
     [SituacaoChamadoEnum.CONCLUIDO]: "green--text text--darken-3",
-    [SituacaoChamadoEnum.CANCELADO]: "red--text text--darken-3"
+    [SituacaoChamadoEnum.CANCELADO]: "red--text text--darken-3",
+    [SituacaoChamadoEnum.EM_FILA]: "blue-grey--text text--darken-3"
 });
 
 const SituacaoChamadoTipoAlerta = Object.freeze({

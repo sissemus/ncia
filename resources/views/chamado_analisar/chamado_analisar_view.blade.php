@@ -10,5 +10,6 @@
     :suportes-o2='@json($suportesO2)'
     :suportes-hemodinamicos='@json($suportesHemodinamicos)'
     :motivos-cancelamento='@json($motivosCancelamento)'
+    :pode-cancelar-atendimento='@json($podeCancelarAtendimento)'
 ></chamado-analisar-view>
 @endsection

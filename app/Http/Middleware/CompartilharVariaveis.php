@@ -44,10 +44,11 @@ class CompartilharVariaveis {
             PerfilEnum::UNIDADE,
             PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
+        $podeAtenderEquipe = $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL);
 
         try {
             DB::table('APLICACAO')
-                ->where('APLICACAO_URL', 'chamado_acompanhamento')
+                ->whereIn('APLICACAO_URL', ['chamado_acompanhamento', 'chamado_acompanhamento/view'])
                 ->where('APLICACAO_NOME', '!=', 'Acompanhar Chamado')
                 ->update(['APLICACAO_NOME' => 'Acompanhar Chamado']);
         } catch (\Throwable $th) {
@@ -57,14 +58,15 @@ class CompartilharVariaveis {
             if ($aplicacao['APLICACAO_URL'] === 'chamado') {
                 $aplicacao['children'] = array_values(array_filter(
                     $aplicacao['children'],
-                    function ($child) use ($podeAnalisar, $podeAcompanhar) {
-                        if ($child['APLICACAO_URL'] === 'chamado_analisar') return $podeAnalisar;
-                        if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') return $podeAcompanhar;
+                    function ($child) use ($podeAnalisar, $podeAcompanhar, $podeAtenderEquipe) {
+                        if ($child['APLICACAO_URL'] === 'chamado_analisar' || $child['APLICACAO_URL'] === 'chamado_analisar/view') return $podeAnalisar;
+                        if ($child['APLICACAO_URL'] === 'chamado_acompanhamento' || $child['APLICACAO_URL'] === 'chamado_acompanhamento/view') return $podeAcompanhar;
+                        if ($child['APLICACAO_URL'] === 'atendimento_equipe' || $child['APLICACAO_URL'] === 'atendimento_equipe/view') return $podeAtenderEquipe;
                         return true;
                     }
                 ));
                 foreach ($aplicacao['children'] as &$child) {
-                    if ($child['APLICACAO_URL'] === 'chamado_acompanhamento') {
+                    if ($child['APLICACAO_URL'] === 'chamado_acompanhamento' || $child['APLICACAO_URL'] === 'chamado_acompanhamento/view') {
                         $child['APLICACAO_NOME'] = 'Acompanhar Chamado';
                     }
                 }
@@ -83,6 +85,14 @@ class CompartilharVariaveis {
                         'APLICACAO_NOME' => 'Acompanhar Chamado',
                         'APLICACAO_URL' => 'chamado_acompanhamento',
                         'APLICACAO_ICONE' => 'mdi-clipboard-list-outline',
+                    ];
+                }
+                if ($podeAtenderEquipe && !$children->contains('APLICACAO_URL', 'atendimento_equipe')) {
+                    $aplicacao['children'][] = [
+                        'APLICACAO_ID' => -3,
+                        'APLICACAO_NOME' => 'Atendimento da Equipe',
+                        'APLICACAO_URL' => 'atendimento_equipe',
+                        'APLICACAO_ICONE' => 'mdi-ambulance',
                     ];
                 }
             }

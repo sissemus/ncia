@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PertenceAViagem;
 use Illuminate\Database\Eloquent\Model;
 
 class AtualizacaoClinica extends Model
 {
+    use PertenceAViagem;
     protected $table = "ATUALIZACAO_CLINICA";
     protected $primaryKey = "ATUALIZACAO_CLINICA_ID";
     public $timestamps = false;
@@ -13,6 +15,7 @@ class AtualizacaoClinica extends Model
 
     protected $fillable = [
         "CHAMADO_ID",
+        "CHAMADO_VIAGEM_ID",
         "TG_PRIORIDADE_ANTERIOR_ID",
         "TG_PRIORIDADE_ID",
         "TG_TIPO_PRECAUCAO_ID",
@@ -34,6 +37,7 @@ class AtualizacaoClinica extends Model
     protected $casts = [
         "ATUALIZACAO_CLINICA_ID" => "integer",
         "CHAMADO_ID" => "integer",
+        "CHAMADO_VIAGEM_ID" => "integer",
         "TG_PRIORIDADE_ANTERIOR_ID" => "integer",
         "TG_PRIORIDADE_ID" => "integer",
         "TG_TIPO_PRECAUCAO_ID" => "integer",

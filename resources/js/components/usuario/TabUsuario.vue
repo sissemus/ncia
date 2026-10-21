@@ -67,15 +67,23 @@
             </v-row>
 
             <v-row>
-                <v-col cols="md-6">
+                <!-- <v-col cols="md-6">
+                    <v-text-field
+                        label="Inatividade"
+                        type="date"
+                        autocomplete="off"
+                        v-model="usuario.USUARIO_ULTIMO_ACESSO"
+                    ></v-text-field>
+                </v-col> -->
+                <!-- <v-col cols="md-6">
                     <v-text-field
                         label="Vigência"
                         type="date"
                         autocomplete="off"
                         v-model="vigenciaInput"
                     ></v-text-field>
-                </v-col>
-                <v-col cols="md-6">
+                </v-col> -->
+                <v-col cols="md-12" style="text-align: right;">
                     <v-select
                         label="Ativo*"
                         :items="ativos"

@@ -3,13 +3,16 @@
 namespace App\Services;
 
 use App\Models\Chamado;
+use App\Models\ChamadoAtendimentoEtapa;
 use App\Models\ChamadoEquipe;
 use App\Models\ChamadoSituacao;
 use App\Models\Cancelamento;
 use App\Models\Equipe;
 use App\Models\Veiculo;
+use App\MyLibs\EtapaAtendimentoEnum;
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\Services\TipoChamadoService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,18 +42,11 @@ class ChamadoFluxoService
             ->firstOrFail();
 
         $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
+        abort_unless((int) $veiculo->VEICULO_ATIVO === 1, 422, 'Veículo inativo.');
         abort_unless(
-            (int) $veiculo->VEICULO_ATIVO === 1 && (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1,
+            (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $this->veiculoTemAtendimentoAtivo($veiculo->VEICULO_ID),
             422,
             'Veículo indisponível.'
-        );
-        abort_if(
-            ChamadoEquipe::where('EQUIPE_ID', $equipe->EQUIPE_ID)
-                ->where('CHAMADO_EQUIPE_ATIVO', 1)
-                ->lockForUpdate()
-                ->exists(),
-            422,
-            'Equipe já está vinculada a outro chamado.'
         );
 
         ChamadoEquipe::create([
@@ -59,9 +55,7 @@ class ChamadoFluxoService
             'CHAMADO_EQUIPE_ATIVO' => 1,
         ]);
 
-        $veiculo->TG_SITUACAO_VEICULO_ID = 2;
-        $veiculo->save();
-        $this->registrarSituacao($chamado, SituacaoChamadoEnum::EM_ATENDIMENTO);
+        $this->registrarSituacao($chamado, SituacaoChamadoEnum::EM_FILA);
     }
 
     public function cancelarAnalise(Chamado $chamado, $motivoId, $motivacao)
@@ -72,10 +66,51 @@ class ChamadoFluxoService
 
     public function cancelarAtendimento(Chamado $chamado, $motivoId, $motivacao)
     {
-        $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
-        $vinculos = $this->bloquearRecursosAtivos($chamado);
+        $situacao = $this->situacaoAtualBloqueada($chamado);
+        abort_unless($situacao && in_array((int) $situacao->TG_SITUACAO_ID, [
+            SituacaoChamadoEnum::EM_FILA,
+            SituacaoChamadoEnum::EM_ATENDIMENTO,
+        ], true), 422, 'A situação do chamado foi alterada.');
+        $vinculos = $this->bloquearRecursosAtivos($chamado, false);
+        if ($vinculos->isEmpty()) {
+            abort_unless(
+                ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                    ->where('CHAMADO_VIAGEM_ID', $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID'))
+                    ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::liberacao(
+                        TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                    ))
+                    ->exists(),
+                422,
+                'O chamado não possui equipe e veículo vinculados.'
+            );
+        }
         $this->registrarCancelamento($chamado, $motivoId, $motivacao);
-        $this->liberarRecursos($vinculos);
+        $this->liberarRecursos(
+            $vinculos,
+            (int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO
+        );
+    }
+
+    public function concluirAtendimento(Chamado $chamado)
+    {
+        $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
+
+        abort_unless(
+            ChamadoAtendimentoEtapa::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('CHAMADO_VIAGEM_ID', $chamado->viagemAtual()->value('CHAMADO_VIAGEM_ID'))
+                ->where('ATENDIMENTO_ETAPA_ID', EtapaAtendimentoEnum::liberacao(
+                    TipoChamadoService::retornoImediato($chamado->TG_CHAMADO_ID)
+                ))
+                ->lockForUpdate()->exists(),
+            422,
+            'O atendimento somente pode ser concluído após a liberação da ambulância.'
+        );
+
+        $this->registrarSituacao(
+            $chamado,
+            SituacaoChamadoEnum::CONCLUIDO,
+            'Deslocamento finalizado sem intercorrência.'
+        );
     }
 
     public function cancelarPorPrazoExcedido(Chamado $chamado)
@@ -103,18 +138,6 @@ class ChamadoFluxoService
             $motivoId,
             'Chamado cancelado manualmente por permanecer aberto por mais de 24 horas.'
         );
-    }
-
-    public function concluirAtendimento(Chamado $chamado)
-    {
-        $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
-        $vinculos = $this->bloquearRecursosAtivos($chamado);
-        $this->registrarSituacao(
-            $chamado,
-            SituacaoChamadoEnum::CONCLUIDO,
-            'Transporte concluído sem intercorrência.'
-        );
-        $this->liberarRecursos($vinculos);
     }
 
     public function validarSituacao(Chamado $chamado, array $situacoesPermitidas)
@@ -167,15 +190,16 @@ class ChamadoFluxoService
         ]);
     }
 
-    private function bloquearRecursosAtivos(Chamado $chamado)
+    private function bloquearRecursosAtivos(Chamado $chamado, $obrigatorio = true)
     {
         $vinculos = ChamadoEquipe::where('CHAMADO_ID', $chamado->CHAMADO_ID)
             ->where('CHAMADO_EQUIPE_ATIVO', 1)
             ->lockForUpdate()
             ->get();
 
-        abort_if($vinculos->isEmpty(), 422, 'O chamado não possui equipe e veículo vinculados.');
-
+        if ($obrigatorio) {
+            abort_if($vinculos->isEmpty(), 422, 'O chamado não possui equipe e veículo vinculados.');
+        }
         foreach ($vinculos as $vinculo) {
             $equipe = Equipe::lockForUpdate()->findOrFail($vinculo->EQUIPE_ID);
             Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
@@ -184,18 +208,53 @@ class ChamadoFluxoService
         return $vinculos;
     }
 
-    private function liberarRecursos($vinculos)
+    private function liberarRecursos($vinculos, $disponibilizarVeiculo = true)
     {
         foreach ($vinculos as $vinculo) {
             $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
             $vinculo->save();
 
             $equipe = Equipe::lockForUpdate()->find($vinculo->EQUIPE_ID);
-            if ($equipe) {
+            if ($equipe && $disponibilizarVeiculo) {
                 Veiculo::where('VEICULO_ID', $equipe->VEICULO_ID)
                     ->lockForUpdate()
                     ->update(['TG_SITUACAO_VEICULO_ID' => 1]);
             }
         }
+    }
+
+    private function situacaoAtualBloqueada(Chamado $chamado)
+    {
+        return ChamadoSituacao::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+            ->orderByDesc('CHAMADO_SITUACAO_DATA')
+            ->orderByDesc('CHAMADO_SITUACAO_ID')
+            ->lockForUpdate()
+            ->first();
+    }
+
+    private function veiculoTemAtendimentoAtivo($veiculoId)
+    {
+        return ChamadoEquipe::join('EQUIPE as e_ocupada', 'e_ocupada.EQUIPE_ID', '=', 'CHAMADO_EQUIPE.EQUIPE_ID')
+            ->where('e_ocupada.VEICULO_ID', $veiculoId)
+            ->where('CHAMADO_EQUIPE_ATIVO', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('CHAMADO_SITUACAO as cs_atual')
+                    ->whereColumn('cs_atual.CHAMADO_ID', 'CHAMADO_EQUIPE.CHAMADO_ID')
+                    ->where('cs_atual.TG_SITUACAO_ID', SituacaoChamadoEnum::EM_ATENDIMENTO)
+                    ->whereNotExists(function ($maisNova) {
+                        $maisNova->select(DB::raw(1))
+                            ->from('CHAMADO_SITUACAO as cs_nova')
+                            ->whereColumn('cs_nova.CHAMADO_ID', 'cs_atual.CHAMADO_ID')
+                            ->where(function ($ordem) {
+                                $ordem->whereColumn('cs_nova.CHAMADO_SITUACAO_DATA', '>', 'cs_atual.CHAMADO_SITUACAO_DATA')
+                                    ->orWhere(function ($empate) {
+                                        $empate->whereColumn('cs_nova.CHAMADO_SITUACAO_DATA', '=', 'cs_atual.CHAMADO_SITUACAO_DATA')
+                                            ->whereColumn('cs_nova.CHAMADO_SITUACAO_ID', '>', 'cs_atual.CHAMADO_SITUACAO_ID');
+                                    });
+                            });
+                    });
+            })
+            ->exists();
     }
 }

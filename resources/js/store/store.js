@@ -98,5 +98,6 @@ export default new Vuex.Store({
         AtualizacaoClinicaModule,
         MdNovoEquipeProfissionalModule,
         EquipeProfissionalViewModule,
+        MdNovoEquipeProfissionalModule,
     }
 });

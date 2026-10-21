@@ -6,10 +6,9 @@ export default {
         equipe: {
             EQUIPE_ID: null,
             VEICULO_ID: null,
+            EQUIPE_DATA: null,
             EQUIPE_TURNO: null,
             EQUIPE_ATIVO: null,
-            EQUIPE_DATA_INI: null,
-            EQUIPE_DATA_FIM: null,
 
         }
     },
@@ -32,10 +31,9 @@ export default {
                 state.equipe = {
                     EQUIPE_ID: null,
                     VEICULO_ID: null,
+                    EQUIPE_DATA: null,
                     EQUIPE_TURNO: null,
                     EQUIPE_ATIVO: null,
-                    EQUIPE_DATA_INI: null,
-                    EQUIPE_DATA_FIM: null,
                 }
             }
         },

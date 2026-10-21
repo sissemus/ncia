@@ -38,6 +38,8 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // ESTA LINHA AQUI: É PARA SABER SE É O PRIMEIRO ACESSO DO USUÁRIO 13/10/26
+            \App\Http\Middleware\VerificarPrimeiroAcesso::class,
         ],
 
         'api' => [
@@ -64,6 +66,6 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         "CompartilharVariaveis"=>CompartilharVariaveis::class,
-        "alterar.senha"=>\App\Http\Middleware\AlterarSenha::class,
+        "alteracao.senha"=>\App\Http\Middleware\AlterarSenha::class,
     ];
 }

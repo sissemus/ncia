@@ -81,12 +81,45 @@ export default {
         },
 
         search(context, msgId) {
+            
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('VUEX -> search');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                        
             let baseUrl = context.rootGetters['getBaseUrl'];
             let page = context.state.pagination.current_page;
 
             axios({
                 method: 'GET',
                 url: `${baseUrl}/veiculo/search`,
+                params: {
+                    page,
+                    ...context.state.veiculoPesquisa
+                }
+            }).then(r => {
+                context.dispatch('setVeiculos', r.data.data);
+                context.dispatch('setPagination', r.data);
+            }).catch(e => {
+                console.error('ERRO: ', e);
+                this.dispatch('TratarErroAjaxModule/tratarErro', {
+                    id: msgId,
+                    response: e.response
+                });
+            });
+        },
+
+        searchCadastrar(context, msgId) {
+
+            console.log('################################');
+            console.log('VUEX -> searchCadastrar');
+            console.log('################################');
+            
+            let baseUrl = context.rootGetters['getBaseUrl'];
+            let page = context.state.pagination.current_page;
+
+            axios({
+                method: 'GET',
+                url: `${baseUrl}/veiculo/searchCadastrar`,
                 params: {
                     page,
                     ...context.state.veiculoPesquisa

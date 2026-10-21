@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chamado;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\Services\EquipeAssistencialService;
 use Carbon\Carbon;
 use Eltonwebnet\JasperRdr\JasperRdr;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +15,12 @@ use Illuminate\Support\Facades\Storage;
 
 class RelatorioController extends Controller
 {
-    public function __construct()
+    private $acessoEquipe;
+
+    public function __construct(EquipeAssistencialService $acessoEquipe)
     {
         $this->middleware('auth');
+        $this->acessoEquipe = $acessoEquipe;
     }
 
     public function chamadoEmAtendimento($id)
@@ -25,11 +29,26 @@ class RelatorioController extends Controller
 
         $chamado = Chamado::with('situacaoAtual')->findOrFail($id);
         abort_unless(
-            $chamado->situacaoAtual
-                && (int) $chamado->situacaoAtual->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO,
+            $chamado->situacaoAtual && in_array((int) $chamado->situacaoAtual->TG_SITUACAO_ID, [
+                SituacaoChamadoEnum::EM_FILA,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+                SituacaoChamadoEnum::CONCLUIDO,
+                SituacaoChamadoEnum::CANCELADO,
+            ], true),
             422,
-            'O PDF está disponível somente para chamados em atendimento.'
+            'O PDF está disponível a partir do encaminhamento para a equipe.'
         );
+        abort_unless($chamado->vinculosEquipe()->exists(), 422, 'O chamado ainda não foi encaminhado para uma equipe.');
+
+        $perfis = $this->perfisAtivos();
+        $podeVisualizarTodos = $perfis->intersect([
+            PerfilEnum::DESENVOLVEDOR,
+            PerfilEnum::ADMINISTRADOR,
+            PerfilEnum::REGULADOR_CIA,
+        ])->isNotEmpty();
+        if (!$podeVisualizarTodos && $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)) {
+            abort_unless($this->acessoEquipe->usuarioPodeConsultarChamado($chamado), 403);
+        }
 
         Storage::disk('local')->makeDirectory('relatorios');
 
@@ -61,13 +80,7 @@ class RelatorioController extends Controller
 
     private function podeEmitirChamadoEmAtendimento()
     {
-        $perfis = DB::table('USUARIO_PERFIL')
-            ->where('USUARIO_ID', Auth::id())
-            ->where('USUARIO_PERFIL_ATIVO', 1)
-            ->pluck('PERFIL_ID')
-            ->map(function ($perfil) {
-                return (int) $perfil;
-            });
+        $perfis = $this->perfisAtivos();
 
         return $perfis->intersect([
             PerfilEnum::DESENVOLVEDOR,
@@ -75,5 +88,17 @@ class RelatorioController extends Controller
             PerfilEnum::REGULADOR_CIA,
             PerfilEnum::EQUIPE_ASSISTENCIAL,
         ])->isNotEmpty();
+    }
+
+    private function perfisAtivos()
+    {
+        return DB::table('USUARIO_PERFIL')
+            ->where('USUARIO_ID', Auth::id())
+            ->where('USUARIO_PERFIL_ATIVO', 1)
+            ->pluck('PERFIL_ID')
+            ->map(function ($perfil) {
+                return (int) $perfil;
+            });
+
     }
 }

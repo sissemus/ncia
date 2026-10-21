@@ -16,8 +16,9 @@ class UsuarioController extends Controller
         return view('usuario.usuario_view');
     }
 
-    public function alterarSenhaView()
+    public function alteracaoSenha()
     {
+        // $usuario = Auth::user(); 
         return view('usuario.alteracao_senha');
     }
 
@@ -37,6 +38,7 @@ class UsuarioController extends Controller
 
     public function listar(Request $request)
     {
+        // dd($request->input());
         $usuario = Usuario::listar($request)->paginate();
 
         return response([
@@ -52,7 +54,7 @@ class UsuarioController extends Controller
 
         return response([
             "cod" => 1,
-            "msg" => "Usuário id {$request->id} buscado com sucesso",
+            "msg" => "Usuário id {$id} buscado com sucesso",
             "retorno" => $usuario
         ], 200);
     }
@@ -79,8 +81,9 @@ class UsuarioController extends Controller
 
     public function alterarSenha(UsuarioUpdatePasswordRequest $request)
     {
-        $usuario = Auth::user();
+        $usuario = Usuario::buscar(Auth::id());
         $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);
+        $usuario->USUARIO_ULTIMO_ACESSO = now();
         $usuario->update();
 
         return response([

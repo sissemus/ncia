@@ -7,6 +7,7 @@ use App\Models\Chamado;
 use App\Models\ChamadoDiagnostico;
 use App\Models\ChamadoProcedimento;
 use App\Models\ChamadoSituacao;
+use App\Models\ChamadoViagem;
 use App\Models\Diagnostico;
 use App\Models\Paciente;
 use App\Models\Procedimento;
@@ -14,6 +15,7 @@ use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Unidade;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\Services\TipoChamadoService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +52,80 @@ class ChamadoController extends Controller
             "procedimentos",
             "diagnosticos"
         ));
+    }
+
+    public function consultarRetorno($id)
+    {
+        $chamado = Chamado::with(['paciente', 'procedimentos', 'diagnosticos', 'viagens'])->findOrFail($id);
+        $this->validarRetorno($chamado);
+        return response()->json([
+            'CHAMADO_ID' => $chamado->CHAMADO_ID,
+            'DADOS' => $chamado->viagens->first()->DADOS,
+            'paciente' => Paciente::find($chamado->viagens->first()->DADOS['PACIENTE_ID']),
+            'procedimentos' => $chamado->procedimentos,
+            'diagnosticos' => $chamado->diagnosticos,
+        ]);
+    }
+
+    public function abrirRetorno(Request $request)
+    {
+        $request->validate(['CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID']);
+        $chamado = DB::transaction(function () use ($request) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
+            $this->validarRetorno($chamado);
+            $ida = $chamado->viagens()->first();
+            $dados = $ida->DADOS;
+            $chamado->fill($dados);
+            $origem = $dados['UNIDADE_ID_SOLICITANTE'];
+            $setorOrigem = $dados['CHAMADO_SETOR_SOLICITANTE'];
+            $leitoOrigem = $dados['CHAMADO_LEITO_SOLICITANTE'];
+            $chamado->UNIDADE_ID_SOLICITANTE = $dados['UNIDADE_ID_DESTINO'];
+            $chamado->CHAMADO_SETOR_SOLICITANTE = $dados['CHAMADO_SETOR_DESTINO'];
+            $chamado->CHAMADO_LEITO_SOLICITANTE = $dados['CHAMADO_LEITO_DESTINO'];
+            $chamado->UNIDADE_ID_DESTINO = $origem;
+            $chamado->CHAMADO_SETOR_DESTINO = $setorOrigem;
+            $chamado->CHAMADO_LEITO_DESTINO = $leitoOrigem;
+            $chamado->TG_CHAMADO_ID = TipoChamadoService::id('Retorno');
+            $chamado->CHAMADO_DATA = Carbon::now();
+            $chamado->save();
+
+            ChamadoViagem::create([
+                'CHAMADO_ID' => $chamado->CHAMADO_ID,
+                'NUMERO' => (int) $chamado->viagens()->reorder()->max('NUMERO') + 1,
+                'RETORNO' => 1,
+                'UNIDADE_ID_SOLICITANTE' => $chamado->UNIDADE_ID_SOLICITANTE,
+                'TG_CHAMADO_ID' => $chamado->TG_CHAMADO_ID,
+                'TG_SITUACAO_ID' => SituacaoChamadoEnum::ABERTO,
+                'INICIO' => $chamado->CHAMADO_DATA,
+                'DADOS' => $chamado->getAttributes(),
+            ]);
+            ChamadoSituacao::create([
+                'TG_SITUACAO_ID' => SituacaoChamadoEnum::ABERTO,
+                'CHAMADO_ID' => $chamado->CHAMADO_ID,
+                'CHAMADO_SITUACAO_DATA' => Carbon::now(),
+                'CHAMADO_SITUACAO_OBSERVACAO' => 'Retorno solicitado a partir da ida concluída.',
+                'USUARIO_ID' => Auth::id(),
+            ]);
+            return $chamado;
+        });
+        return response()->json(['cod' => 1, 'msg' => 'Retorno aberto com sucesso', 'retorno' => $chamado]);
+    }
+
+    private function validarRetorno(Chamado $chamado)
+    {
+        $viagens = $chamado->viagens()->get();
+        $ida = $viagens->first();
+        abort_unless($ida && !$ida->RETORNO
+            && (int) $ida->TG_CHAMADO_ID === TipoChamadoService::id('Transporte')
+            && (int) $ida->TG_SITUACAO_ID === SituacaoChamadoEnum::CONCLUIDO, 422,
+            'A ida deve ser um transporte concluído.');
+        $ultima = $viagens->last();
+        abort_if($ultima->NUMERO > 1 && (int) $ultima->TG_SITUACAO_ID !== SituacaoChamadoEnum::CANCELADO,
+            422, 'Este chamado já possui retorno.');
+        $dados = $ida->DADOS;
+        $autorizado = DB::table('USUARIO_UNIDADE')->where('USUARIO_ID', Auth::id())
+            ->where('UNIDADE_ID', $dados['UNIDADE_ID_SOLICITANTE'])->exists();
+        abort_unless($autorizado, 403);
     }
 
     public function verificarDuplicidade(Request $request)
@@ -139,6 +215,17 @@ class ChamadoController extends Controller
                 "CHAMADO_CONSELHO_PROFISSIONAL" => $request->CHAMADO_CONSELHO_PROFISSIONAL,
                 "CHAMADO_NUMERO_CONSELHO"      => $request->CHAMADO_NUMERO_CONSELHO,
                 "CHAMADO_PROFISSIONAL_SOLICITANTE" => $request->CHAMADO_PROFISSIONAL_SOLICITANTE,
+            ]);
+
+            ChamadoViagem::create([
+                'CHAMADO_ID' => $chamado->CHAMADO_ID,
+                'NUMERO' => 1,
+                'RETORNO' => 0,
+                'UNIDADE_ID_SOLICITANTE' => $chamado->UNIDADE_ID_SOLICITANTE,
+                'TG_CHAMADO_ID' => $chamado->TG_CHAMADO_ID,
+                'TG_SITUACAO_ID' => SituacaoChamadoEnum::ABERTO,
+                'INICIO' => $chamado->CHAMADO_DATA,
+                'DADOS' => $chamado->getAttributes(),
             ]);
 
             ChamadoProcedimento::create([

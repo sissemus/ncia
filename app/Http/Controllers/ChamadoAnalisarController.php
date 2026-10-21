@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Chamado;
+use App\Models\ChamadoSituacao;
 use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Veiculo;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
+use App\MyLibs\RTG;
+use App\Services\TipoChamadoService;
 use App\Services\ChamadoFluxoService;
+use App\Services\EquipeAssistencialService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,16 +21,19 @@ use Illuminate\Support\Facades\DB;
 class ChamadoAnalisarController extends Controller
 {
     private $fluxo;
+    private $acessoEquipe;
 
-    public function __construct(ChamadoFluxoService $fluxo)
+    public function __construct(ChamadoFluxoService $fluxo, EquipeAssistencialService $acessoEquipe)
     {
         $this->middleware('auth');
         $this->fluxo = $fluxo;
+        $this->acessoEquipe = $acessoEquipe;
     }
 
     public function view()
     {
         $this->autorizarVisualizacao();
+        $podeCancelarAtendimento = $this->podeAnalisar($this->perfisAtivos());
 
         return view('chamado_analisar.chamado_analisar_view', [
             'prioridades' => TabelaGenerica::prioridadePaciente(),
@@ -37,6 +44,7 @@ class ChamadoAnalisarController extends Controller
             'suportesO2' => TabelaGenerica::suporteO2(),
             'suportesHemodinamicos' => TabelaGenerica::suporteHemodinamico(),
             'motivosCancelamento' => TabelaGenerica::motivoCancelamento(),
+            'podeCancelarAtendimento' => $podeCancelarAtendimento,
         ]);
     }
 
@@ -75,7 +83,6 @@ class ChamadoAnalisarController extends Controller
             'vinculoAtivo.unidade',
         ])
             ->where('VEICULO_ATIVO', 1)
-            ->where('TG_SITUACAO_VEICULO_ID', 1)
             ->whereHas('vinculoAtivo')
             ->whereHas('equipe', function ($query) use ($data) {
                 $query->where('EQUIPE_DATA', $data)
@@ -87,16 +94,59 @@ class ChamadoAnalisarController extends Controller
             ->orderBy('VEICULO_IDENTIFICACAO')
             ->get();
 
+        $cargas = DB::table('CHAMADO_EQUIPE as ce_carga')
+            ->join('EQUIPE as e_carga', 'e_carga.EQUIPE_ID', '=', 'ce_carga.EQUIPE_ID')
+            ->join('CHAMADO_SITUACAO as cs_carga', 'cs_carga.CHAMADO_ID', '=', 'ce_carga.CHAMADO_ID')
+            ->where('ce_carga.CHAMADO_EQUIPE_ATIVO', 1)
+            ->whereIn('cs_carga.TG_SITUACAO_ID', [
+                SituacaoChamadoEnum::EM_FILA,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ])
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('CHAMADO_SITUACAO as cs_carga_nova')
+                    ->whereColumn('cs_carga_nova.CHAMADO_ID', 'cs_carga.CHAMADO_ID')
+                    ->where(function ($ordem) {
+                        $ordem->whereColumn('cs_carga_nova.CHAMADO_SITUACAO_DATA', '>', 'cs_carga.CHAMADO_SITUACAO_DATA')
+                            ->orWhere(function ($empate) {
+                                $empate->whereColumn('cs_carga_nova.CHAMADO_SITUACAO_DATA', '=', 'cs_carga.CHAMADO_SITUACAO_DATA')
+                                    ->whereColumn('cs_carga_nova.CHAMADO_SITUACAO_ID', '>', 'cs_carga.CHAMADO_SITUACAO_ID');
+                            });
+                    });
+            })
+            ->select('e_carga.VEICULO_ID', 'cs_carga.TG_SITUACAO_ID', DB::raw('COUNT(*) as TOTAL'))
+            ->groupBy('e_carga.VEICULO_ID', 'cs_carga.TG_SITUACAO_ID')
+            ->get()
+            ->groupBy('VEICULO_ID');
+
+        $veiculos = $veiculos->filter(function ($veiculo) use ($cargas) {
+            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
+            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
+                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
+            });
+
+            return (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $ocupadoEmAtendimento;
+        })->values();
+
         // Retorna somente os campos usados pelo modal. Além de reduzir a resposta,
         // evita que colunas legadas com codificação inválida interrompam o JSON.
-        return response()->json($veiculos->map(function ($veiculo) {
+        return response()->json($veiculos->map(function ($veiculo) use ($cargas) {
             $equipe = $veiculo->equipe;
             $vinculo = $veiculo->vinculoAtivo;
+            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
+            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
+                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
+            });
+            $quantidadeEmFila = (int) optional($cargaVeiculo->first(function ($item) {
+                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA;
+            }))->TOTAL;
 
             return [
                 'VEICULO_ID' => $veiculo->VEICULO_ID,
                 'VEICULO_IDENTIFICACAO' => $this->textoJson($veiculo->VEICULO_IDENTIFICACAO),
                 'VEICULO_PLACA' => $this->textoJson($veiculo->VEICULO_PLACA),
+                'OCUPADO_EM_ATENDIMENTO' => $ocupadoEmAtendimento,
+                'QUANTIDADE_EM_FILA' => $quantidadeEmFila,
                 'equipe' => $equipe ? [
                     'EQUIPE_ID' => $equipe->EQUIPE_ID,
                     'VEICULO_ID' => $equipe->VEICULO_ID,
@@ -135,6 +185,49 @@ class ChamadoAnalisarController extends Controller
             $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
             $this->fluxo->recepcionar($chamado);
 
+            return response(['cod' => 1, 'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)]);
+        });
+    }
+
+    public function alterarTipo(Request $request)
+    {
+        $this->autorizarAnalise();
+        $request->validate([
+            'CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID',
+            'TG_CHAMADO_ID' => [
+                'required', 'integer',
+                \Illuminate\Validation\Rule::exists('TABELA_GENERICA', 'COLUNA_ID')
+                    ->where('TABELA_ID', RTG::TIPO_CHAMADO)->where('ATIVO', 1),
+            ],
+        ]);
+        return DB::transaction(function () use ($request) {
+            $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
+            $this->fluxo->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ANALISE]);
+            $viagem = $chamado->viagemAtual()->lockForUpdate()->firstOrFail();
+            $novoTipo = (int) $request->TG_CHAMADO_ID;
+            abort_if(TipoChamadoService::retorno($novoTipo) && !$viagem->RETORNO,
+                422, 'Retorno exige uma ida concluída e deve ser aberto pela consulta.');
+            if ((int) $chamado->TG_CHAMADO_ID !== $novoTipo) {
+                $anterior = $chamado->TG_CHAMADO_ID;
+                $tipos = TabelaGenerica::tipoChamado()->keyBy('COLUNA_ID');
+                $descricaoAnterior = $tipos->get($anterior)->DESCRICAO ?? (string) $anterior;
+                $descricaoNova = $tipos->get($novoTipo)->DESCRICAO ?? (string) $novoTipo;
+                $chamado->TG_CHAMADO_ID = $novoTipo;
+                $chamado->save();
+                $viagem->TG_CHAMADO_ID = $novoTipo;
+                $dados = $viagem->DADOS;
+                $dados['TG_CHAMADO_ID'] = $novoTipo;
+                $viagem->DADOS = $dados;
+                $viagem->save();
+                ChamadoSituacao::create([
+                    'CHAMADO_ID' => $chamado->CHAMADO_ID,
+                    'TG_SITUACAO_ID' => SituacaoChamadoEnum::EM_ANALISE,
+                    'CHAMADO_SITUACAO_DATA' => Carbon::now(),
+                    'CHAMADO_SITUACAO_OBSERVACAO' => 'Tipo de chamado alterado pela Regulação CIA de '
+                        . $descricaoAnterior . ' para ' . $descricaoNova . '.',
+                    'USUARIO_ID' => Auth::id(),
+                ]);
+            }
             return response(['cod' => 1, 'retorno' => $this->carregarChamado($chamado->CHAMADO_ID)]);
         });
     }
@@ -203,7 +296,7 @@ class ChamadoAnalisarController extends Controller
     public function concluir(Request $request)
     {
         $this->autorizarAtendimento();
-        $request->validate(['CHAMADO_ID' => 'required|integer']);
+        $request->validate(['CHAMADO_ID' => 'required|integer|exists:CHAMADO,CHAMADO_ID']);
 
         return DB::transaction(function () use ($request) {
             $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
@@ -223,7 +316,9 @@ class ChamadoAnalisarController extends Controller
             'diagnosticos',
             'situacoes.usuario',
             'atualizacoesClinicas.usuario',
+            'etapasAtendimento.usuario',
             'situacaoAtual',
+            'viagens.situacoes.usuario', 'viagens.etapasAtendimento.usuario', 'viagemAtual',
             'vinculosEquipe.equipe.veiculo',
             'vinculosEquipe.equipe.equipeProfissional.profissional',
         ])->findOrFail($id);
@@ -277,7 +372,7 @@ class ChamadoAnalisarController extends Controller
 
     private function autorizarAtendimento()
     {
-        abort_unless($this->podeAtender($this->perfisAtivos()), 403);
+        abort_unless($this->podeAnalisar($this->perfisAtivos()), 403);
     }
 
     private function autorizarConsultaChamado(Chamado $chamado)
@@ -290,7 +385,11 @@ class ChamadoAnalisarController extends Controller
         abort_unless(
             $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
                 && $chamado->situacaoAtual
-                && (int) $chamado->situacaoAtual->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO,
+                && in_array((int) $chamado->situacaoAtual->TG_SITUACAO_ID, [
+                    SituacaoChamadoEnum::EM_FILA,
+                    SituacaoChamadoEnum::EM_ATENDIMENTO,
+                ], true)
+                && $this->acessoEquipe->usuarioPodeConsultarChamado($chamado),
             403
         );
     }

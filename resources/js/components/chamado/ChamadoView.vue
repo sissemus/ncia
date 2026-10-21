@@ -23,8 +23,85 @@
             <div :id="msgIdDebug"></div>
 
             <v-card-text class="pt-4">
-                <!-- ================= SEÇÃO 1: PACIENTE ================= -->
                 <v-card outlined class="mb-4">
+                    <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
+                        <v-icon small left color="primary">mdi-swap-horizontal</v-icon>
+                        Tipo de Chamado
+                    </v-card-title>
+                    <v-card-text class="pt-3">
+                        <v-select label="Tipo de Chamado*" :items="tiposChamado" item-value="COLUNA_ID"
+                            item-text="DESCRICAO" outlined dense hide-details
+                            v-model="chamado.TG_CHAMADO_ID" @change="alterarTipoChamado"></v-select>
+                        <div class="caption mt-2">{{ descricaoTipoSelecionado }}</div>
+                        <div class="caption mt-1">O tipo solicitado será avaliado pela Regulação CIA e poderá ser alterado.</div>
+                    </v-card-text>
+                </v-card>
+
+                <v-card v-if="ehRetorno" outlined class="mb-4">
+                    <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
+                        Retorno de um chamado concluído
+                    </v-card-title>
+                    <v-card-text class="pt-3">
+                        <v-row dense align="center">
+                            <v-col cols="12" sm="5">
+                                <v-text-field label="Nº do chamado de origem*" type="number" min="1"
+                                    v-model="numeroChamadoOrigem" @input="retornoConsulta = null" outlined dense hide-details
+                                    @keyup.enter="consultarRetorno"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" sm="3">
+                                <v-btn color="primary" block :loading="consultandoRetorno"
+                                    @click="consultarRetorno">Consultar</v-btn>
+                            </v-col>
+                        </v-row>
+                        <v-alert v-if="retornoConsulta" type="info" outlined class="mt-3">
+                            Confirme os dados herdados da ida. A origem e o destino da volta foram invertidos automaticamente.
+                        </v-alert>
+                        <v-row v-if="retornoConsulta" dense>
+                            <v-col cols="12" sm="6"><v-text-field label="Paciente" filled readonly
+                                :value="retornoConsulta.paciente && retornoConsulta.paciente.PACIENTE_NOME || 'Paciente em vulnerabilidade social'"></v-text-field></v-col>
+                            <v-col cols="12" sm="3"><v-text-field label="CPF" filled readonly
+                                :value="retornoConsulta.paciente && retornoConsulta.paciente.PACIENTE_CPF || '-'"></v-text-field></v-col>
+                            <v-col cols="12" sm="3"><v-text-field label="Prioridade" filled readonly
+                                :value="descricaoTabelaGenerica(prioridades, retornoConsulta.DADOS.TG_PRIORIDADE_ID)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Origem da volta" filled readonly
+                                :value="nomeUnidade(retornoConsulta.DADOS.UNIDADE_ID_DESTINO)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Destino da volta" filled readonly
+                                :value="nomeUnidade(retornoConsulta.DADOS.UNIDADE_ID_SOLICITANTE)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Setor / leito de origem" filled readonly
+                                :value="localRetorno(retornoConsulta.DADOS.CHAMADO_SETOR_DESTINO, retornoConsulta.DADOS.CHAMADO_LEITO_DESTINO)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Setor / leito de destino" filled readonly
+                                :value="localRetorno(retornoConsulta.DADOS.CHAMADO_SETOR_SOLICITANTE, retornoConsulta.DADOS.CHAMADO_LEITO_SOLICITANTE)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Procedimento" filled readonly
+                                :value="retornoConsulta.procedimentos.map(item => item.PROCEDIMENTO_DESCRICAO).join(', ')"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Diagnóstico" filled readonly
+                                :value="retornoConsulta.diagnosticos.map(item => item.DIAGNOSTICO_DESCRICAO).join(', ')"></v-text-field></v-col>
+                            <v-col cols="12"><v-textarea label="Observações da ida" filled readonly rows="2"
+                                :value="retornoConsulta.DADOS.CHAMADO_OBSERVACAO || '-'"></v-textarea></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Profissional solicitante" filled readonly
+                                :value="retornoConsulta.DADOS.CHAMADO_PROFISSIONAL_SOLICITANTE || '-'"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Conselho / número" filled readonly
+                                :value="localRetorno(retornoConsulta.DADOS.CHAMADO_CONSELHO_PROFISSIONAL, retornoConsulta.DADOS.CHAMADO_NUMERO_CONSELHO)"></v-text-field></v-col>
+                            <v-col cols="12" sm="4"><v-text-field label="Precaução" filled readonly
+                                :value="descricaoTabelaGenerica(tiposPrecaucao, retornoConsulta.DADOS.TG_TIPO_PRECAUCAO_ID)"></v-text-field></v-col>
+                            <v-col cols="12" sm="4"><v-text-field label="Suporte O2" filled readonly
+                                :value="descricaoTabelaGenerica(suportesO2, retornoConsulta.DADOS.TG_SUPORTE_O2_ID)"></v-text-field></v-col>
+                            <v-col cols="12" sm="4"><v-text-field label="Suporte hemodinâmico" filled readonly
+                                :value="descricaoTabelaGenerica(suportesHemodinamicos, retornoConsulta.DADOS.TG_SUPORTE_HEMODINAMICO_ID)"></v-text-field></v-col>
+                            <v-col cols="12" sm="6"><v-text-field label="Dispositivos" filled readonly
+                                :value="retornoConsulta.DADOS.CHAMADO_DISPOSITIVOS || '-'"></v-text-field></v-col>
+                            <v-col cols="12" sm="3"><v-text-field label="Peso" filled readonly
+                                :value="retornoConsulta.DADOS.CHAMADO_PESO || '-'"></v-text-field></v-col>
+                            <v-col cols="12" sm="3"><v-text-field label="Horário de atendimento" filled readonly
+                                :value="retornoConsulta.DADOS.CHAMADO_HORARIO_ATENDIMENTO || '-'"></v-text-field></v-col>
+                        </v-row>
+                    </v-card-text>
+                    <v-card-actions v-if="retornoConsulta">
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary" :loading="salvando" @click="salvarRetorno">Abrir retorno</v-btn>
+                    </v-card-actions>
+                </v-card>
+                <!-- ================= SEÇÃO 1: PACIENTE ================= -->
+                <v-card v-if="!ehRetorno" outlined class="mb-4">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
                         <v-icon small left color="primary">mdi-account</v-icon>
                         1. Identificação do Paciente
@@ -97,15 +174,6 @@
                             </v-alert>
 
                             <v-row dense>
-                                <v-col cols="12" md="6">
-                                    <v-text-field label="Nome Completo (opcional)" outlined dense hide-details
-                                        autocomplete="off" v-model="pacienteTemporario.PACIENTE_NOME"></v-text-field>
-                                </v-col>
-                                <v-col cols="12" sm="6" md="3">
-                                    <v-text-field label="Data de Nascimento (opcional)" type="date" outlined dense
-                                        hide-details autocomplete="off"
-                                        v-model="pacienteTemporario.PACIENTE_DT_NASCIMENTO"></v-text-field>
-                                </v-col>
                                 <v-col cols="12" sm="6" md="3">
                                     <v-select label="Sexo*" :items="sexos" item-value="COLUNA_ID" item-text="DESCRICAO"
                                         outlined dense hide-details v-model="pacienteTemporario.TG_SEXO_ID"></v-select>
@@ -116,7 +184,7 @@
                 </v-card>
 
                 <!-- ================= SEÇÃO 2: DADOS DO CHAMADO ================= -->
-                <v-card outlined :disabled="!formularioChamadoDisponivel" class="mb-2">
+                <v-card v-if="!ehRetorno" outlined :disabled="!formularioChamadoDisponivel" class="mb-2">
                     <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
                         <v-icon small left color="primary">mdi-file-document-edit</v-icon>
                         2. Dados do Atendimento e Regulação
@@ -133,11 +201,6 @@
                             <v-col cols="6" sm="4" md="2">
                                 <v-text-field label="Hora" readonly filled dense hide-details
                                     :value="horaSolicitacao"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" sm="4" md="3">
-                                <v-select label="Tipo de Chamado*" :items="tiposChamado" item-value="COLUNA_ID"
-                                    item-text="DESCRICAO" outlined dense hide-details
-                                    v-model="chamado.TG_CHAMADO_ID"></v-select>
                             </v-col>
                             <v-col cols="12" sm="6" md="3">
                                 <v-select label="Prioridade*" :items="prioridades" item-value="COLUNA_ID"
@@ -185,12 +248,12 @@
                                         hide-details v-model="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE"></v-text-field>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-select label="Conselho" :items="['CRM', 'COREN']" clearable outlined dense
+                                        <v-select label="Conselho*" :items="['CRM', 'COREN']" clearable outlined dense
                                             hide-details v-model="chamado.CHAMADO_CONSELHO_PROFISSIONAL"></v-select>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-text-field label="Nº do Conselho" autocomplete="off" inputmode="numeric"
-                                            maxlength="6" outlined dense hide-details
+                                        <v-text-field label="Nº do Conselho*" autocomplete="off"
+                                            maxlength="50" outlined dense hide-details
                                             v-model="chamado.CHAMADO_NUMERO_CONSELHO"></v-text-field>
                                     </v-col>
                                     <v-col cols="12" sm="6">
@@ -293,7 +356,7 @@
                                     hide-details v-model="chamado.CHAMADO_SATURACAO_O2"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Escala Glasgow" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Escala Glasgow*" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_ESCALA_GLASGOW"></v-text-field>
                             </v-col>
                         </v-row>
@@ -359,6 +422,9 @@ export default {
             msgId: "msgChamadoView",
             msgIdDebug: "msgChamadoViewDebug",
             consultandoPaciente: false,
+            consultandoRetorno: false,
+            numeroChamadoOrigem: null,
+            retornoConsulta: null,
             salvando: false,
             duplicidadeConfirmada: false,
             duplicidadeChave: null,
@@ -423,6 +489,19 @@ export default {
             }
         },
 
+        ehRetorno() {
+            const tipo = this.tiposChamado.find(item => Number(item.COLUNA_ID) === Number(this.chamado.TG_CHAMADO_ID));
+            return !!tipo && String(tipo.DESCRICAO).trim().toUpperCase() === 'RETORNO';
+        },
+
+        descricaoTipoSelecionado() {
+            const tipo = this.tiposChamado.find(item => Number(item.COLUNA_ID) === Number(this.chamado.TG_CHAMADO_ID));
+            const nome = tipo ? String(tipo.DESCRICAO).trim().toUpperCase() : '';
+            if (nome === 'RETORNO') return 'Volta após a conclusão de uma ida anterior, sob o mesmo número.';
+            if (nome === 'RETORNO IMEDIATO') return 'A ambulância espera o paciente e retorna com ele à origem.';
+            return 'Transporte da origem ao destino, com liberação da ambulância após a chegada.';
+        },
+
         pacienteDisponivel() {
             if (this.pacienteVulnerabilidadeSocial) return !!this.pacienteTemporario.TG_SEXO_ID;
             return !!this.paciente;
@@ -435,8 +514,50 @@ export default {
 
         methods: {
         preencherPadroes() {
-            if (this.tiposChamado.length === 1) this.chamado.TG_CHAMADO_ID = this.tiposChamado[0].COLUNA_ID;
+            const transporte = this.tiposChamado.find(item =>
+                String(item.DESCRICAO).trim().toUpperCase() === 'TRANSPORTE');
+            if (transporte) this.chamado.TG_CHAMADO_ID = transporte.COLUNA_ID;
             if (this.unidadesSolicitantes.length === 1) this.chamado.UNIDADE_ID_SOLICITANTE = this.unidadesSolicitantes[0].UNIDADE_ID;
+        },
+
+        alterarTipoChamado() {
+            this.retornoConsulta = null;
+            this.numeroChamadoOrigem = null;
+        },
+
+        nomeUnidade(id) {
+            const unidade = this.unidadesDestino.find(item => Number(item.UNIDADE_ID) === Number(id));
+            return unidade ? unidade.UNIDADE_NOME : '-';
+        },
+
+        localRetorno(setor, leito) {
+            return [setor, leito].filter(Boolean).join(' / ') || '-';
+        },
+
+        consultarRetorno() {
+            if (!this.numeroChamadoOrigem) return;
+            this.consultandoRetorno = true;
+            this.retornoConsulta = null;
+            axios.get(`${this.baseUrl}/chamado/consultar-retorno/${this.numeroChamadoOrigem}`)
+                .then(response => { this.retornoConsulta = response.data; })
+                .catch(e => this.$store.dispatch('TratarErroAjaxModule/tratarErro',
+                    { id: this.msgId, response: e.response }))
+                .finally(() => { this.consultandoRetorno = false; });
+        },
+
+        salvarRetorno() {
+            if (!this.retornoConsulta) return;
+            this.salvando = true;
+            axios.post(`${this.baseUrl}/chamado/abrir-retorno`,
+                { CHAMADO_ID: this.retornoConsulta.CHAMADO_ID })
+                .then(response => {
+                    const numero = response.data.retorno.CHAMADO_ID;
+                    return Swal.fire('Sucesso', `Retorno do chamado nº ${numero} aberto com sucesso.`, 'success')
+                        .then(() => this.limpar());
+                })
+                .catch(e => this.$store.dispatch('TratarErroAjaxModule/tratarErro',
+                    { id: this.msgId, response: e.response }))
+                .finally(() => { this.salvando = false; });
         },
 
         verificarDuplicidade() {
@@ -574,7 +695,9 @@ export default {
         },
 
         preencherDadosChamadoTeste() {
-            if (this.tiposChamado.length) this.chamado.TG_CHAMADO_ID = this.tiposChamado[0].COLUNA_ID;
+            const transporte = this.tiposChamado.find(item =>
+                String(item.DESCRICAO).trim().toUpperCase() === 'TRANSPORTE');
+            if (transporte) this.chamado.TG_CHAMADO_ID = transporte.COLUNA_ID;
             if (this.prioridades.length) this.chamado.TG_PRIORIDADE_ID = this.prioridades[0].COLUNA_ID;
             if (this.unidadesSolicitantes.length) this.chamado.UNIDADE_ID_SOLICITANTE = this.unidadesSolicitantes[0].UNIDADE_ID;
             if (this.unidadesDestino.length) this.chamado.UNIDADE_ID_DESTINO = this.unidadesDestino[0].UNIDADE_ID;
@@ -616,8 +739,6 @@ export default {
             this.pacienteVulnerabilidadeSocial = true;
 
             this.pacienteTemporario = {
-                PACIENTE_NOME: "Paciente Vulnerabilidade Teste",
-                PACIENTE_DT_NASCIMENTO: "1985-05-20",
                 TG_SEXO_ID: this.sexos.length ? this.sexos[0].COLUNA_ID : null
             };
 
@@ -667,13 +788,18 @@ export default {
                 return false;
             }
 
-            if (!!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL !== !!this.chamado.CHAMADO_NUMERO_CONSELHO) {
-                Swal.fire("Atenção", "Informe o conselho profissional e o respectivo número.", "warning");
+            if (!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL) {
+                Swal.fire("Atenção", "Informe o conselho profissional.", "warning");
                 return false;
             }
 
-            if (this.chamado.CHAMADO_NUMERO_CONSELHO && !/^\d{6}$/.test(this.chamado.CHAMADO_NUMERO_CONSELHO)) {
-                Swal.fire("Atenção", "O número do conselho deve conter exatamente 6 dígitos.", "warning");
+            if (!this.chamado.CHAMADO_NUMERO_CONSELHO || !this.chamado.CHAMADO_NUMERO_CONSELHO.toString().trim()) {
+                Swal.fire("Atenção", "Informe o número do conselho.", "warning");
+                return false;
+            }
+
+            if (this.chamado.CHAMADO_NUMERO_CONSELHO && this.chamado.CHAMADO_NUMERO_CONSELHO.length > 50) {
+                Swal.fire("Atenção", "O número do conselho deve conter no máximo 50 caracteres.", "warning");
                 return false;
             }
 
@@ -742,6 +868,11 @@ export default {
                 return false;
             }
 
+            if (!this.chamado.CHAMADO_ESCALA_GLASGOW || !this.chamado.CHAMADO_ESCALA_GLASGOW.toString().trim()) {
+                Swal.fire("Atenção", "Informe a escala Glasgow.", "warning");
+                return false;
+            }
+
             return true;
         },
 
@@ -757,8 +888,8 @@ export default {
             if (this.pacienteVulnerabilidadeSocial) {
                 payload.PACIENTE_ID = null;
                 payload.PACIENTE_VULNERABILIDADE_SOCIAL = 1;
-                payload.PACIENTE_NOME = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_NOME : null;
-                payload.PACIENTE_DT_NASCIMENTO = this.pacienteTemporario ? this.pacienteTemporario.PACIENTE_DT_NASCIMENTO : null;
+                payload.PACIENTE_NOME = null;
+                payload.PACIENTE_DT_NASCIMENTO = null;
                 payload.TG_SEXO_ID = this.pacienteTemporario ? this.pacienteTemporario.TG_SEXO_ID : null;
             } else {
                 // Garante que o PACIENTE_ID venha do objeto paciente localizado
@@ -775,7 +906,8 @@ export default {
                         return;
                     }
 
-                    Swal.fire("Sucesso", r.data.msg || "Chamado aberto com sucesso.", "success").then(() => {
+                    const numero = r.data.retorno.CHAMADO_ID;
+                    Swal.fire("Sucesso", `Chamado nº ${numero} aberto com sucesso.`, "success").then(() => {
                         this.limpar();
                     });
                 })
@@ -793,6 +925,8 @@ export default {
 
         limpar() {
             this.$store.dispatch("ChamadoViewModule/clear");
+            this.retornoConsulta = null;
+            this.numeroChamadoOrigem = null;
             this.duplicidadeChave = null;
             this.duplicidadeConfirmada = false;
             this.dataSolicitacao = moment().format("DD/MM/YYYY");

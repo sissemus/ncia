@@ -44,8 +44,15 @@ class Veiculo extends Model
 
     public function equipe()
     {
-        return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
+        return $this->hasOne(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
             ->where('EQUIPE_DATA', now()->format('Y-m-d'));
+    }
+
+    public function equipes()
+    {
+        return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
+            ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+            ->where('EQUIPE_ATIVO', '=', 1);
     }
 
     public function vinculoAtivo()
@@ -59,17 +66,49 @@ class Veiculo extends Model
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
-            "equipe",
-            "equipe.equipeProfissional.profissional",
-            "equipe.equipeProfissional.profissional.tipoProfissional",
-            "vinculoAtivo",
-            "vinculoAtivo.unidade",
+            "equipes",
+            "equipes.equipeProfissional",
+            "equipes.equipeProfissional.profissional",
+            "equipes.equipeProfissional.profissional.tipoProfissional"
         ];
     }
 
     public static function pesquisar($requisicao)
     {
         return self::with(self::relacionamento())
+            ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
+                return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");
+            })
+            ->when($requisicao->TG_TIPO_VEICULO_ID, function (Builder $query) use ($requisicao) {
+                return $query->where("TG_TIPO_VEICULO_ID", $requisicao->TG_TIPO_VEICULO_ID);
+            })
+            ->when($requisicao->TG_SITUACAO_VEICULO_ID, function (Builder $query) use ($requisicao) {
+                return $query->where("TG_SITUACAO_VEICULO_ID", $requisicao->TG_SITUACAO_VEICULO_ID);
+            })
+            ->when($requisicao->VEICULO_ATIVO !== null && $requisicao->VEICULO_ATIVO !== '', function (Builder $query) use ($requisicao) {
+                return $query->where("VEICULO_ATIVO", $requisicao->VEICULO_ATIVO);
+            })
+            ->orderBy("VEICULO_IDENTIFICACAO")
+            ->paginate();
+    }
+
+    // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
+    public static function relacionamentoCadastrar()
+    {
+        return [
+            "tipoVeiculo",
+            "situacaoVeiculo",
+            "equipe",
+            "equipes.equipeProfissional.profissional",
+            "equipes.equipeProfissional.profissional.tipoProfissional",
+            "vinculoAtivo",
+            "vinculoAtivo.unidade",
+        ];
+    }
+
+    public static function pesquisarCadastrar($requisicao)
+    {
+        return self::with(self::relacionamentoCadastrar())
             ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
                 return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");
             })
