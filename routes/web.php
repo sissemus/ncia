@@ -87,9 +87,10 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::post('/', [AtualizacaoClinicaController::class, 'store']);
     });
 
-    Route::prefix('atendimento_equipe')->group(function () {
+    Route::prefix('atendimento_equipe')->middleware('acesso.aplicacao:atendimento_equipe')->group(function () {
         Route::get('/', [AtendimentoEquipeController::class, 'view']);
         Route::get('fila', [AtendimentoEquipeController::class, 'fila']);
+        Route::get('chamado/{id}', [AtendimentoEquipeController::class, 'chamado']);
         Route::post('avancar', [AtendimentoEquipeController::class, 'avancar']);
         Route::post('cancelar', [AtendimentoEquipeController::class, 'cancelar']);
     });
@@ -243,7 +244,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::post("abrir", [ChamadoController::class, "abrir"]);
     });
 
-    Route::prefix("chamado_acompanhamento")->group(function () {
+    Route::prefix("chamado_acompanhamento")->middleware('acesso.aplicacao:chamado_acompanhamento')->group(function () {
         Route::get("/", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("view", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "view"]);
         Route::get("search", [\App\Http\Controllers\ChamadoAcompanhamentoController::class, "search"]);
@@ -251,17 +252,21 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
     });
 
     Route::prefix("chamado_analisar")->group(function () {
-        Route::get("/", [ChamadoAnalisarController::class, "view"]);
-        Route::get("view", [ChamadoAnalisarController::class, "view"]);
-        Route::get("search", [ChamadoAnalisarController::class, "search"]);
-        Route::get("buscar/{id}", [ChamadoAnalisarController::class, "buscar"]);
-        Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
-        Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
-        Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
-        Route::post("alterar-tipo", [ChamadoAnalisarController::class, "alterarTipo"]);
-        Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
-        Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
-        Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
+        Route::middleware('acesso.aplicacao:chamado_analisar,consulta_equipe')->group(function () {
+            Route::get("/", [ChamadoAnalisarController::class, "view"]);
+            Route::get("view", [ChamadoAnalisarController::class, "view"]);
+            Route::get("buscar/{id}", [ChamadoAnalisarController::class, "buscar"]);
+        });
+        Route::middleware('acesso.aplicacao:chamado_analisar')->group(function () {
+            Route::get("search", [ChamadoAnalisarController::class, "search"]);
+            Route::get("veiculos-disponiveis", [ChamadoAnalisarController::class, "veiculosDisponiveis"]);
+            Route::post("recepcionar", [ChamadoAnalisarController::class, "recepcionar"]);
+            Route::post("encaminhar", [ChamadoAnalisarController::class, "encaminhar"]);
+            Route::post("alterar-tipo", [ChamadoAnalisarController::class, "alterarTipo"]);
+            Route::post("cancelar", [ChamadoAnalisarController::class, "cancelar"]);
+            Route::post("cancelar-atendimento", [ChamadoAnalisarController::class, "cancelarAtendimento"]);
+            Route::post("concluir", [ChamadoAnalisarController::class, "concluir"]);
+        });
     });
     
     Route::prefix("equipe")->group(function () {

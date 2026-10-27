@@ -66,7 +66,7 @@
                                     @click="abrirAcaoChamado(chamado)">
                                     <v-icon>{{ iconeAcaoFila }}</v-icon>
                                 </v-btn>
-                                <v-btn v-if="abaAtiva === 'atendimento'" icon color="primary"
+                                <v-btn v-if="abaAtiva === 'fila'" icon color="primary"
                                     title="Baixar PDF do chamado"
                                     :loading="gerandoPdfId === chamado.CHAMADO_ID"
                                     :disabled="gerandoPdfId !== null"

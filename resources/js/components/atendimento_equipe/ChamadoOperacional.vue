@@ -6,6 +6,11 @@
             <v-chip x-small dark class="ml-2" :color="corPrioridade">{{ prioridade }}</v-chip>
             <v-chip x-small dark class="ml-2" :color="corSituacao">{{ situacao }}</v-chip>
             <v-spacer></v-spacer>
+            <v-btn color="primary" outlined small tile class="mr-2"
+                :disabled="processandoId !== null" @click="$emit('consultar', chamado)">
+                <v-icon small left>mdi-eye</v-icon>
+                Consultar chamado
+            </v-btn>
             <v-btn color="error" outlined small tile class="mr-2"
                 :disabled="processandoId !== null" @click="$emit('cancelar', chamado)">
                 <v-icon small left>mdi-cancel</v-icon>
@@ -33,7 +38,7 @@
                 </v-chip>
             </div>
             <v-alert v-if="!podeAvancar" dense text type="info" class="mt-3 mb-0">
-                {{ chamado.MOTIVO_BLOQUEIO_RECEBIMENTO || 'Aguardando a conclusão do atendimento atual ou dos chamados anteriores da fila.' }}
+                {{ chamado.MOTIVO_BLOQUEIO_RECEBIMENTO || 'Aguardando os chamados anteriores da fila.' }}
             </v-alert>
         </v-card-text>
     </v-card>

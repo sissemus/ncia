@@ -215,7 +215,7 @@ class ChamadoFluxoService
             $vinculo->save();
 
             $equipe = Equipe::lockForUpdate()->find($vinculo->EQUIPE_ID);
-            if ($equipe && $disponibilizarVeiculo) {
+            if ($equipe && $disponibilizarVeiculo && !$this->veiculoTemAtendimentoAtivo($equipe->VEICULO_ID)) {
                 Veiculo::where('VEICULO_ID', $equipe->VEICULO_ID)
                     ->lockForUpdate()
                     ->update(['TG_SITUACAO_VEICULO_ID' => 1]);

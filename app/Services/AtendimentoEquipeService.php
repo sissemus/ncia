@@ -79,16 +79,6 @@ class AtendimentoEquipeService
             return (int) $id;
         })->unique()->values();
 
-        $queryAtendimentos = Chamado::join('CHAMADO_EQUIPE as ce_ocupacao', 'ce_ocupacao.CHAMADO_ID', '=', 'CHAMADO.CHAMADO_ID')
-            ->join('EQUIPE as e_ocupacao', 'e_ocupacao.EQUIPE_ID', '=', 'ce_ocupacao.EQUIPE_ID')
-            ->where('ce_ocupacao.CHAMADO_EQUIPE_ATIVO', 1)
-            ->whereIn('e_ocupacao.VEICULO_ID', $veiculoIds)
-            ->select('CHAMADO.CHAMADO_ID', 'e_ocupacao.VEICULO_ID as VEICULO_FILA_ID');
-        $this->restringirSituacaoAtual($queryAtendimentos, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
-        $atendimentosPorVeiculo = $queryAtendimentos->get()->keyBy(function ($chamado) {
-            return (int) $chamado->VEICULO_FILA_ID;
-        });
-
         $queryFilaGlobal = Chamado::join('CHAMADO_EQUIPE as ce_ordem_global', 'ce_ordem_global.CHAMADO_ID', '=', 'CHAMADO.CHAMADO_ID')
             ->join('EQUIPE as e_ordem_global', 'e_ordem_global.EQUIPE_ID', '=', 'ce_ordem_global.EQUIPE_ID')
             ->where('ce_ordem_global.CHAMADO_EQUIPE_ATIVO', 1)
@@ -109,7 +99,7 @@ class AtendimentoEquipeService
             });
 
         return $chamados
-            ->map(function ($chamado) use ($atendimentosPorVeiculo, $primeirosDaFilaPorVeiculo) {
+            ->map(function ($chamado) use ($primeirosDaFilaPorVeiculo) {
                 $viagemId = $chamado->viagemAtual ? $chamado->viagemAtual->CHAMADO_VIAGEM_ID : null;
                 $etapas = $chamado->etapasAtendimento->where('CHAMADO_VIAGEM_ID', $viagemId);
                 $ultima = $etapas->last();
@@ -126,17 +116,13 @@ class AtendimentoEquipeService
 
                 $veiculoId = (int) $chamado->VEICULO_FILA_ID;
                 $situacaoId = $chamado->situacaoAtual ? (int) $chamado->situacaoAtual->TG_SITUACAO_ID : null;
-                $atendimentoAtual = $atendimentosPorVeiculo->get($veiculoId);
                 $primeiroDaFila = $primeirosDaFilaPorVeiculo->get($veiculoId);
                 $podeReceber = $situacaoId === SituacaoChamadoEnum::EM_FILA
-                    && !$atendimentoAtual
                     && $primeiroDaFila
                     && (int) $primeiroDaFila->CHAMADO_ID === (int) $chamado->CHAMADO_ID;
 
                 $motivoBloqueio = null;
-                if ($situacaoId === SituacaoChamadoEnum::EM_FILA && $atendimentoAtual) {
-                    $motivoBloqueio = 'Veículo ocupado por outro atendimento. Aguarde a liberação da ambulância.';
-                } elseif ($situacaoId === SituacaoChamadoEnum::EM_FILA && !$podeReceber) {
+                if ($situacaoId === SituacaoChamadoEnum::EM_FILA && !$podeReceber) {
                     $motivoBloqueio = 'Aguardando o chamado anterior deste veículo, conforme prioridade e antiguidade da fila.';
                 }
 
@@ -184,12 +170,12 @@ class AtendimentoEquipeService
 
             if ($proximaEtapa === EtapaAtendimentoEnum::RECEBIDO) {
                 if ((int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA) {
-                    $outroChamadoId = $this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID);
-                    abort_if($outroChamadoId, 422,
-                        'Veículo ocupado por outro atendimento. Aguarde a liberação da ambulância.');
                     abort_unless($this->primeiroChamadoEmFilaDoVeiculo($veiculo->VEICULO_ID) === (int) $chamado->CHAMADO_ID, 422,
                         'Existe outro chamado com maior prioridade ou mais antigo aguardando recebimento.');
-                    abort_unless((int) $veiculo->VEICULO_ATIVO === 1 && (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1, 422,
+                    abort_unless((int) $veiculo->VEICULO_ATIVO === 1 && (
+                        (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1
+                        || $this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID)
+                    ), 422,
                         'O veículo não está disponível para iniciar o atendimento.');
                 }
             } else {
@@ -217,8 +203,10 @@ class AtendimentoEquipeService
             )) {
                 $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
                 $vinculo->save();
-                $veiculo->TG_SITUACAO_VEICULO_ID = 1;
-                $veiculo->save();
+                if (!$this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID)) {
+                    $veiculo->TG_SITUACAO_VEICULO_ID = 1;
+                    $veiculo->save();
+                }
             }
 
             return [
