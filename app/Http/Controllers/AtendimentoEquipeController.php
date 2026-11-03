@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TabelaGenerica;
 use App\Models\Chamado;
+use App\Models\ChamadoEquipe;
 use App\MyLibs\PerfilEnum;
 use App\Services\AtendimentoEquipeService;
 use App\Services\EquipeAssistencialService;
@@ -49,7 +50,12 @@ class AtendimentoEquipeController extends Controller
             'vinculosEquipe.equipe.equipeProfissional.profissional',
         ])->findOrFail($id);
 
-        abort_unless($this->acessoEquipe->vinculoAtivoDoUsuario($chamado), 403);
+        if ($this->acessoEquipe->usuarioPodeOperarTodasEquipes()) {
+            abort_unless(ChamadoEquipe::where('CHAMADO_ID', $chamado->CHAMADO_ID)
+                ->where('CHAMADO_EQUIPE_ATIVO', 1)->exists(), 403);
+        } else {
+            abort_unless($this->acessoEquipe->vinculoAtivoDoUsuario($chamado), 403);
+        }
         abort_unless($chamado->situacaoAtual && in_array((int) $chamado->situacaoAtual->TG_SITUACAO_ID, [
             \App\MyLibs\SituacaoChamadoEnum::EM_FILA,
             \App\MyLibs\SituacaoChamadoEnum::EM_ATENDIMENTO,
@@ -61,9 +67,11 @@ class AtendimentoEquipeController extends Controller
     public function fila()
     {
         $this->autorizarAtendimentoEquipe();
+        $acessoGlobal = $this->acessoEquipe->usuarioPodeOperarTodasEquipes();
 
         return response()->json([
             'chamados' => $this->atendimento->listarFilaDoUsuario(),
+            'acessoGlobal' => $acessoGlobal,
             'possuiVinculoProfissional' => $this->acessoEquipe->equipeIdsDoUsuario(true)->isNotEmpty(),
         ]);
     }
@@ -110,6 +118,7 @@ class AtendimentoEquipeController extends Controller
         $possuiPerfil = DB::table('USUARIO_PERFIL')
             ->where('USUARIO_ID', Auth::id())
             ->whereIn('PERFIL_ID', [
+                PerfilEnum::DESENVOLVEDOR,
                 PerfilEnum::EQUIPE_ASSISTENCIAL,
                 PerfilEnum::REGULADOR_CIA,
                 PerfilEnum::ADMINISTRADOR,

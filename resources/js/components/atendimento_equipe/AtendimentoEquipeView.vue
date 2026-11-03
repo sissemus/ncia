@@ -14,12 +14,13 @@
             <v-progress-linear v-if="carregando" indeterminate color="primary"></v-progress-linear>
 
             <v-card-text>
-                <v-alert v-if="!carregando && !possuiVinculoProfissional" type="warning" outlined>
+                <v-alert v-if="!carregando && !acessoGlobal && !possuiVinculoProfissional" type="warning" outlined>
                     Seu usuário não está vinculado a uma equipe assistencial ativa. Confirme se o CPF do usuário é o mesmo do cadastro do profissional.
                 </v-alert>
 
                 <v-alert v-else-if="!carregando && !chamados.length" type="info" outlined>
-                    Não há chamados em fila ou em atendimento vinculados à sua equipe.
+                    <span v-if="acessoGlobal">Não há chamados em fila ou em atendimento.</span>
+                    <span v-else>Não há chamados em fila ou em atendimento vinculados à sua equipe.</span>
                 </v-alert>
 
                 <template v-if="chamados.length">
@@ -131,6 +132,7 @@ export default {
             msgId: "msgAtendimentoEquipe",
             chamados: [],
             possuiVinculoProfissional: true,
+            acessoGlobal: false,
             carregando: false,
             processandoId: null,
             dialogDetalhes: false,
@@ -206,6 +208,7 @@ export default {
                 .then(response => {
                     this.chamados = response.data.chamados || [];
                     this.possuiVinculoProfissional = !!response.data.possuiVinculoProfissional;
+                    this.acessoGlobal = !!response.data.acessoGlobal;
                 })
                 .catch(this.erro)
                 .finally(() => { this.carregando = false; });

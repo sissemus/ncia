@@ -31,8 +31,9 @@ class AtendimentoEquipeService
 
     public function listarFilaDoUsuario()
     {
-        $equipeIds = $this->acessoEquipe->equipeIdsDoUsuario(true);
-        if ($equipeIds->isEmpty()) {
+        $acessoGlobal = $this->acessoEquipe->usuarioPodeOperarTodasEquipes();
+        $equipeIds = $acessoGlobal ? collect() : $this->acessoEquipe->equipeIdsDoUsuario(true);
+        if (!$acessoGlobal && $equipeIds->isEmpty()) {
             return collect();
         }
 
@@ -43,7 +44,9 @@ class AtendimentoEquipeService
             ->join('CHAMADO_EQUIPE as ce_fila', 'ce_fila.CHAMADO_ID', '=', 'CHAMADO.CHAMADO_ID')
             ->join('EQUIPE as e_fila', 'e_fila.EQUIPE_ID', '=', 'ce_fila.EQUIPE_ID')
             ->where('ce_fila.CHAMADO_EQUIPE_ATIVO', 1)
-            ->whereIn('ce_fila.EQUIPE_ID', $equipeIds)
+            ->when(!$acessoGlobal, function ($consulta) use ($equipeIds) {
+                $consulta->whereIn('ce_fila.EQUIPE_ID', $equipeIds);
+            })
             ->select(
                 'CHAMADO.*',
                 'ce_fila.EQUIPE_ID as EQUIPE_FILA_ID',
@@ -149,7 +152,7 @@ class AtendimentoEquipeService
                 ->lockForUpdate()
                 ->first();
             abort_unless($vinculo, 422, 'O chamado não possui equipe ativa vinculada.');
-            abort_unless($this->acessoEquipe->pertenceEquipe($vinculo->EQUIPE_ID, true), 403);
+            abort_unless($this->acessoEquipe->usuarioPodeOperarEquipe($vinculo->EQUIPE_ID), 403);
 
             $equipe = Equipe::lockForUpdate()->findOrFail($vinculo->EQUIPE_ID);
             $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
@@ -237,7 +240,7 @@ class AtendimentoEquipeService
                 ->where('CHAMADO_EQUIPE_ATIVO', 1)->orderByDesc('CHAMADO_EQUIPE_ID')
                 ->lockForUpdate()->first();
             abort_unless($vinculo, 422, 'O chamado não possui equipe ativa vinculada.');
-            abort_unless($this->acessoEquipe->pertenceEquipe($vinculo->EQUIPE_ID, true), 403);
+            abort_unless($this->acessoEquipe->usuarioPodeOperarEquipe($vinculo->EQUIPE_ID), 403);
 
             $motivoId = DB::table('TABELA_GENERICA')
                 ->where('TABELA_ID', RTG::MOTIVO_CANCELAMENTO)
