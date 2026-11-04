@@ -46,7 +46,7 @@ class AtualizacaoClinicaController extends Controller
             $chamado = Chamado::lockForUpdate()->findOrFail($request->CHAMADO_ID);
             $chamado->load("situacaoAtual");
             $this->autorizarConsulta($chamado, $perfis);
-            abort_unless($this->perfilPodeCriar($perfis), 403);
+            abort_unless($this->perfilPodeCriar($perfis, $chamado), 403);
 
             $atualizacao = $this->service->registrar($chamado, $request->validated(), Auth::id());
 
@@ -154,7 +154,7 @@ class AtualizacaoClinicaController extends Controller
 
     private function podeCriar(Chamado $chamado, $perfis)
     {
-        return $this->perfilPodeCriar($perfis) && in_array($this->situacaoAtualId($chamado), [
+        return $this->perfilPodeCriar($perfis, $chamado) && in_array($this->situacaoAtualId($chamado), [
             SituacaoChamadoEnum::ABERTO,
             SituacaoChamadoEnum::EM_ANALISE,
             SituacaoChamadoEnum::EM_FILA,
@@ -162,14 +162,23 @@ class AtualizacaoClinicaController extends Controller
         ], true);
     }
 
-    private function perfilPodeCriar($perfis)
+    private function perfilPodeCriar($perfis, Chamado $chamado)
     {
-        return $perfis->intersect([
+        if ($perfis->intersect([
             PerfilEnum::DESENVOLVEDOR,
             PerfilEnum::ADMINISTRADOR,
             PerfilEnum::REGULADOR_CIA,
             PerfilEnum::UNIDADE,
-        ])->isNotEmpty();
+        ])->isNotEmpty()) {
+            return true;
+        }
+
+        return $perfis->contains(PerfilEnum::EQUIPE_ASSISTENCIAL)
+            && in_array($this->situacaoAtualId($chamado), [
+                SituacaoChamadoEnum::EM_FILA,
+                SituacaoChamadoEnum::EM_ATENDIMENTO,
+            ], true)
+            && (bool) $this->acessoEquipe->vinculoAtivoDoUsuario($chamado);
     }
 
     private function situacaoAtualId(Chamado $chamado)

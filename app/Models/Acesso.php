@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Acesso extends Model
 {
@@ -43,53 +44,38 @@ class Acesso extends Model
 
     public static function getByUsuarioId($usuarioId)
     {
-        $aplicacaoIds = DB::select(
-            "SELECT ACS.APLICACAO_ID
-            FROM ACESSO ACS
-            INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
-            WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = ? AND UP.USUARIO_PERFIL_ATIVO = 1)
-            AND A.APLICACAO_PAI_ID IS NULL
-            GROUP BY ACS.APLICACAO_ID",
-            [$usuarioId]
-        );
-        $aplicacaoIdsArray = [];
-        if (count($aplicacaoIds) > 0) {
-            foreach ($aplicacaoIds as $aplicacaoId) {
-                $aplicacaoIdsArray[] = $aplicacaoId->APLICACAO_ID;
-            }
-        }
+        $aplicacaoIdsArray = self::aplicacoesAtivasDoUsuario($usuarioId)
+            ->whereNull('a.APLICACAO_PAI_ID')
+            ->distinct()
+            ->pluck('a.APLICACAO_ID');
+
         $aplicacoesPai = Aplicacao::with([])
             ->whereIn("APLICACAO_ID", $aplicacaoIdsArray)
+            ->where('APLICACAO_ATIVA', 1)
             ->orderBy("APLICACAO_ORDEM")
             ->get();
         if ($aplicacoesPai) {
+            $visibilidadeNoCadastro = Schema::hasColumn('APLICACAO', 'APLICACAO_EXIBIR_MENU');
             $aplicacoesPaiFiltered = $aplicacoesPai->filter(function ($app) {
                 return $app->APLICACAO_URL !== 'veiculo_unidade';
             });
             $aplicacoesPaiArray = [];
             foreach ($aplicacoesPaiFiltered as $appPai) {
                 $appPaiArray = $appPai->toArray();
-                $children = DB::select(
-                    "SELECT ACS.APLICACAO_ID,
-                    A.APLICACAO_PAI_ID
-                    FROM ACESSO ACS
-                    INNER JOIN APLICACAO A on A.APLICACAO_ID = ACS.APLICACAO_ID
-                    WHERE ACS.PERFIL_ID IN (SELECT UP.PERFIL_ID FROM USUARIO_PERFIL UP WHERE UP.USUARIO_ID = ? AND UP.USUARIO_PERFIL_ATIVO = 1)
-                    AND A.APLICACAO_PAI_ID = ?
-                    GROUP BY ACS.APLICACAO_ID, A.APLICACAO_PAI_ID",
-                    [$usuarioId, $appPaiArray['APLICACAO_ID']]
-                );
-                $childrenArray = [];
-                if ($children) {
-                    foreach ($children as $child) {
-                        $childrenArray[] = $child->APLICACAO_ID;
-                    }
-                }
-                $childrenApps = Aplicacao::with([])
+                $childrenArray = self::aplicacoesAtivasDoUsuario($usuarioId)
+                    ->where('a.APLICACAO_PAI_ID', $appPaiArray['APLICACAO_ID'])
+                    ->distinct()
+                    ->pluck('a.APLICACAO_ID');
+                $childrenQuery = Aplicacao::with([])
                     ->whereIn("APLICACAO_ID", $childrenArray)
                     ->where("APLICACAO_ATIVA", 1)
-                    ->orderBy("APLICACAO_ORDEM")
-                    ->get();
+                    ->orderBy("APLICACAO_ORDEM");
+                if ($visibilidadeNoCadastro) {
+                    $childrenQuery->where('APLICACAO_EXIBIR_MENU', 1);
+                } else {
+                    $childrenQuery->where('APLICACAO_URL', '<>', 'chamado_analisar');
+                }
+                $childrenApps = $childrenQuery->get();
                 
                 $appPaiArray['children'] = $childrenApps->filter(function ($app) {
                     return $app->APLICACAO_URL !== 'veiculo_unidade';
@@ -100,5 +86,25 @@ class Acesso extends Model
             }
             return $aplicacoesPaiArray;
         }
+
+        return [];
+    }
+
+    public static function usuarioPossuiAplicacao($usuarioId, $url)
+    {
+        return self::aplicacoesAtivasDoUsuario($usuarioId)
+            ->whereIn('a.APLICACAO_URL', [$url, $url . '/view'])
+            ->exists();
+    }
+
+    private static function aplicacoesAtivasDoUsuario($usuarioId)
+    {
+        return DB::table('ACESSO as acs')
+            ->join('APLICACAO as a', 'a.APLICACAO_ID', '=', 'acs.APLICACAO_ID')
+            ->join('USUARIO_PERFIL as up', 'up.PERFIL_ID', '=', 'acs.PERFIL_ID')
+            ->where('up.USUARIO_ID', $usuarioId)
+            ->where('up.USUARIO_PERFIL_ATIVO', 1)
+            ->where('acs.ACESSO_ATIVO', 1)
+            ->where('a.APLICACAO_ATIVA', 1);
     }
 }

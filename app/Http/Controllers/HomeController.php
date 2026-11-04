@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Usuario;
+use App\Models\Acesso;
 use App\Models\Chamado;
 use App\MyLibs\PerfilEnum;
 use App\MyLibs\SituacaoChamadoEnum;
@@ -32,7 +33,8 @@ class HomeController extends Controller
                 PerfilEnum::ADMINISTRADOR,
                 PerfilEnum::REGULADOR_CIA,
                 PerfilEnum::UNIDADE,
-            ])->isEmpty()) {
+            ])->isEmpty()
+            && Acesso::usuarioPossuiAplicacao(Auth::id(), 'atendimento_equipe')) {
             return redirect('/atendimento_equipe');
         }
         $prioridades = \App\Models\TabelaGenerica::prioridadePaciente();

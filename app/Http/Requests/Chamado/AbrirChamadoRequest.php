@@ -4,6 +4,7 @@ namespace App\Http\Requests\Chamado;
 
 use App\MyLibs\RTG;
 use App\Services\TipoChamadoService;
+use App\Services\UnidadeSolicitanteService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,16 @@ class AbrirChamadoRequest extends FormRequest
 
     public function rules()
     {
+        $regrasUnidadeSolicitante = [
+            "required",
+            "integer",
+            Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_SOLICITANTE", 1)->where("UNIDADE_ATIVO", 1),
+        ];
+        if (!UnidadeSolicitanteService::podeEscolherQualquerUnidade(Auth::id())) {
+            $regrasUnidadeSolicitante[] = Rule::exists("USUARIO_UNIDADE", "UNIDADE_ID")
+                ->where("USUARIO_ID", Auth::id());
+        }
+
         return [
             "PACIENTE_VULNERABILIDADE_SOCIAL" => ["required", "boolean"],
             "PACIENTE_ID" => [
@@ -39,12 +50,7 @@ class AbrirChamadoRequest extends FormRequest
             "TG_PRIORIDADE_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::PRIORIDADE_PACIENTE)->where("ATIVO", 1)],
             "CHAMADO_AMBULANCIA_EXTRA" => ["required", "boolean"],
 
-            "UNIDADE_ID_SOLICITANTE" => [
-                "required",
-                "integer",
-                Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_SOLICITANTE", 1)->where("UNIDADE_ATIVO", 1),
-                Rule::exists("USUARIO_UNIDADE", "UNIDADE_ID")->where("USUARIO_ID", Auth::id()),
-            ],
+            "UNIDADE_ID_SOLICITANTE" => $regrasUnidadeSolicitante,
             "UNIDADE_ID_DESTINO" => ["required", "integer", Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_ATIVO", 1)],
             "CHAMADO_PROFISSIONAL_SOLICITANTE" => ["required", "string", "max:150"],
             "CHAMADO_CONSELHO_PROFISSIONAL" => ["required", Rule::in(["CRM", "COREN"])],

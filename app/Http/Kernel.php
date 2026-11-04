@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         "CompartilharVariaveis"=>CompartilharVariaveis::class,
         "alteracao.senha"=>\App\Http\Middleware\AlterarSenha::class,
+        'acesso.aplicacao' => \App\Http\Middleware\AutorizarAplicacao::class,
     ];
 }

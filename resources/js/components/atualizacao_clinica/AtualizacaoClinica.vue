@@ -258,7 +258,10 @@ export default {
             if (!this.podeSalvar) return;
             this.$store.dispatch("AtualizacaoClinicaModule/salvar", this.msgDialogId)
                 .then(dados => {
-                    if (dados) Swal.fire("Sucesso", dados.msg, "success");
+                    if (dados) {
+                        this.$emit("salvo", dados);
+                        Swal.fire("Sucesso", dados.msg, "success");
+                    }
                 });
         },
         descricao(lista, id) {

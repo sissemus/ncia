@@ -11,11 +11,11 @@ use App\Models\ChamadoViagem;
 use App\Models\Diagnostico;
 use App\Models\Paciente;
 use App\Models\Procedimento;
-use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Unidade;
 use App\MyLibs\SituacaoChamadoEnum;
 use App\Services\TipoChamadoService;
+use App\Services\UnidadeSolicitanteService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,9 +31,7 @@ class ChamadoController extends Controller
         $tiposPrecaucao = TabelaGenerica::tipoPrecaucao();
         $suportesO2 = TabelaGenerica::suporteO2();
         $suportesHemodinamicos = TabelaGenerica::suporteHemodinamico();
-        $unidadesSolicitantes = Unidade::where("UNIDADE_ATIVO", 1)
-            ->where("UNIDADE_SOLICITANTE", 1)
-            ->whereIn("UNIDADE_ID", DB::table("USUARIO_UNIDADE")->where("USUARIO_ID", Auth::id())->pluck("UNIDADE_ID"))
+        $unidadesSolicitantes = UnidadeSolicitanteService::unidadesPermitidas(Auth::id())
             ->orderBy("UNIDADE_NOME")
             ->get();
         $unidadesDestino = Unidade::where("UNIDADE_ATIVO", 1)->orderBy("UNIDADE_NOME")->get();
@@ -135,12 +133,8 @@ class ChamadoController extends Controller
             "UNIDADE_ID_SOLICITANTE" => ["required", "integer"],
         ]);
 
-        $unidadePermitida = Unidade::where("UNIDADE_ID", $request->UNIDADE_ID_SOLICITANTE)
-            ->where("UNIDADE_SOLICITANTE", 1)
-            ->where("UNIDADE_ATIVO", 1)
-            ->whereIn("UNIDADE_ID", DB::table("USUARIO_UNIDADE")
-                ->where("USUARIO_ID", Auth::id())
-                ->pluck("UNIDADE_ID"))
+        $unidadePermitida = UnidadeSolicitanteService::unidadesPermitidas(Auth::id())
+            ->where("UNIDADE_ID", $request->UNIDADE_ID_SOLICITANTE)
             ->exists();
 
         abort_unless($unidadePermitida, 403);

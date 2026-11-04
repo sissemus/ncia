@@ -5,12 +5,32 @@ namespace App\Services;
 use App\Models\Chamado;
 use App\Models\ChamadoEquipe;
 use App\Models\Usuario;
+use App\MyLibs\PerfilEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EquipeAssistencialService
 {
+    public function usuarioPodeOperarTodasEquipes($usuarioId = null)
+    {
+        return DB::table('USUARIO_PERFIL')
+            ->where('USUARIO_ID', $usuarioId ?: Auth::id())
+            ->where('USUARIO_PERFIL_ATIVO', 1)
+            ->whereIn('PERFIL_ID', [
+                PerfilEnum::DESENVOLVEDOR,
+                PerfilEnum::ADMINISTRADOR,
+                PerfilEnum::REGULADOR_CIA,
+            ])
+            ->exists();
+    }
+
+    public function usuarioPodeOperarEquipe($equipeId)
+    {
+        return $this->usuarioPodeOperarTodasEquipes()
+            || $this->pertenceEquipe($equipeId, true);
+    }
+
     public function cpfUsuario($usuarioId = null)
     {
         $usuario = Usuario::find($usuarioId ?: Auth::id());

@@ -19,6 +19,7 @@ class Aplicacao extends Model
         "APLICACAO_URL",
         "APLICACAO_GESTAO",
         "APLICACAO_ATIVA",
+        "APLICACAO_EXIBIR_MENU",
         "APLICACAO_ORDEM",
         "APLICACAO_PAI_ID",
     ];
@@ -26,6 +27,7 @@ class Aplicacao extends Model
         "APLICACAO_ID" => "integer",
         "APLICACAO_GESTAO" => "integer",
         "APLICACAO_ATIVA" => "integer",
+        "APLICACAO_EXIBIR_MENU" => "integer",
         "APLICACAO_ORDEM" => "integer",
         "APLICACAO_PAI_ID" => "integer",
     ];
