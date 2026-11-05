@@ -170,19 +170,32 @@ class EquipeController extends Controller
 
     public function deletar(Request $request)
     {
-        $EQUIPE_ATIVO = isset($request['EQUIPE_ATIVO']) ? $request['EQUIPE_ATIVO'] : null;
-        $VEICULO_ID = isset($request['VEICULO_ID']) ? $request['VEICULO_ID'] : null;
+        
+        $EQUIPE_ID = isset($request['EQUIPE_ID']) ? $request['EQUIPE_ID'] : null;
+        // $EQUIPE_ATIVO = isset($request['EQUIPE_ATIVO']) ? $request['EQUIPE_ATIVO'] : null;
+        // $VEICULO_ID = isset($request['VEICULO_ID']) ? $request['VEICULO_ID'] : null;
 
         //VERIFICAR SE A EQUIPE JÁ FOI UTILIZADA
 
-        Equipe::
-            when($EQUIPE_ATIVO, 
-                function($q, $c) {
-                    return $q->where('EQUIPE_ATIVO', '=', $c);
-                }
-            )
-            ->where('VEICULO_ID', $VEICULO_ID)
-            ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+        $equipe = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+
+        //verifico se a equipe foi utilizada em algum chamado
+
+        $chamado_equipe = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+
+        if ($chamado_equipe != null){
+
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
+            ], 422);
+
+        }
+
+        EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
+            ->delete();
+        
+        Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
             ->delete();
 
         return response()->json([
@@ -190,30 +203,5 @@ class EquipeController extends Controller
             'mensagem' => 'Equipe excluída com sucesso.'
         ]);
 
-        return DB::transaction(function () use ($request) {
-            $equipe = Equipe::lockForUpdate()->findOrFail($request->EQUIPE_ID);
-            $chamadoIds = ChamadoEquipe::where('EQUIPE_ID', $equipe->EQUIPE_ID)
-                ->distinct()
-                ->orderBy('CHAMADO_ID')
-                ->pluck('CHAMADO_ID');
-
-            if ($chamadoIds->isNotEmpty()) {
-                return response()->json([
-                    'sucesso' => false,
-                    'mensagem' => 'Não é possível excluir a equipe Nº ' . $equipe->EQUIPE_ID
-                        . ', pois ela possui vínculo com o(s) chamado(s): '
-                        . $chamadoIds->implode(', ')
-                        . '. O histórico do atendimento deve ser preservado.',
-                ], 422);
-            }
-
-            EquipeProfissional::where('EQUIPE_ID', $equipe->EQUIPE_ID)->delete();
-            $equipe->delete();
-
-            return response()->json([
-                'sucesso' => true,
-                'mensagem' => 'Equipe excluída com sucesso.',
-            ]);
-        });
     }
 }
