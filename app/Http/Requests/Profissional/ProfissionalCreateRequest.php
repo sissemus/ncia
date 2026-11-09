@@ -8,6 +8,14 @@ use Illuminate\Validation\Rule;
 
 class ProfissionalCreateRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'PROFISSIONAL_CPF' => preg_replace('/\D/', '', (string) $this->PROFISSIONAL_CPF),
+            'PROFISSIONAL_WHATSAPP' => preg_replace('/\D/', '', (string) $this->PROFISSIONAL_WHATSAPP),
+        ]);
+    }
+
     public function authorize()
     {
         return Auth::check();
@@ -31,8 +39,11 @@ class ProfissionalCreateRequest extends FormRequest
                 "required",
                 "integer",
             ],
-            "PROFISSIONAL_WHATSAPP" => ["nullable", "string", "max:20"],
+            "PROFISSIONAL_WHATSAPP" => ["required", "regex:/^[0-9]{10,11}$/"],
             "PROFISSIONAL_ATIVO" => ["required", "integer", "in:0,1"],
+            'CRIAR_ACESSO' => ['sometimes', 'boolean'],
+            'PERFIL_ID' => ['nullable', 'integer'],
+            'VINCULAR_USUARIO_ID' => ['nullable', 'integer'],
         ];
     }
 
@@ -47,5 +58,10 @@ class ProfissionalCreateRequest extends FormRequest
             "TG_TIPO_PROFISSIONAL_ID" => "<b>TIPO DE PROFISSIONAL</b>",
             "PROFISSIONAL_ATIVO" => "<b>ATIVO</b>",
         ];
+    }
+
+    public function messages()
+    {
+        return ['PROFISSIONAL_WHATSAPP.regex' => 'O telefone de contato deve conter DDD e telefone com 10 ou 11 dígitos.'];
     }
 }

@@ -213,6 +213,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
     });
 
     Route::prefix("profissional")->group(function () {
+        Route::get('acesso-opcoes', [ProfissionalController::class, 'acessoOpcoes']);
+        Route::get('usuario-por-cpf', [ProfissionalController::class, 'usuarioPorCpf']);
         Route::get("/", [ProfissionalController::class, "view"]);
         Route::get("view", [ProfissionalController::class, "view"]);
         Route::post("inserir", [ProfissionalController::class, "inserir"]);

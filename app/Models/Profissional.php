@@ -34,7 +34,14 @@ class Profissional extends Model
         "TG_SEXO_ID" => "integer",
         "TG_TIPO_PROFISSIONAL_ID" => "integer",
         "PROFISSIONAL_ATIVO" => "integer",
+        "USUARIO_ID" => "integer",
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'USUARIO_ID', 'USUARIO_ID')
+            ->select('USUARIO_ID', 'USUARIO_LOGIN', 'USUARIO_NOME', 'USUARIO_ATIVO');
+    }
 
     public function sexo()
     {
@@ -53,6 +60,7 @@ class Profissional extends Model
         return [
             "sexo",
             "tipoProfissional",
+            "usuario",
         ];
     }
 

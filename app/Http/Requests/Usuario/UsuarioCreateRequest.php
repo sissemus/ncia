@@ -10,6 +10,7 @@ class UsuarioCreateRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
+            "USUARIO_CPF" => preg_replace('/[^0-9]/', '', (string) $this->USUARIO_CPF),
             "USUARIO_CONTATO" => preg_replace('/[^0-9]/', '', (string) $this->USUARIO_CONTATO),
         ]);
     }
@@ -34,7 +35,7 @@ class UsuarioCreateRequest extends FormRequest
         return [
             "USUARIO_LOGIN" => ["required", "unique:USUARIO", "max:50"],
             "USUARIO_SENHA" => ["required", "same:USUARIO_SENHA_CONFIRMATION", "max:32"],
-            "USUARIO_NOME" => ["required", "unique:USUARIO", "max:255"],
+            "USUARIO_NOME" => ["required", "string", "max:255"],
             "USUARIO_CPF" => ["required", "unique:USUARIO", "cpf"],
             "USUARIO_CONTATO" => ["required", "regex:/^[0-9]{10,11}$/", "unique:USUARIO,USUARIO_CONTATO"],
             "USUARIO_ATIVO" => ["required", "integer"],

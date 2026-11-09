@@ -43,7 +43,8 @@ class Usuario extends Authenticatable
 
     protected $hidden = [
         'remember_token',
-        'USUARIO_SENHA'
+        'USUARIO_SENHA',
+        'USUARIO_LOGIN_UNICO',
     ];
 
     public function getAuthPassword()
@@ -61,6 +62,11 @@ class Usuario extends Authenticatable
         return $this->hasMany(UsuarioPerfil::class, "USUARIO_ID", "USUARIO_ID");
     }
 
+    public function profissional()
+    {
+        return $this->hasOne(Profissional::class, 'USUARIO_ID', 'USUARIO_ID');
+    }
+
     public function usuarioUnidades()
     {
         return $this->hasMany(UsuarioUnidade::class, "USUARIO_ID", "USUARIO_ID")
@@ -75,6 +81,7 @@ class Usuario extends Authenticatable
         return [
             "usuarioPerfis.perfil",
             "usuarioUnidades.unidade",
+            "profissional",
         ];
     }
 
