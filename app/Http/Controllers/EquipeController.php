@@ -177,20 +177,20 @@ class EquipeController extends Controller
 
         //VERIFICAR SE A EQUIPE JÁ FOI UTILIZADA
 
-        $equipe = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+        // $equipe = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
 
         //verifico se a equipe foi utilizada em algum chamado
 
-        $chamado_equipe = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+        // $chamado_equipe = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
 
-        if ($chamado_equipe != null){
+        // if ($chamado_equipe != null){
 
-            return response()->json([
-                'sucesso' => false,
-                'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
-            ], 422);
+        //     return response()->json([
+        //         'sucesso' => false,
+        //         'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
+        //     ], 422);
 
-        }
+        // }
 
         EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
             ->delete();
