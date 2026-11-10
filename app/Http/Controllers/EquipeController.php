@@ -10,6 +10,8 @@ use App\Models\EquipeProfissional;
 use App\Models\Profissional;
 use App\Models\TabelaGenerica;
 use App\Models\Veiculo;
+use App\Services\EquipeAssistencialService;
+use App\Services\TrocaPlantaoService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
@@ -24,8 +26,39 @@ class EquipeController extends Controller
         $tiposProfissional = TabelaGenerica::tipoProfissional();
         $tiposVeiculo = TabelaGenerica::tipoVeiculo();
         $profissionais = Profissional::listarNPesquisa();
+        $podeTrocarPlantao = app(EquipeAssistencialService::class)->usuarioPodeOperarTodasEquipes();
 
-        return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais', 'tiposVeiculo'));
+        return view('equipe.equipe_view', compact('tiposProfissional', 'profissionais', 'tiposVeiculo', 'podeTrocarPlantao'));
+    }
+
+    public function equipesPlantao(Request $request, EquipeAssistencialService $acesso)
+    {
+        abort_unless($acesso->usuarioPodeOperarTodasEquipes(), 403);
+        $dados = $request->validate(['VEICULO_ID' => 'required|integer|min:1']);
+
+        return response()->json(Equipe::with(['equipeProfissional' => function ($query) {
+            $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1)->with('profissional');
+        }])->where('VEICULO_ID', $dados['VEICULO_ID'])->where('EQUIPE_ATIVO', 1)
+            ->whereHas('equipeProfissional', function ($query) {
+                $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
+            })->orderByDesc('EQUIPE_DATA')->orderByDesc('EQUIPE_ID')->get());
+    }
+
+    public function trocarPlantao(Request $request, EquipeAssistencialService $acesso, TrocaPlantaoService $plantao)
+    {
+        abort_unless($acesso->usuarioPodeOperarTodasEquipes(), 403);
+        $dados = $request->validate([
+            'VEICULO_ID' => 'required|integer|min:1',
+            'EQUIPE_ID' => 'required|integer|min:1',
+        ]);
+        $quantidade = $plantao->transferir($dados['VEICULO_ID'], $dados['EQUIPE_ID']);
+
+        return response()->json([
+            'transferidos' => $quantidade,
+            'mensagem' => $quantidade
+                ? $quantidade . ' chamado(s) em fila transferido(s) para a equipe selecionada.'
+                : 'Não há chamados em fila para transferir para esta equipe.',
+        ]);
     }
 
     public function inserir(EquipeCreateRequest $request)
