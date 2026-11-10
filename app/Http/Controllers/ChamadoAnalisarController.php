@@ -13,6 +13,7 @@ use App\MyLibs\RTG;
 use App\Services\TipoChamadoService;
 use App\Services\ChamadoFluxoService;
 use App\Services\EquipeAssistencialService;
+use App\Services\PlantaoEquipeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,25 +69,25 @@ class ChamadoAnalisarController extends Controller
     public function veiculosDisponiveis()
     {
         $this->autorizarAnalise();
-        $data = Carbon::now('America/Sao_Paulo')->toDateString();
+        $vigente = PlantaoEquipeService::vigente();
 
         $veiculos = Veiculo::with([
-            'equipe' => function ($query) use ($data) {
-                $query->where('EQUIPE_DATA', $data)
-                    ->where('EQUIPE_ATIVO', 1)
-                    ->orderByDesc('EQUIPE_ID');
+            'equipesAtivas' => function ($query) use ($vigente) {
+                PlantaoEquipeService::filtrarEncaminhamento($query, $vigente)
+                    ->whereHas('equipeProfissional', function ($query) {
+                        $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
+                    })->orderBy('EQUIPE_ID');
             },
-            'equipe.equipeProfissional' => function ($query) {
+            'equipesAtivas.equipeProfissional' => function ($query) {
                 $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
             },
-            'equipe.equipeProfissional.profissional',
+            'equipesAtivas.equipeProfissional.profissional',
             'vinculoAtivo.unidade',
         ])
             ->where('VEICULO_ATIVO', 1)
             ->whereHas('vinculoAtivo')
-            ->whereHas('equipe', function ($query) use ($data) {
-                $query->where('EQUIPE_DATA', $data)
-                    ->where('EQUIPE_ATIVO', 1)
+            ->whereHas('equipesAtivas', function ($query) use ($vigente) {
+                PlantaoEquipeService::filtrarEncaminhamento($query, $vigente)
                     ->whereHas('equipeProfissional', function ($profissionais) {
                         $profissionais->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
                     });
@@ -130,50 +131,54 @@ class ChamadoAnalisarController extends Controller
 
         // Retorna somente os campos usados pelo modal. Além de reduzir a resposta,
         // evita que colunas legadas com codificação inválida interrompam o JSON.
-        return response()->json($veiculos->map(function ($veiculo) use ($cargas) {
-            $equipe = $veiculo->equipe;
-            $vinculo = $veiculo->vinculoAtivo;
-            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
-            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
-                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
-            });
-            $quantidadeEmFila = (int) optional($cargaVeiculo->first(function ($item) {
-                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA;
-            }))->TOTAL;
+        $opcoes = $veiculos->flatMap(function ($veiculo) use ($cargas, $vigente) {
+            return $veiculo->equipesAtivas->map(function ($equipe) use ($veiculo, $cargas, $vigente) {
+                $vinculo = $veiculo->vinculoAtivo;
+                $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
+                $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
+                    return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
+                });
+                $quantidadeEmFila = (int) optional($cargaVeiculo->first(function ($item) {
+                    return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA;
+                }))->TOTAL;
 
-            return [
-                'VEICULO_ID' => $veiculo->VEICULO_ID,
-                'VEICULO_IDENTIFICACAO' => $this->textoJson($veiculo->VEICULO_IDENTIFICACAO),
-                'VEICULO_PLACA' => $this->textoJson($veiculo->VEICULO_PLACA),
-                'OCUPADO_EM_ATENDIMENTO' => $ocupadoEmAtendimento,
-                'QUANTIDADE_EM_FILA' => $quantidadeEmFila,
-                'equipe' => $equipe ? [
-                    'EQUIPE_ID' => $equipe->EQUIPE_ID,
-                    'VEICULO_ID' => $equipe->VEICULO_ID,
-                    'EQUIPE_DATA' => $equipe->EQUIPE_DATA,
-                    'EQUIPE_TURNO' => $this->textoJson($equipe->EQUIPE_TURNO),
-                    'equipeProfissional' => $equipe->equipeProfissional->map(function ($item) {
-                        return [
-                            'EQUIPE_PROFISSIONAL_ID' => $item->EQUIPE_PROFISSIONAL_ID,
-                            'PROFISSIONAL_ID' => $item->PROFISSIONAL_ID,
-                            'EQUIPE_PROFISSIONAL_ATIVO' => $item->EQUIPE_PROFISSIONAL_ATIVO,
-                            'profissional' => $item->profissional ? [
-                                'PROFISSIONAL_ID' => $item->profissional->PROFISSIONAL_ID,
-                                'PROFISSIONAL_NOME' => $this->textoJson($item->profissional->PROFISSIONAL_NOME),
-                            ] : null,
-                        ];
-                    })->values(),
-                ] : null,
-                'vinculoAtivo' => $vinculo ? [
-                    'VEICULO_UNIDADE_ID' => $vinculo->VEICULO_UNIDADE_ID,
-                    'UNIDADE_ID' => $vinculo->UNIDADE_ID,
-                    'unidade' => $vinculo->unidade ? [
-                        'UNIDADE_ID' => $vinculo->unidade->UNIDADE_ID,
-                        'UNIDADE_NOME' => $this->textoJson($vinculo->unidade->UNIDADE_NOME),
+                return [
+                    'VEICULO_ID' => $veiculo->VEICULO_ID,
+                    'VEICULO_IDENTIFICACAO' => $this->textoJson($veiculo->VEICULO_IDENTIFICACAO),
+                    'VEICULO_PLACA' => $this->textoJson($veiculo->VEICULO_PLACA),
+                    'OCUPADO_EM_ATENDIMENTO' => $ocupadoEmAtendimento,
+                    'QUANTIDADE_EM_FILA' => $quantidadeEmFila,
+                    'PROXIMO_TURNO' => !PlantaoEquipeService::corresponde($equipe, $vigente),
+                    'equipe' => $equipe ? [
+                        'EQUIPE_ID' => $equipe->EQUIPE_ID,
+                        'VEICULO_ID' => $equipe->VEICULO_ID,
+                        'EQUIPE_DATA' => $equipe->EQUIPE_DATA,
+                        'EQUIPE_TURNO' => $this->textoJson($equipe->EQUIPE_TURNO),
+                        'equipeProfissional' => $equipe->equipeProfissional->map(function ($item) {
+                            return [
+                                'EQUIPE_PROFISSIONAL_ID' => $item->EQUIPE_PROFISSIONAL_ID,
+                                'PROFISSIONAL_ID' => $item->PROFISSIONAL_ID,
+                                'EQUIPE_PROFISSIONAL_ATIVO' => $item->EQUIPE_PROFISSIONAL_ATIVO,
+                                'profissional' => $item->profissional ? [
+                                    'PROFISSIONAL_ID' => $item->profissional->PROFISSIONAL_ID,
+                                    'PROFISSIONAL_NOME' => $this->textoJson($item->profissional->PROFISSIONAL_NOME),
+                                ] : null,
+                            ];
+                        })->values(),
                     ] : null,
-                ] : null,
-            ];
-        })->values());
+                    'vinculoAtivo' => $vinculo ? [
+                        'VEICULO_UNIDADE_ID' => $vinculo->VEICULO_UNIDADE_ID,
+                        'UNIDADE_ID' => $vinculo->UNIDADE_ID,
+                        'unidade' => $vinculo->unidade ? [
+                            'UNIDADE_ID' => $vinculo->unidade->UNIDADE_ID,
+                            'UNIDADE_NOME' => $this->textoJson($vinculo->unidade->UNIDADE_NOME),
+                        ] : null,
+                    ] : null,
+                ];
+            });
+        })->sortBy('PROXIMO_TURNO')->values();
+
+        return response()->json($opcoes);
     }
 
     public function recepcionar(Request $request)

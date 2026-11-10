@@ -83,7 +83,7 @@
                                                         <v-btn icon v-bind="attrs" v-on="on"
                                                             aria-label="Trocar plantão"
                                                             :disabled="processandoEquipeId !== null || dialogPlantao || processandoPlantao"
-                                                            @click="abrirTrocaPlantao(veiculo)">
+                                                            @click="abrirTrocaPlantao(veiculo, eqp)">
                                                             <v-icon>mdi-account-switch</v-icon>
                                                         </v-btn>
                                                     </template>
@@ -137,12 +137,14 @@
             <v-card>
                 <v-card-title>Trocar plantão — {{ veiculoPlantao && veiculoPlantao.VEICULO_IDENTIFICACAO }}</v-card-title>
                 <v-card-text>
+                    <p v-if="equipeOrigemPlantao"><strong>Equipe de origem:</strong>
+                        Nº {{ equipeOrigemPlantao.EQUIPE_ID }} — {{ formatarData(equipeOrigemPlantao.EQUIPE_DATA) }} — {{ equipeOrigemPlantao.EQUIPE_TURNO }}</p>
                     <p>Selecione a equipe que assumirá os chamados em fila desta ambulância.
                         Os chamados em atendimento continuarão com a equipe anterior até a conclusão.</p>
                     <v-select v-model="equipePlantaoId" :items="equipesPlantao"
                         item-value="EQUIPE_ID" item-text="descricaoPlantao" label="Equipe que assumirá"
                         :loading="carregandoPlantao" :disabled="carregandoPlantao || processandoPlantao"
-                        no-data-text="Não há equipes ativas disponíveis para esta ambulância.">
+                        no-data-text="Não há equipe substituta ativa com turno e data compatíveis nesta ambulância.">
                         <template v-slot:item="{ item }">
                             <v-list-item-content>
                                 <v-list-item-title>Equipe Nº {{ item.EQUIPE_ID }} — {{ formatarData(item.EQUIPE_DATA) }} — {{ item.EQUIPE_TURNO }}</v-list-item-title>
@@ -190,6 +192,7 @@ export default {
             carregandoPlantao: false,
             processandoPlantao: false,
             veiculoPlantao: null,
+            equipeOrigemPlantao: null,
             equipePlantaoId: null,
             equipesPlantao: [],
         }
@@ -240,16 +243,17 @@ export default {
         }
     },
     methods: {
-        async abrirTrocaPlantao(veiculo) {
+        async abrirTrocaPlantao(veiculo, equipeOrigem) {
             if (this.dialogPlantao || this.processandoEquipeId !== null) return;
             this.veiculoPlantao = veiculo;
+            this.equipeOrigemPlantao = equipeOrigem;
             this.equipePlantaoId = null;
             this.equipesPlantao = [];
             this.dialogPlantao = true;
             this.carregandoPlantao = true;
             try {
                 const { data } = await axios.get(`${this.baseUrl}/equipe/equipes-plantao`, {
-                    params: { VEICULO_ID: veiculo.VEICULO_ID }
+                    params: { VEICULO_ID: veiculo.VEICULO_ID, EQUIPE_ORIGEM_ID: equipeOrigem.EQUIPE_ID }
                 });
                 this.equipesPlantao = data.map(equipe => {
                     const profissionais = (equipe.equipeProfissional || [])
@@ -276,6 +280,7 @@ export default {
             try {
                 const { data } = await axios.post(`${this.baseUrl}/equipe/trocar-plantao`, {
                     VEICULO_ID: this.veiculoPlantao.VEICULO_ID,
+                    EQUIPE_ORIGEM_ID: this.equipeOrigemPlantao.EQUIPE_ID,
                     EQUIPE_ID: this.equipePlantaoId
                 });
                 this.dialogPlantao = false;

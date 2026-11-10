@@ -146,7 +146,7 @@
                 <v-card-text class="mt-5">
                     <fieldset v-if="acao === 'encaminhar'" class="custom-fieldset">
                         <legend class="custom-legend">VEÍCULO E EQUIPE</legend>
-                        <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" return-object v-model="equipeSelecionada" outlined dense />
+                        <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" item-value="equipe.EQUIPE_ID" return-object v-model="equipeSelecionada" outlined dense />
                     </fieldset>
                     <v-alert v-if="acao === 'concluir'" type="info" outlined>
                         Confirme a conclusão do atendimento após a liberação da ambulância.
@@ -361,7 +361,10 @@ export default {
             if (!veiculo) return '-';
             const situacao = veiculo.OCUPADO_EM_ATENDIMENTO ? 'EM ATENDIMENTO' : 'DISPONÍVEL';
             const fila = Number(veiculo.QUANTIDADE_EM_FILA || 0);
-            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)} — ${situacao} — ${fila} em fila`;
+            const data = veiculo.equipe && veiculo.equipe.EQUIPE_DATA
+                ? moment(veiculo.equipe.EQUIPE_DATA).format('DD/MM/YYYY') : '';
+            const plantao = veiculo.PROXIMO_TURNO ? 'Próximo turno' : 'Plantão vigente';
+            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)} — ${data} — ${plantao} — ${situacao} — ${fila} em fila`;
         },
         descricaoEquipe(equipe) { return equipe ? `Equipe Nº ${equipe.EQUIPE_ID}${equipe.EQUIPE_TURNO ? ` - ${equipe.EQUIPE_TURNO}` : ''}` : '-'; },
         valor(obj, campo) { return obj && obj[campo] ? obj[campo] : '-'; },

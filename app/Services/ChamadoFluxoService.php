@@ -30,16 +30,16 @@ class ChamadoFluxoService
     public function encaminhar(Chamado $chamado, $equipeId)
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ANALISE]);
-        $hoje = Carbon::now('America/Sao_Paulo')->toDateString();
+        $vigente = PlantaoEquipeService::vigente();
 
-        $equipe = Equipe::where('EQUIPE_ID', $equipeId)
-            ->whereDate('EQUIPE_DATA', $hoje)
+        $queryEquipe = Equipe::where('EQUIPE_ID', $equipeId)
             ->where('EQUIPE_ATIVO', 1)
             ->whereHas('equipeProfissional', function ($query) {
                 $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
-            })
-            ->lockForUpdate()
-            ->firstOrFail();
+            });
+        PlantaoEquipeService::filtrarEncaminhamento($queryEquipe, $vigente);
+        $equipe = $queryEquipe->lockForUpdate()->first();
+        abort_unless($equipe, 422, 'Selecione uma equipe ativa do plantão vigente ou do próximo turno. Atualize a lista.');
 
         $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
         abort_unless((int) $veiculo->VEICULO_ATIVO === 1, 422, 'Veículo inativo.');

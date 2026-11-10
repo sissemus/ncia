@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class TrocaPlantaoService
 {
-    public function transferir($veiculoId, $equipeId)
+    public function transferir($veiculoId, $equipeOrigemId, $equipeId)
     {
-        return DB::transaction(function () use ($veiculoId, $equipeId) {
+        return DB::transaction(function () use ($veiculoId, $equipeOrigemId, $equipeId) {
             $ids = ChamadoEquipe::join('EQUIPE as origem', 'origem.EQUIPE_ID', '=', 'CHAMADO_EQUIPE.EQUIPE_ID')
                 ->where('origem.VEICULO_ID', $veiculoId)
+                ->where('CHAMADO_EQUIPE.EQUIPE_ID', $equipeOrigemId)
                 ->where('CHAMADO_EQUIPE_ATIVO', 1)
                 ->distinct()->pluck('CHAMADO_ID');
 
@@ -25,7 +26,7 @@ class TrocaPlantaoService
             $chamados = Chamado::whereIn('CHAMADO_ID', $ids)
                 ->orderBy('CHAMADO_ID')->lockForUpdate()->get();
             $pendentes = collect();
-            $equipeIds = collect([(int) $equipeId]);
+            $equipeIds = collect([(int) $equipeOrigemId, (int) $equipeId]);
             foreach ($chamados as $chamado) {
                 $situacao = ChamadoSituacao::where('CHAMADO_ID', $chamado->CHAMADO_ID)
                     ->orderByDesc('CHAMADO_SITUACAO_DATA')->orderByDesc('CHAMADO_SITUACAO_ID')
@@ -44,9 +45,16 @@ class TrocaPlantaoService
             $equipes = Equipe::whereIn('EQUIPE_ID', $equipeIds->unique())
                 ->orderBy('EQUIPE_ID')->lockForUpdate()->get()->keyBy('EQUIPE_ID');
             $destino = $equipes->get((int) $equipeId);
+            $origem = $equipes->get((int) $equipeOrigemId);
+            abort_unless($origem && (int) $origem->EQUIPE_ATIVO === 1
+                && (int) $origem->VEICULO_ID === (int) $veiculoId, 422,
+                'A equipe de origem não está ativa nesta ambulância.');
+            $seguinte = PlantaoEquipeService::seguinte($origem->EQUIPE_TURNO, $origem->EQUIPE_DATA);
             abort_unless($destino && (int) $destino->EQUIPE_ATIVO === 1
                 && (int) $destino->VEICULO_ID === (int) $veiculoId, 422,
                 'Selecione uma equipe ativa da mesma ambulância.');
+            abort_unless(PlantaoEquipeService::corresponde($destino, $seguinte), 422,
+                'Selecione SN da mesma data da SD de origem ou SD do dia seguinte à SN de origem.');
             abort_unless($destino->equipeProfissional()->where('EQUIPE_PROFISSIONAL_ATIVO', 1)->exists(),
                 422, 'A equipe selecionada não possui profissionais ativos.');
             $veiculo = Veiculo::lockForUpdate()->findOrFail($veiculoId);
@@ -61,7 +69,7 @@ class TrocaPlantaoService
                 })) {
                     continue;
                 }
-                $anteriores = $vinculos->where('EQUIPE_ID', '!=', (int) $equipeId);
+                $anteriores = $vinculos->where('EQUIPE_ID', (int) $equipeOrigemId);
                 if ($anteriores->isEmpty()) {
                     continue;
                 }

@@ -12,6 +12,7 @@ use App\Models\TabelaGenerica;
 use App\Models\Veiculo;
 use App\Services\EquipeAssistencialService;
 use App\Services\TrocaPlantaoService;
+use App\Services\PlantaoEquipeService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
@@ -34,14 +35,23 @@ class EquipeController extends Controller
     public function equipesPlantao(Request $request, EquipeAssistencialService $acesso)
     {
         abort_unless($acesso->usuarioPodeOperarTodasEquipes(), 403);
-        $dados = $request->validate(['VEICULO_ID' => 'required|integer|min:1']);
+        $dados = $request->validate([
+            'VEICULO_ID' => 'required|integer|min:1',
+            'EQUIPE_ORIGEM_ID' => 'required|integer|min:1',
+        ]);
+        $origem = Equipe::where('VEICULO_ID', $dados['VEICULO_ID'])
+            ->where('EQUIPE_ATIVO', 1)->findOrFail($dados['EQUIPE_ORIGEM_ID']);
+        $seguinte = PlantaoEquipeService::seguinte($origem->EQUIPE_TURNO, $origem->EQUIPE_DATA);
 
-        return response()->json(Equipe::with(['equipeProfissional' => function ($query) {
+        $equipes = Equipe::with(['equipeProfissional' => function ($query) {
             $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1)->with('profissional');
         }])->where('VEICULO_ID', $dados['VEICULO_ID'])->where('EQUIPE_ATIVO', 1)
             ->whereHas('equipeProfissional', function ($query) {
                 $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
-            })->orderByDesc('EQUIPE_DATA')->orderByDesc('EQUIPE_ID')->get());
+            });
+        PlantaoEquipeService::filtrarPlantao($equipes, $seguinte);
+
+        return response()->json($equipes->orderBy('EQUIPE_ID')->get());
     }
 
     public function trocarPlantao(Request $request, EquipeAssistencialService $acesso, TrocaPlantaoService $plantao)
@@ -50,8 +60,9 @@ class EquipeController extends Controller
         $dados = $request->validate([
             'VEICULO_ID' => 'required|integer|min:1',
             'EQUIPE_ID' => 'required|integer|min:1',
+            'EQUIPE_ORIGEM_ID' => 'required|integer|min:1',
         ]);
-        $quantidade = $plantao->transferir($dados['VEICULO_ID'], $dados['EQUIPE_ID']);
+        $quantidade = $plantao->transferir($dados['VEICULO_ID'], $dados['EQUIPE_ORIGEM_ID'], $dados['EQUIPE_ID']);
 
         return response()->json([
             'transferidos' => $quantidade,

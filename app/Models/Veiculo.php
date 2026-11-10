@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\MyLibs\RTG;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -55,6 +56,12 @@ class Veiculo extends Model
             ->where('EQUIPE_ATIVO', '=', 1);
     }
 
+    public function equipesAtivas()
+    {
+        return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
+            ->where('EQUIPE_ATIVO', 1);
+    }
+
     public function vinculoAtivo()
     {
         return $this->hasOne(VeiculoUnidade::class, "VEICULO_ID", "VEICULO_ID")
@@ -95,12 +102,29 @@ class Veiculo extends Model
     // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
     public static function relacionamentoCadastrar()
     {
+        $hoje = Carbon::now('America/Sao_Paulo');
+
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
             "equipe",
-            "equipes.equipeProfissional.profissional",
-            "equipes.equipeProfissional.profissional.tipoProfissional",
+            'equipesAtivas' => function ($query) use ($hoje) {
+                $query->where(function ($query) use ($hoje) {
+                    $query->whereDate('EQUIPE_DATA', $hoje->toDateString())
+                        ->orWhere(function ($query) use ($hoje) {
+                            // Manter a SN anterior acessível para entregar sua fila à SD.
+                            $query->whereDate('EQUIPE_DATA', $hoje->copy()->subDay()->toDateString())
+                                ->where('EQUIPE_TURNO', 'SN')
+                                ->whereExists(function ($query) {
+                                    $query->selectRaw('1')->from('CHAMADO_EQUIPE as ce_plantao')
+                                        ->whereColumn('ce_plantao.EQUIPE_ID', 'EQUIPE.EQUIPE_ID')
+                                        ->where('ce_plantao.CHAMADO_EQUIPE_ATIVO', 1);
+                                });
+                        });
+                })->orderBy('EQUIPE_DATA')->orderBy('EQUIPE_ID');
+            },
+            'equipesAtivas.equipeProfissional.profissional',
+            'equipesAtivas.equipeProfissional.profissional.tipoProfissional',
             "vinculoAtivo",
             "vinculoAtivo.unidade",
         ];
@@ -108,7 +132,7 @@ class Veiculo extends Model
 
     public static function pesquisarCadastrar($requisicao)
     {
-        return self::with(self::relacionamentoCadastrar())
+        $veiculos = self::with(self::relacionamentoCadastrar())
             ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
                 return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");
             })
@@ -123,6 +147,13 @@ class Veiculo extends Model
             })
             ->orderBy("VEICULO_IDENTIFICACAO")
             ->paginate();
+
+        $veiculos->getCollection()->each(function ($veiculo) {
+            $veiculo->setRelation('equipes', $veiculo->getRelation('equipesAtivas'));
+            $veiculo->unsetRelation('equipesAtivas');
+        });
+
+        return $veiculos;
     }
 
     public static function buscar($id)
