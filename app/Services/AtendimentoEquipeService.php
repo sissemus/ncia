@@ -175,10 +175,8 @@ class AtendimentoEquipeService
                 if ((int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA) {
                     abort_unless($this->primeiroChamadoEmFilaDoVeiculo($veiculo->VEICULO_ID) === (int) $chamado->CHAMADO_ID, 422,
                         'Existe outro chamado com maior prioridade ou mais antigo aguardando recebimento.');
-                    abort_unless((int) $veiculo->VEICULO_ATIVO === 1 && (
-                        (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1
-                        || $this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID)
-                    ), 422,
+                    abort_unless((int) $veiculo->VEICULO_ATIVO === 1
+                        && (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1, 422,
                         'O veículo não está disponível para iniciar o atendimento.');
                 }
             } else {
@@ -196,8 +194,7 @@ class AtendimentoEquipeService
 
             if ($proximaEtapa === EtapaAtendimentoEnum::RECEBIDO
                 && (int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_FILA) {
-                $veiculo->TG_SITUACAO_VEICULO_ID = 2;
-                $veiculo->save();
+                // A ocupação vem do chamado; a situação do veículo é alterada manualmente.
                 $this->registrarSituacao($chamado, SituacaoChamadoEnum::EM_ATENDIMENTO, 'Atendimento recebido pela equipe assistencial.');
             }
 
@@ -206,10 +203,6 @@ class AtendimentoEquipeService
             )) {
                 $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
                 $vinculo->save();
-                if (!$this->outroChamadoEmAtendimentoDoVeiculo($veiculo->VEICULO_ID, $chamado->CHAMADO_ID)) {
-                    $veiculo->TG_SITUACAO_VEICULO_ID = 1;
-                    $veiculo->save();
-                }
             }
 
             return [
@@ -267,18 +260,6 @@ class AtendimentoEquipeService
             ->orderBy('CHAMADO.CHAMADO_ID')
             ->lockForUpdate()
             ->value('CHAMADO.CHAMADO_ID');
-    }
-
-    private function outroChamadoEmAtendimentoDoVeiculo($veiculoId, $ignorarChamadoId)
-    {
-        $query = Chamado::join('CHAMADO_EQUIPE as ce_ocupada', 'ce_ocupada.CHAMADO_ID', '=', 'CHAMADO.CHAMADO_ID')
-            ->join('EQUIPE as e_ocupada', 'e_ocupada.EQUIPE_ID', '=', 'ce_ocupada.EQUIPE_ID')
-            ->where('e_ocupada.VEICULO_ID', $veiculoId)
-            ->where('ce_ocupada.CHAMADO_EQUIPE_ATIVO', 1)
-            ->where('CHAMADO.CHAMADO_ID', '!=', $ignorarChamadoId);
-        $this->restringirSituacaoAtual($query, [SituacaoChamadoEnum::EM_ATENDIMENTO]);
-
-        return (int) $query->value('CHAMADO.CHAMADO_ID');
     }
 
     private function restringirSituacaoAtual($query, array $situacoes)

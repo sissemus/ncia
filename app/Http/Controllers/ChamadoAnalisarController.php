@@ -85,6 +85,7 @@ class ChamadoAnalisarController extends Controller
             'vinculoAtivo.unidade',
         ])
             ->where('VEICULO_ATIVO', 1)
+            ->where('TG_SITUACAO_VEICULO_ID', 1)
             ->whereHas('vinculoAtivo')
             ->whereHas('equipesAtivas', function ($query) {
                 PlantaoEquipeService::filtrarEncaminhamento($query)
@@ -119,15 +120,6 @@ class ChamadoAnalisarController extends Controller
             ->groupBy('e_carga.VEICULO_ID', 'cs_carga.TG_SITUACAO_ID')
             ->get()
             ->groupBy('VEICULO_ID');
-
-        $veiculos = $veiculos->filter(function ($veiculo) use ($cargas) {
-            $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
-            $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
-                return (int) $item->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO;
-            });
-
-            return (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $ocupadoEmAtendimento;
-        })->values();
 
         // Retorna somente os campos usados pelo modal. Além de reduzir a resposta,
         // evita que colunas legadas com codificação inválida interrompam o JSON.
