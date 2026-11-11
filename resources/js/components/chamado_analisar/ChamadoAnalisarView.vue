@@ -146,7 +146,8 @@
                 <v-card-text class="mt-5">
                     <fieldset v-if="acao === 'encaminhar'" class="custom-fieldset">
                         <legend class="custom-legend">VEÍCULO E EQUIPE</legend>
-                        <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" return-object v-model="equipeSelecionada" outlined dense />
+                        <v-select label="Veículo / equipe*" :items="veiculos" :item-text="descricaoVeiculoEquipe" item-value="equipe.EQUIPE_ID" return-object v-model="equipeSelecionada" outlined dense />
+                        <p class="caption mb-0">Os horários orientam a ordem da lista. Selecione a equipe que efetivamente assumiu o plantão.</p>
                     </fieldset>
                     <v-alert v-if="acao === 'concluir'" type="info" outlined>
                         Confirme a conclusão do atendimento após a liberação da ambulância.
@@ -169,6 +170,7 @@
 </template>
 
 <script>
+import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
 import moment from 'moment';
 import TratarErroAjax from '../assets/TratarErroAjax';
 import Swal from 'sweetalert2';
@@ -361,12 +363,15 @@ export default {
             if (!veiculo) return '-';
             const situacao = veiculo.OCUPADO_EM_ATENDIMENTO ? 'EM ATENDIMENTO' : 'DISPONÍVEL';
             const fila = Number(veiculo.QUANTIDADE_EM_FILA || 0);
-            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)} — ${situacao} — ${fila} em fila`;
+            const data = veiculo.equipe && veiculo.equipe.EQUIPE_DATA
+                ? moment(veiculo.equipe.EQUIPE_DATA).format('DD/MM/YYYY') : '';
+            const plantao = veiculo.PLANTAO_DESCRICAO || 'Plantão cadastrado';
+            return `${veiculo.VEICULO_IDENTIFICACAO || 'Veículo'} — ${this.descricaoEquipe(veiculo.equipe)} — ${data} — ${plantao} — ${situacao} — ${fila} em fila`;
         },
         descricaoEquipe(equipe) { return equipe ? `Equipe Nº ${equipe.EQUIPE_ID}${equipe.EQUIPE_TURNO ? ` - ${equipe.EQUIPE_TURNO}` : ''}` : '-'; },
         valor(obj, campo) { return obj && obj[campo] ? obj[campo] : '-'; },
         descricao(lista, id) { const item = (lista || []).find(atual => Number(atual.COLUNA_ID) === Number(id)); return item ? item.DESCRICAO : '-'; },
-        formatarDataHora(data) { return data ? moment(data).format('DD/MM/YYYY HH:mm:ss') : '-'; },
+        formatarDataHora(data) { return formatarDataHoraFortaleza(data, true); },
         simNao(valor) { return valor === null || valor === undefined ? '-' : Number(valor) === 1 ? 'Sim' : 'Não'; },
         erro(error) {
             this.$store.dispatch('TratarErroAjaxModule/tratarErro', { id: this.msgId, response: error && error.response }, { root: true });

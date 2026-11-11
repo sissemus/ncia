@@ -4,6 +4,11 @@
         <div :id="msgIdDebug"></div>
 
         <v-card-text class="mt-5">
+            <v-alert v-if="usuario.profissional" type="info" outlined>
+                Este usuário está vinculado a um profissional. Nome, CPF e telefone são
+                atualizados nos dois cadastros. O login será mantido; a senha pode ser alterada
+                na opção de alteração de senha do próprio usuário.
+            </v-alert>
 
             <v-row>
                 <v-col cols="md-7">
@@ -27,6 +32,7 @@
                 <v-col cols="md-6">
                     <v-text-field
                         label="Login*"
+                        :readonly="!!usuario.profissional"
                         autocomplete="off"
                         v-model="usuario.USUARIO_LOGIN"
                     ></v-text-field>
@@ -48,6 +54,7 @@
                 <v-col cols="md-6">
                     <v-text-field
                         label="Senha*"
+                        :disabled="!!usuario.profissional"
                         type="password"
                         autocomplete="off"
                         v-model="senha"
@@ -59,6 +66,7 @@
                 <v-col cols="md-6">
                     <v-text-field
                         label="Confirmar Senha*"
+                        :disabled="!!usuario.profissional"
                         type="password"
                         autocomplete="off"
                         v-model="confirmarSenha"
@@ -187,8 +195,6 @@ export default {
             this.usuario.USUARIO_SENHA = this.senha;
             this.usuario.USUARIO_SENHA_CONFIRMATION = this.confirmarSenha;
             this.$store.dispatch('TratarErroAjaxModule/fecharAlert', this.msgId);
-
-            console.log('usuario: ', this.usuario);
 
             axios({
                 method: this.usuario.USUARIO_ID === null ? 'POST' : 'PUT',

@@ -70,7 +70,7 @@
                                 <v-col cols="12" md="6"><strong>Setor/leito de destino:</strong> {{ dado(chamadoDetalhado, 'CHAMADO_SETOR_DESTINO') }} / {{ dado(chamadoDetalhado, 'CHAMADO_LEITO_DESTINO') }}</v-col>
                                 <v-col cols="12" md="4"><strong>Tipo:</strong> {{ descricao(listaTiposChamado, chamadoDetalhado.TG_CHAMADO_ID) }}</v-col>
                                 <v-col cols="12" md="4"><strong>Prioridade:</strong> {{ descricao(prioridades, chamadoDetalhado.TG_PRIORIDADE_ID) }}</v-col>
-                                <v-col cols="12" md="4"><strong>Abertura:</strong> {{ dado(chamadoDetalhado, 'CHAMADO_DATA') }}</v-col>
+                                <v-col cols="12" md="4"><strong>Abertura:</strong> {{ formatarDataHora(chamadoDetalhado.CHAMADO_DATA) }}</v-col>
                                 <v-col cols="12" md="6"><strong>Procedimentos:</strong> {{ descricoes(chamadoDetalhado.procedimentos, 'PROCEDIMENTO_DESCRICAO') }}</v-col>
                                 <v-col cols="12" md="6"><strong>Diagnósticos:</strong> {{ descricoes(chamadoDetalhado.diagnosticos, 'DIAGNOSTICO_DESCRICAO') }}</v-col>
                             </v-row>
@@ -97,7 +97,7 @@
                         <v-card-title class="subtitle-2 blue-grey lighten-5">Histórico do atendimento</v-card-title>
                         <v-card-text class="pt-3">
                             <div v-for="etapa in chamadoDetalhado.etapasAtendimento || []" :key="etapa.CHAMADO_ATENDIMENTO_ETAPA_ID">
-                                {{ etapa.ATENDIMENTO_ETAPA_DESCRICAO }} — {{ etapa.ATENDIMENTO_ETAPA_DATA }}
+                                {{ etapa.ATENDIMENTO_ETAPA_DESCRICAO }} — {{ formatarDataHora(etapa.ATENDIMENTO_ETAPA_DATA) }}
                             </div>
                             <div v-if="!chamadoDetalhado.etapasAtendimento || !chamadoDetalhado.etapasAtendimento.length">Nenhuma etapa registrada.</div>
                         </v-card-text>
@@ -109,6 +109,7 @@
 </template>
 
 <script>
+import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
 import Swal from "sweetalert2";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import ChamadoOperacional from "./ChamadoOperacional";
@@ -171,6 +172,7 @@ export default {
     },
     mounted() { this.carregar(); },
     methods: {
+        formatarDataHora(valor) { return formatarDataHoraFortaleza(valor, true); },
         dado(item, campo) { return item && item[campo] ? item[campo] : "-"; },
         descricao(lista, id) {
             const item = (lista || []).find(valor => Number(valor.COLUNA_ID) === Number(id));

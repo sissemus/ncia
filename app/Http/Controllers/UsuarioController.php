@@ -6,6 +6,7 @@ use App\Http\Requests\Usuario\UsuarioCreateRequest;
 use App\Http\Requests\Usuario\UsuarioUpdatePasswordRequest;
 use App\Http\Requests\Usuario\UsuarioUpdateRequest;
 use App\Models\Usuario;
+use App\Services\IntegracaoProfissionalUsuarioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -60,17 +61,9 @@ class UsuarioController extends Controller
     }
 
 
-    public function alterar(UsuarioUpdateRequest $request)
+    public function alterar(UsuarioUpdateRequest $request, IntegracaoProfissionalUsuarioService $integracao)
     {
-        $usuario = Usuario::buscar($request->USUARIO_ID);
-        $senha_original = $usuario->USUARIO_SENHA;
-        $usuario->fill($request->post());
-        if ($request->USUARIO_SENHA == null || $request->USUARIO_SENHA == '') {
-            $usuario->USUARIO_SENHA = $senha_original;
-        } else {
-            $usuario->USUARIO_SENHA = md5($request->USUARIO_SENHA);
-        }
-        $usuario->update();
+        $usuario = $integracao->atualizarUsuario($request->validated());
 
         return response([
             "cod" => 1,

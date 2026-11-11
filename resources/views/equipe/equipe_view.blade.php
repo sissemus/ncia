@@ -4,6 +4,7 @@
     <equipe-view :tipos-profissional='@json($tiposProfissional)'
                  :profissionais='@json($profissionais)'
                  :tipos-veiculo='@json($tiposVeiculo)'
+                 :pode-trocar-plantao='@json($podeTrocarPlantao)'
     ></equipe-view>
     
 @endsection

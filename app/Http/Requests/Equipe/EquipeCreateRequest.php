@@ -7,6 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class EquipeCreateRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        if (is_string($this->input('EQUIPE_TURNO'))) {
+            $this->merge(['EQUIPE_TURNO' => strtoupper(trim($this->input('EQUIPE_TURNO')))]);
+        }
+    }
+
     public function authorize()
     {
         return Auth::check();
@@ -16,8 +23,9 @@ class EquipeCreateRequest extends FormRequest
     {
         return [
             "VEICULO_ID" => ["required", "integer"],
-            "EQUIPE_TURNO" => ["required"],
-            "equipeProfissionais" => ["required", "array", "min:1"]
+            "EQUIPE_TURNO" => ["required", "string", "in:SD,SN"],
+            "equipeProfissionais" => ["required", "array", "min:1"],
+            "equipeProfissionais.*.PROFISSIONAL_ID" => ["required", "integer", "distinct"],
         ];
     }
 

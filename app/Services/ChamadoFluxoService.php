@@ -30,21 +30,19 @@ class ChamadoFluxoService
     public function encaminhar(Chamado $chamado, $equipeId)
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ANALISE]);
-        $hoje = Carbon::now('America/Sao_Paulo')->toDateString();
-
-        $equipe = Equipe::where('EQUIPE_ID', $equipeId)
-            ->whereDate('EQUIPE_DATA', $hoje)
+        $queryEquipe = Equipe::where('EQUIPE_ID', $equipeId)
             ->where('EQUIPE_ATIVO', 1)
             ->whereHas('equipeProfissional', function ($query) {
                 $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
-            })
-            ->lockForUpdate()
-            ->firstOrFail();
+            });
+        PlantaoEquipeService::filtrarEncaminhamento($queryEquipe);
+        $equipe = $queryEquipe->lockForUpdate()->first();
+        abort_unless($equipe, 422, 'Selecione uma equipe ativa de hoje, SN do dia anterior ou SD do dia seguinte. Atualize a lista.');
 
         $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
         abort_unless((int) $veiculo->VEICULO_ATIVO === 1, 422, 'Veículo inativo.');
         abort_unless(
-            (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1 || $this->veiculoTemAtendimentoAtivo($veiculo->VEICULO_ID),
+            (int) $veiculo->TG_SITUACAO_VEICULO_ID === 1,
             422,
             'Veículo indisponível.'
         );
@@ -85,10 +83,7 @@ class ChamadoFluxoService
             );
         }
         $this->registrarCancelamento($chamado, $motivoId, $motivacao);
-        $this->liberarRecursos(
-            $vinculos,
-            (int) $situacao->TG_SITUACAO_ID === SituacaoChamadoEnum::EM_ATENDIMENTO
-        );
+        $this->liberarRecursos($vinculos);
     }
 
     public function concluirAtendimento(Chamado $chamado)
@@ -117,11 +112,8 @@ class ChamadoFluxoService
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::ABERTO]);
 
-        $abertura = Carbon::parse(
-            $chamado->getRawOriginal('CHAMADO_DATA'),
-            'America/Sao_Paulo'
-        );
-        $limite = Carbon::now('America/Sao_Paulo')->subHours(24);
+        $abertura = Carbon::parse($chamado->getRawOriginal('CHAMADO_DATA'));
+        $limite = Carbon::now()->subHours(24);
 
         abort_if($abertura->gt($limite), 422, 'O chamado ainda não completou 24 horas em aberto.');
 
@@ -184,7 +176,7 @@ class ChamadoFluxoService
         ChamadoSituacao::create([
             'CHAMADO_ID' => $chamado->CHAMADO_ID,
             'TG_SITUACAO_ID' => $situacao,
-            'CHAMADO_SITUACAO_DATA' => Carbon::now('America/Sao_Paulo'),
+            'CHAMADO_SITUACAO_DATA' => Carbon::now(),
             'CHAMADO_SITUACAO_OBSERVACAO' => $observacao,
             'USUARIO_ID' => Auth::id(),
         ]);
@@ -208,18 +200,11 @@ class ChamadoFluxoService
         return $vinculos;
     }
 
-    private function liberarRecursos($vinculos, $disponibilizarVeiculo = true)
+    private function liberarRecursos($vinculos)
     {
         foreach ($vinculos as $vinculo) {
             $vinculo->CHAMADO_EQUIPE_ATIVO = 0;
             $vinculo->save();
-
-            $equipe = Equipe::lockForUpdate()->find($vinculo->EQUIPE_ID);
-            if ($equipe && $disponibilizarVeiculo && !$this->veiculoTemAtendimentoAtivo($equipe->VEICULO_ID)) {
-                Veiculo::where('VEICULO_ID', $equipe->VEICULO_ID)
-                    ->lockForUpdate()
-                    ->update(['TG_SITUACAO_VEICULO_ID' => 1]);
-            }
         }
     }
 
@@ -230,31 +215,5 @@ class ChamadoFluxoService
             ->orderByDesc('CHAMADO_SITUACAO_ID')
             ->lockForUpdate()
             ->first();
-    }
-
-    private function veiculoTemAtendimentoAtivo($veiculoId)
-    {
-        return ChamadoEquipe::join('EQUIPE as e_ocupada', 'e_ocupada.EQUIPE_ID', '=', 'CHAMADO_EQUIPE.EQUIPE_ID')
-            ->where('e_ocupada.VEICULO_ID', $veiculoId)
-            ->where('CHAMADO_EQUIPE_ATIVO', 1)
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('CHAMADO_SITUACAO as cs_atual')
-                    ->whereColumn('cs_atual.CHAMADO_ID', 'CHAMADO_EQUIPE.CHAMADO_ID')
-                    ->where('cs_atual.TG_SITUACAO_ID', SituacaoChamadoEnum::EM_ATENDIMENTO)
-                    ->whereNotExists(function ($maisNova) {
-                        $maisNova->select(DB::raw(1))
-                            ->from('CHAMADO_SITUACAO as cs_nova')
-                            ->whereColumn('cs_nova.CHAMADO_ID', 'cs_atual.CHAMADO_ID')
-                            ->where(function ($ordem) {
-                                $ordem->whereColumn('cs_nova.CHAMADO_SITUACAO_DATA', '>', 'cs_atual.CHAMADO_SITUACAO_DATA')
-                                    ->orWhere(function ($empate) {
-                                        $empate->whereColumn('cs_nova.CHAMADO_SITUACAO_DATA', '=', 'cs_atual.CHAMADO_SITUACAO_DATA')
-                                            ->whereColumn('cs_nova.CHAMADO_SITUACAO_ID', '>', 'cs_atual.CHAMADO_SITUACAO_ID');
-                                    });
-                            });
-                    });
-            })
-            ->exists();
     }
 }

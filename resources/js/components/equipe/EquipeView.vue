@@ -61,7 +61,7 @@
                                         </tr>
 
                                         <tr v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:78%;padding:0 10px 0 0;">
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:68%;padding:0 10px 0 0;">
                                                 <span v-for="(prf, idxPrf) in eqp.equipeProfissional" :key="idxPrf">
                                                     {{ prf.profissional.PROFISSIONAL_NOME }}
                                                     - ({{ prf.profissional.tipoProfissional.DESCRICAO }})
@@ -77,11 +77,22 @@
                                                 {{ eqp.EQUIPE_TURNO }}
                                             </td>
 
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:5%;">
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:15%;white-space:nowrap;">
+                                                <v-tooltip v-if="podeTrocarPlantao" bottom>
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <v-btn icon v-bind="attrs" v-on="on"
+                                                            aria-label="Trocar plantão"
+                                                            :disabled="processandoEquipeId !== null || dialogPlantao || processandoPlantao"
+                                                            @click="abrirTrocaPlantao(veiculo, eqp)">
+                                                            <v-icon>mdi-account-switch</v-icon>
+                                                        </v-btn>
+                                                    </template>
+                                                    <span>Trocar plantão</span>
+                                                </v-tooltip>
                                                 <v-btn
                                                     icon
                                                     :loading="processandoEquipeId === eqp.EQUIPE_ID"
-                                                    :disabled="processandoEquipeId !== null"
+                                                    :disabled="processandoEquipeId !== null || dialogPlantao"
                                                     @click="deletar(eqp, veiculo)"
                                                     title="Remover equipe"
                                                 >
@@ -122,6 +133,35 @@
                 </v-row>
             </v-card-actions>
         </v-card>
+        <v-dialog v-model="dialogPlantao" max-width="720" persistent>
+            <v-card>
+                <v-card-title>Trocar plantão — {{ veiculoPlantao && veiculoPlantao.VEICULO_IDENTIFICACAO }}</v-card-title>
+                <v-card-text>
+                    <p v-if="equipeOrigemPlantao"><strong>Equipe de origem:</strong>
+                        Nº {{ equipeOrigemPlantao.EQUIPE_ID }} — {{ formatarData(equipeOrigemPlantao.EQUIPE_DATA) }} — {{ equipeOrigemPlantao.EQUIPE_TURNO }}</p>
+                    <p>Selecione a equipe que assumirá os chamados em fila desta ambulância.
+                        Os chamados em atendimento continuarão com a equipe anterior até a conclusão.</p>
+                    <v-select v-model="equipePlantaoId" :items="equipesPlantao"
+                        item-value="EQUIPE_ID" item-text="descricaoPlantao" label="Equipe que assumirá"
+                        :loading="carregandoPlantao" :disabled="carregandoPlantao || processandoPlantao"
+                        no-data-text="Não há equipe substituta ativa com turno e data compatíveis nesta ambulância.">
+                        <template v-slot:item="{ item }">
+                            <v-list-item-content>
+                                <v-list-item-title>Equipe Nº {{ item.EQUIPE_ID }} — {{ formatarData(item.EQUIPE_DATA) }} — {{ item.EQUIPE_TURNO }}</v-list-item-title>
+                                <v-list-item-subtitle class="text-wrap">{{ item.profissionaisPlantao }}</v-list-item-subtitle>
+                            </v-list-item-content>
+                        </template>
+                    </v-select>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text :disabled="processandoPlantao || carregandoPlantao" @click="dialogPlantao = false">Cancelar</v-btn>
+                    <v-btn color="primary" :loading="processandoPlantao"
+                        :disabled="carregandoPlantao || processandoPlantao || !equipePlantaoId"
+                        @click="confirmarTrocaPlantao">Confirmar troca</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
         <MdNovoEquipe></MdNovoEquipe>
     </div>
 </template>
@@ -139,6 +179,7 @@ export default {
         tiposProfissional: {type: Array, default: () => []},
         profissionais: {type: Array, default: () => []},
         tiposVeiculo: {type: Array, default: () => []},
+        podeTrocarPlantao: {type: Boolean, default: false},
     },
     data() {
         return {
@@ -147,6 +188,13 @@ export default {
 
             idxEqp: 0,
             processandoEquipeId: null,
+            dialogPlantao: false,
+            carregandoPlantao: false,
+            processandoPlantao: false,
+            veiculoPlantao: null,
+            equipeOrigemPlantao: null,
+            equipePlantaoId: null,
+            equipesPlantao: [],
         }
     },
     mounted() {
@@ -167,10 +215,8 @@ export default {
             set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipes', newValue) }
         },
         pagination: {
-            // get() { return this.$store.getters['EquipeViewModule/getPagination'] },
-            // set(newValue) { this.$store.dispatch('EquipeViewModule/setPagination', newValue) }
-            get() { return this.$store.getters['VeiculoViewModule/getVeiculos']},
-            set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
+            get() { return this.$store.getters['VeiculoViewModule/getPagination']},
+            set(newValue) { this.$store.dispatch('VeiculoViewModule/setPagination', newValue) }
         },
         equipePesquisa: {
             get() { return this.$store.getters['EquipeViewModule/getEquipePesquisa'] },
@@ -197,6 +243,58 @@ export default {
         }
     },
     methods: {
+        async abrirTrocaPlantao(veiculo, equipeOrigem) {
+            if (this.dialogPlantao || this.processandoEquipeId !== null) return;
+            this.veiculoPlantao = veiculo;
+            this.equipeOrigemPlantao = equipeOrigem;
+            this.equipePlantaoId = null;
+            this.equipesPlantao = [];
+            this.dialogPlantao = true;
+            this.carregandoPlantao = true;
+            try {
+                const { data } = await axios.get(`${this.baseUrl}/equipe/equipes-plantao`, {
+                    params: { VEICULO_ID: veiculo.VEICULO_ID, EQUIPE_ORIGEM_ID: equipeOrigem.EQUIPE_ID }
+                });
+                this.equipesPlantao = data.map(equipe => {
+                    const profissionais = (equipe.equipeProfissional || [])
+                        .map(vinculo => vinculo.profissional && vinculo.profissional.PROFISSIONAL_NOME)
+                        .filter(Boolean).join(', ');
+                    return {
+                        ...equipe,
+                        profissionaisPlantao: profissionais,
+                        descricaoPlantao: `Nº ${equipe.EQUIPE_ID} — ${this.formatarData(equipe.EQUIPE_DATA)} — ${equipe.EQUIPE_TURNO} — ${profissionais}`
+                    };
+                });
+            } catch (error) {
+                this.dialogPlantao = false;
+                Swal.fire('Não foi possível carregar as equipes',
+                    this.mensagemErro(error, 'Tente novamente.'), 'error');
+            } finally {
+                this.carregandoPlantao = false;
+            }
+        },
+
+        async confirmarTrocaPlantao() {
+            if (this.processandoPlantao || this.carregandoPlantao || !this.equipePlantaoId) return;
+            this.processandoPlantao = true;
+            try {
+                const { data } = await axios.post(`${this.baseUrl}/equipe/trocar-plantao`, {
+                    VEICULO_ID: this.veiculoPlantao.VEICULO_ID,
+                    EQUIPE_ORIGEM_ID: this.equipeOrigemPlantao.EQUIPE_ID,
+                    EQUIPE_ID: this.equipePlantaoId
+                });
+                this.dialogPlantao = false;
+                this.search();
+                await Swal.fire(data.transferidos ? 'Plantão atualizado' : 'Nenhuma transferência',
+                    data.mensagem, data.transferidos ? 'success' : 'info');
+            } catch (error) {
+                Swal.fire('Não foi possível trocar o plantão',
+                    this.mensagemErro(error, 'Tente novamente.'), 'error');
+            } finally {
+                this.processandoPlantao = false;
+            }
+        },
+
         search() {
             
             this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
@@ -233,6 +331,7 @@ export default {
         },
 
         deletar(equipe, veiculo) {
+            if (this.dialogPlantao || this.processandoEquipeId !== null) return;
             if (!equipe || !equipe.EQUIPE_ID) {
                 Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
                 return;
@@ -266,7 +365,7 @@ export default {
                     .catch(error => {
                         Swal.fire(
                             'Exclusão não permitida',
-                            this.mensagemErroExclusao(error),
+                            this.mensagemErro(error),
                             'warning'
                         );
                     })
@@ -276,7 +375,7 @@ export default {
             })
         },
 
-        mensagemErroExclusao(error) {
+        mensagemErro(error, fallback = 'Não foi possível excluir a equipe. Tente novamente.') {
             const response = error && error.response;
             const data = response && response.data;
             if (data && data.mensagem) return data.mensagem;
@@ -287,7 +386,7 @@ export default {
                     return data.errors[campo][0];
                 }
             }
-            return 'Não foi possível excluir a equipe. Tente novamente.';
+            return fallback;
         },
 
         truncateText(text, maxLength) {
