@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Equipe\EquipeCreateRequest;
-use App\Http\Requests\Equipe\EquipeUpdateRequest;
 use App\Models\ChamadoEquipe;
 use App\Models\Equipe;
 use App\Models\EquipeProfissional;
@@ -14,7 +13,6 @@ use App\Services\EquipeAssistencialService;
 use App\Services\TrocaPlantaoService;
 use App\Services\PlantaoEquipeService;
 use Carbon\Carbon;
-use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,104 +72,33 @@ class EquipeController extends Controller
 
     public function inserir(EquipeCreateRequest $request)
     {
+        $equipeId = DB::transaction(function () use ($request) {
+            // Serializar cadastros da mesma ambulância antes de verificar a duplicidade.
+            $veiculo = Veiculo::lockForUpdate()->findOrFail($request->input('VEICULO_ID'));
+            $data = Carbon::now()->toDateString();
+            $turno = $request->input('EQUIPE_TURNO');
+            $this->validarDuplicidade($veiculo->VEICULO_ID, $data, $turno);
 
-        $equipes = [];
-
-        $EQUIPE_ID = null;
-
-        $USUARIO_ID_CAD = Auth::id();
-
-        // informações sobre o veículo
-        $veiculo = Veiculo::findOrFail($request->input('VEICULO_ID'));
-        $tipoVeiculo = $veiculo->TG_TIPO_VEICULO_ID;
-
-        $equipe = new Equipe($request->input());
-        $equipe->EQUIPE_ATIVO = 1;
-        $equipe->EQUIPE_DATA = now()->format('Y-m-d');
-        $equipe->USUARIO_ID_CAD = $USUARIO_ID_CAD;
-
-        DB::beginTransaction();
-
-        // salvando equipe
-        $equipe->save();
-
-        $EQUIPE_ID = $equipe->EQUIPE_ID;
-        
-        $int = 0;
-  
-        //para o tipo de veículo == 1
-        $tiposProfissional_1 = [1, 2, 4];
-        $tiposProfissional_1_compare = [];
-        
-        //para o tipo de veículo == 2
-        $tiposProfissional_2 = [1, 2, 3, 4];
-        $tiposProfissional_2_compare = [];
-        
-        foreach ($request->input('equipeProfissionais') as $dados) {
-
-            $PROFISSIONAL_ID = $dados['PROFISSIONAL_ID'];
-
-            $profissional = Profissional::findOrFail($PROFISSIONAL_ID);
-
-            $tipoProfissional  = $profissional->TG_TIPO_PROFISSIONAL_ID;
-
-            // crio um array temporário para armazenar o tipo do veículo
-            if($tipoVeiculo == 1){
-                array_push($tiposProfissional_1_compare, $tipoProfissional);
-            }
-            else{
-                array_push($tiposProfissional_2_compare, $tipoProfissional);
+            $equipe = Equipe::create([
+                'VEICULO_ID' => $veiculo->VEICULO_ID,
+                'EQUIPE_DATA' => $data,
+                'EQUIPE_TURNO' => $turno,
+                'EQUIPE_ATIVO' => 1,
+                'USUARIO_ID_CAD' => Auth::id(),
+            ]);
+            foreach ($request->input('equipeProfissionais') as $dados) {
+                Profissional::findOrFail($dados['PROFISSIONAL_ID']);
+                $profissional = new EquipeProfissional($dados);
+                $profissional->EQUIPE_ID = $equipe->EQUIPE_ID;
+                $profissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
+                $profissional->USUARIO_ID_CAD = Auth::id();
+                $profissional->save();
             }
 
-            $int++;
+            return $equipe->EQUIPE_ID;
+        }, 3);
 
-            // informações da equipeProfissional
-            $equipeProfissional = new EquipeProfissional($dados);
-
-            // para cada profissional
-            $equipeProfissional->EQUIPE_ID = $EQUIPE_ID;
-
-            $equipeProfissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
-
-            $equipeProfissional->USUARIO_ID_CAD = $USUARIO_ID_CAD;
-
-            $equipeProfissional->save();
-    
-        }
-
-        //validando se a equipe está completa
-        // if($tipoVeiculo == 1){
-
-        //     sort($tiposProfissional_1);
-        //     sort($tiposProfissional_1_compare);
-
-        //     // comparando por tipo de equipe
-        //     if($tiposProfissional_1 != $tiposProfissional_1_compare){
-        //         throw ValidationException::withMessages([
-        //             'TG_TIPO_PROFISSIONAL_ID' =>
-        //                 'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
-        //         ]);
-        //     }
-        // }
-        // else{
-
-        //     sort($tiposProfissional_2);
-        //     sort($tiposProfissional_2_compare);
-
-        //     if($tiposProfissional_2 != $tiposProfissional_2_compare){
-        //         throw ValidationException::withMessages([
-        //             'TG_TIPO_PROFISSIONAL_ID' =>
-        //                 'O(s) tipo(s) de profissional(is) informado(s) não é(são) compatível(is) com o tipo de veículo selecionado.'
-        //         ]);
-        //     }
-        // }
-
-        DB::commit();
-        
-        $equipes = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->get();
-
-        return response($equipes, 201);
-
+        return response(Equipe::where('EQUIPE_ID', $equipeId)->get(), 201);
     }
 
     public function listar()
@@ -197,19 +124,43 @@ class EquipeController extends Controller
 
     public function alterar(Request $request)
     {
-    
-    
-        $equipe = Equipe::findOrFail($request->EQUIPE_ID);
+        if (is_string($request->input('EQUIPE_TURNO'))) {
+            $request->merge(['EQUIPE_TURNO' => strtoupper(trim($request->input('EQUIPE_TURNO')))]);
+        }
+        $dados = $request->validate([
+            'EQUIPE_ID' => 'required|integer|min:1',
+            'VEICULO_ID' => 'required|integer|min:1',
+            'EQUIPE_TURNO' => 'required|string|in:SD,SN',
+            'EQUIPE_ATIVO' => 'sometimes|required|integer|in:0,1',
+        ]);
+        $equipe = DB::transaction(function () use ($dados) {
+            $equipe = Equipe::lockForUpdate()->findOrFail($dados['EQUIPE_ID']);
+            Veiculo::lockForUpdate()->findOrFail($dados['VEICULO_ID']);
+            // Editar uma equipe não deve mudar a data original de seu plantão.
+            $this->validarDuplicidade($dados['VEICULO_ID'], $equipe->EQUIPE_DATA->toDateString(),
+                $dados['EQUIPE_TURNO'], $equipe->EQUIPE_ID);
+            $equipe->fill($dados);
+            $equipe->USUARIO_ID_CAD = Auth::id();
+            $equipe->save();
 
-        $equipe->fill($request->post());
-
-        $equipe->EQUIPE_DATA = now();
-
-        $equipe->USUARIO_ID_CAD = Auth::id();
-
-        $equipe->save();
+            return $equipe;
+        }, 3);
 
         return response($equipe);
+    }
+
+    private function validarDuplicidade($veiculoId, $data, $turno, $ignorarId = null)
+    {
+        $consulta = Equipe::where('VEICULO_ID', $veiculoId)->whereDate('EQUIPE_DATA', $data)
+            ->where('EQUIPE_TURNO', $turno);
+        if ($ignorarId !== null) {
+            $consulta->where('EQUIPE_ID', '!=', $ignorarId);
+        }
+        if ($consulta->exists()) {
+            throw ValidationException::withMessages([
+                'EQUIPE_TURNO' => 'Já existe uma equipe deste turno cadastrada para esta ambulância nesta data.',
+            ]);
+        }
     }
 
     public function deletar(Request $request)

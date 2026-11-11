@@ -190,7 +190,7 @@ class AtendimentoEquipeService
                 'CHAMADO_ID' => $chamado->CHAMADO_ID,
                 'CHAMADO_EQUIPE_ID' => $vinculo->CHAMADO_EQUIPE_ID,
                 'ATENDIMENTO_ETAPA_ID' => $proximaEtapa,
-                'ATENDIMENTO_ETAPA_DATA' => Carbon::now('America/Sao_Paulo'),
+                'ATENDIMENTO_ETAPA_DATA' => Carbon::now(),
                 'USUARIO_ID' => Auth::id(),
             ]);
 
@@ -320,7 +320,7 @@ class AtendimentoEquipeService
         ChamadoSituacao::create([
             'CHAMADO_ID' => $chamado->CHAMADO_ID,
             'TG_SITUACAO_ID' => $situacao,
-            'CHAMADO_SITUACAO_DATA' => Carbon::now('America/Sao_Paulo'),
+            'CHAMADO_SITUACAO_DATA' => Carbon::now(),
             'CHAMADO_SITUACAO_OBSERVACAO' => $observacao,
             'USUARIO_ID' => Auth::id(),
         ]);

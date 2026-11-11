@@ -45,7 +45,7 @@ class HomeController extends Controller
 
     public function chamadosAbertos(Request $request)
     {
-        $hoje = Carbon::now('America/Sao_Paulo')->toDateString();
+        $hoje = Carbon::now()->toDateString();
         $perfisAtivos = $this->perfisAtivos();
 
         $podeVisualizarTodos = $this->podeVisualizarTodos($perfisAtivos);
@@ -101,7 +101,7 @@ class HomeController extends Controller
         $perfisAtivos = $this->perfisAtivos();
         abort_unless($this->podeCancelarPorPrazo($perfisAtivos), 403);
 
-        $limite = Carbon::now('America/Sao_Paulo')->subHours(24);
+        $limite = Carbon::now()->subHours(24);
         $query = $this->consultaPorSituacao(SituacaoChamadoEnum::ABERTO)
             ->where('CHAMADO.CHAMADO_DATA', '<=', $limite);
 

@@ -47,7 +47,7 @@ class AtualizacaoClinicaService
             "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => $dados["ATUALIZACAO_CLINICA_NUMERO_CONSELHO"],
             "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => $dados["ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA"],
             "USUARIO_ID" => $usuarioId,
-            "ATUALIZACAO_CLINICA_DATA" => Carbon::now("America/Sao_Paulo"),
+            "ATUALIZACAO_CLINICA_DATA" => Carbon::now(),
         ]);
 
         $chamado->TG_PRIORIDADE_ID = $dados["TG_PRIORIDADE_ID"];

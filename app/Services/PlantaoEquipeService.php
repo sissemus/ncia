@@ -8,7 +8,7 @@ class PlantaoEquipeService
 {
     public static function vigente()
     {
-        $agora = Carbon::now('America/Sao_Paulo');
+        $agora = Carbon::now();
         if ($agora->hour < 7) {
             return ['turno' => 'SN', 'data' => $agora->subDay()->toDateString()];
         }
@@ -33,17 +33,35 @@ class PlantaoEquipeService
             ->whereDate('EQUIPE_DATA', $plantao['data']);
     }
 
-    public static function filtrarEncaminhamento($query, array $vigente)
+    public static function filtrarEncaminhamento($query)
     {
-        $seguinte = self::seguinte($vigente['turno'], $vigente['data']);
+        $hoje = Carbon::now();
 
-        return $query->where(function ($query) use ($vigente, $seguinte) {
-            $query->where(function ($query) use ($vigente) {
-                self::filtrarPlantao($query, $vigente);
-            })->orWhere(function ($query) use ($seguinte) {
-                self::filtrarPlantao($query, $seguinte);
+        // O relógio ordena as opções; a entrega efetiva é confirmada pelo regulador.
+        return $query->where(function ($query) use ($hoje) {
+            $query->where(function ($query) use ($hoje) {
+                $query->whereDate('EQUIPE_DATA', $hoje->toDateString())
+                    ->whereIn('EQUIPE_TURNO', ['SD', 'SN']);
+            })->orWhere(function ($query) use ($hoje) {
+                self::filtrarPlantao($query, ['turno' => 'SN', 'data' => $hoje->copy()->subDay()->toDateString()]);
+            })->orWhere(function ($query) use ($hoje) {
+                self::filtrarPlantao($query, ['turno' => 'SD', 'data' => $hoje->copy()->addDay()->toDateString()]);
             });
         });
+    }
+
+    public static function classificacao($equipe, array $vigente)
+    {
+        if (self::corresponde($equipe, $vigente)) {
+            return ['ordem' => 0, 'descricao' => 'Turno de referência'];
+        }
+        if (self::corresponde($equipe, self::seguinte($vigente['turno'], $vigente['data']))) {
+            return ['ordem' => 1, 'descricao' => 'Próximo turno'];
+        }
+        $referencia = $vigente['data'] . ' ' . $vigente['turno'];
+        $plantao = $equipe->EQUIPE_DATA->toDateString() . ' ' . $equipe->EQUIPE_TURNO;
+
+        return ['ordem' => 2, 'descricao' => $plantao < $referencia ? 'Plantão anterior' : 'Plantão cadastrado'];
     }
 
     public static function corresponde($equipe, array $plantao)

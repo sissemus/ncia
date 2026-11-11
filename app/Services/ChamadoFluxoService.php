@@ -30,16 +30,14 @@ class ChamadoFluxoService
     public function encaminhar(Chamado $chamado, $equipeId)
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::EM_ANALISE]);
-        $vigente = PlantaoEquipeService::vigente();
-
         $queryEquipe = Equipe::where('EQUIPE_ID', $equipeId)
             ->where('EQUIPE_ATIVO', 1)
             ->whereHas('equipeProfissional', function ($query) {
                 $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
             });
-        PlantaoEquipeService::filtrarEncaminhamento($queryEquipe, $vigente);
+        PlantaoEquipeService::filtrarEncaminhamento($queryEquipe);
         $equipe = $queryEquipe->lockForUpdate()->first();
-        abort_unless($equipe, 422, 'Selecione uma equipe ativa do plantão vigente ou do próximo turno. Atualize a lista.');
+        abort_unless($equipe, 422, 'Selecione uma equipe ativa de hoje, SN do dia anterior ou SD do dia seguinte. Atualize a lista.');
 
         $veiculo = Veiculo::lockForUpdate()->findOrFail($equipe->VEICULO_ID);
         abort_unless((int) $veiculo->VEICULO_ATIVO === 1, 422, 'Veículo inativo.');
@@ -117,11 +115,8 @@ class ChamadoFluxoService
     {
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::ABERTO]);
 
-        $abertura = Carbon::parse(
-            $chamado->getRawOriginal('CHAMADO_DATA'),
-            'America/Sao_Paulo'
-        );
-        $limite = Carbon::now('America/Sao_Paulo')->subHours(24);
+        $abertura = Carbon::parse($chamado->getRawOriginal('CHAMADO_DATA'));
+        $limite = Carbon::now()->subHours(24);
 
         abort_if($abertura->gt($limite), 422, 'O chamado ainda não completou 24 horas em aberto.');
 
@@ -184,7 +179,7 @@ class ChamadoFluxoService
         ChamadoSituacao::create([
             'CHAMADO_ID' => $chamado->CHAMADO_ID,
             'TG_SITUACAO_ID' => $situacao,
-            'CHAMADO_SITUACAO_DATA' => Carbon::now('America/Sao_Paulo'),
+            'CHAMADO_SITUACAO_DATA' => Carbon::now(),
             'CHAMADO_SITUACAO_OBSERVACAO' => $observacao,
             'USUARIO_ID' => Auth::id(),
         ]);

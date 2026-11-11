@@ -58,7 +58,7 @@ class RelatorioController extends Controller
         $dados = Chamado::getDadosRelatorioChamadoEmAtendimento($id);
         $parametros = [
             'pBrasao' => public_path('img/brasao.png'),
-            'pGeradoEm' => Carbon::now('America/Sao_Paulo')->format('d/m/Y H:i:s'),
+            'pGeradoEm' => Carbon::now()->format('d/m/Y H:i:s'),
         ];
         $resultado = JasperRdr::render(
             json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE),

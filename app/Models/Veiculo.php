@@ -102,7 +102,7 @@ class Veiculo extends Model
     // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
     public static function relacionamentoCadastrar()
     {
-        $hoje = Carbon::now('America/Sao_Paulo');
+        $hoje = Carbon::now();
 
         return [
             "tipoVeiculo",

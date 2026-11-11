@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
 import { getPrioridadeColor } from "../../enums/PrioridadePacienteEnum";
 import SituacaoChamadoEnum, { getSituacaoChamadoColor } from "../../enums/SituacaoChamadoEnum";
 
@@ -93,9 +94,7 @@ export default {
     methods: {
         unidade(item) { return item && item.UNIDADE_NOME ? item.UNIDADE_NOME : "-"; },
         formatarData(valor) {
-            if (!valor) return "-";
-            const data = new Date(String(valor).replace(" ", "T"));
-            return Number.isNaN(data.getTime()) ? valor : data.toLocaleString("pt-BR");
+            return formatarDataHoraFortaleza(valor, true);
         },
     },
 };

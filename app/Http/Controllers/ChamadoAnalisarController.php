@@ -72,8 +72,8 @@ class ChamadoAnalisarController extends Controller
         $vigente = PlantaoEquipeService::vigente();
 
         $veiculos = Veiculo::with([
-            'equipesAtivas' => function ($query) use ($vigente) {
-                PlantaoEquipeService::filtrarEncaminhamento($query, $vigente)
+            'equipesAtivas' => function ($query) {
+                PlantaoEquipeService::filtrarEncaminhamento($query)
                     ->whereHas('equipeProfissional', function ($query) {
                         $query->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
                     })->orderBy('EQUIPE_ID');
@@ -86,8 +86,8 @@ class ChamadoAnalisarController extends Controller
         ])
             ->where('VEICULO_ATIVO', 1)
             ->whereHas('vinculoAtivo')
-            ->whereHas('equipesAtivas', function ($query) use ($vigente) {
-                PlantaoEquipeService::filtrarEncaminhamento($query, $vigente)
+            ->whereHas('equipesAtivas', function ($query) {
+                PlantaoEquipeService::filtrarEncaminhamento($query)
                     ->whereHas('equipeProfissional', function ($profissionais) {
                         $profissionais->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
                     });
@@ -133,6 +133,7 @@ class ChamadoAnalisarController extends Controller
         // evita que colunas legadas com codificação inválida interrompam o JSON.
         $opcoes = $veiculos->flatMap(function ($veiculo) use ($cargas, $vigente) {
             return $veiculo->equipesAtivas->map(function ($equipe) use ($veiculo, $cargas, $vigente) {
+                $classificacao = PlantaoEquipeService::classificacao($equipe, $vigente);
                 $vinculo = $veiculo->vinculoAtivo;
                 $cargaVeiculo = $cargas->get((int) $veiculo->VEICULO_ID, collect());
                 $ocupadoEmAtendimento = $cargaVeiculo->contains(function ($item) {
@@ -148,7 +149,9 @@ class ChamadoAnalisarController extends Controller
                     'VEICULO_PLACA' => $this->textoJson($veiculo->VEICULO_PLACA),
                     'OCUPADO_EM_ATENDIMENTO' => $ocupadoEmAtendimento,
                     'QUANTIDADE_EM_FILA' => $quantidadeEmFila,
-                    'PROXIMO_TURNO' => !PlantaoEquipeService::corresponde($equipe, $vigente),
+                    'PROXIMO_TURNO' => $classificacao['ordem'] === 1,
+                    'PLANTAO_DESCRICAO' => $classificacao['descricao'],
+                    'ORDEM_PLANTAO' => $classificacao['ordem'],
                     'equipe' => $equipe ? [
                         'EQUIPE_ID' => $equipe->EQUIPE_ID,
                         'VEICULO_ID' => $equipe->VEICULO_ID,
@@ -176,7 +179,7 @@ class ChamadoAnalisarController extends Controller
                     ] : null,
                 ];
             });
-        })->sortBy('PROXIMO_TURNO')->values();
+        })->sortBy('ORDEM_PLANTAO')->values();
 
         return response()->json($opcoes);
     }

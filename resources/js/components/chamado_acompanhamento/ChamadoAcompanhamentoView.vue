@@ -518,6 +518,7 @@
 </template>
 
 <script>
+import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
 import moment from "moment";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
@@ -766,6 +767,7 @@ export default {
     },
 
     methods: {
+        formatarDataHora(valor) { return formatarDataHoraFortaleza(valor); },
         nomeViagemEvento(id) {
             const viagem = this.viagens.find(item => Number(item.CHAMADO_VIAGEM_ID) === Number(id));
             return viagem ? (viagem.RETORNO ? 'Volta' : 'Ida') + ' #' + viagem.NUMERO : 'Ida';
