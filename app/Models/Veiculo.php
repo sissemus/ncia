@@ -72,6 +72,7 @@ class Veiculo extends Model
     {
         return [
             "tipoVeiculo",
+            "vinculoAtivo.unidade",
             "situacaoVeiculo",
             "equipes",
             "equipes.equipeProfissional",

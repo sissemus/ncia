@@ -8,6 +8,7 @@ use App\Models\Veiculo;
 use App\Models\VeiculoUnidade;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VeiculoController extends Controller
 {
@@ -24,19 +25,18 @@ class VeiculoController extends Controller
 
     public function inserir(VeiculoCreateRequest $request)
     {
-        $veiculo = new Veiculo($request->validated());
-        $veiculo->save();
+        $veiculo = DB::transaction(function () use ($request) {
+            $veiculo = new Veiculo($request->validated());
+            $veiculo->save();
 
-        if ($request->filled('UNIDADE_ID')) {
-            $dtIni = $request->VEICULO_UNIDADE_DT_INI ? Carbon::parse($request->VEICULO_UNIDADE_DT_INI) : Carbon::now();
             VeiculoUnidade::create([
                 'VEICULO_ID' => $veiculo->VEICULO_ID,
                 'UNIDADE_ID' => $request->UNIDADE_ID,
-                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
-                'VEICULO_UNIDADE_DT_INI' => $dtIni,
+                'VEICULO_UNIDADE_DT_INI' => Carbon::parse($request->VEICULO_UNIDADE_DT_INI),
                 'VEICULO_UNIDADE_DT_FIM' => null
             ]);
-        }
+            return $veiculo;
+        });
 
         return response($veiculo->load(Veiculo::relacionamento()), 201);
     }
@@ -77,61 +77,61 @@ class VeiculoController extends Controller
 
     public function alterar(VeiculoUpdateRequest $request)
     {
-        $veiculo = Veiculo::findOrFail($request->VEICULO_ID);
-        $veiculo->fill($request->validated());
-        $veiculo->VEICULO_IDENTIFICACAO = mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8');
+        $veiculo = DB::transaction(function () use ($request) {
+            $veiculo = Veiculo::lockForUpdate()->findOrFail($request->VEICULO_ID);
+            $veiculo->fill($request->validated());
+            $veiculo->VEICULO_IDENTIFICACAO = mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8');
         
-        $veiculo->save();
+            $vinculoAtivo = VeiculoUnidade::ondeAtivo($veiculo->VEICULO_ID)->first();
 
-        // Handle unit mapping
-        $vinculoAtivo = VeiculoUnidade::ondeAtivo($veiculo->VEICULO_ID)->first();
+            $novaUnidadeId = (int) $request->UNIDADE_ID;
+            $dtIni = Carbon::parse($request->VEICULO_UNIDADE_DT_INI);
 
-        $novaUnidadeId = (int) $request->UNIDADE_ID;
-        $dtIni = $request->VEICULO_UNIDADE_DT_INI ? Carbon::parse($request->VEICULO_UNIDADE_DT_INI) : Carbon::now();
+            if ($vinculoAtivo && (int) $vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
+                $novaData = $dtIni->format('Y-m-d');
+                $dataAntiga = $vinculoAtivo->VEICULO_UNIDADE_DT_INI ? Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI)->format('Y-m-d') : null;
 
-        if ($vinculoAtivo && (int) $vinculoAtivo->UNIDADE_ID !== $novaUnidadeId) {
-            $novaData = $dtIni->format('Y-m-d');
-            $dataAntiga = $vinculoAtivo->VEICULO_UNIDADE_DT_INI ? Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI)->format('Y-m-d') : null;
+                if ($dataAntiga && $novaData === $dataAntiga) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'VEICULO_UNIDADE_DT_INI' => ['A data do vínculo deve ser alterada quando a unidade vinculada ao veículo for alterada.']
+                    ]);
+                }
 
-            if ($dataAntiga && $novaData === $dataAntiga) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'VEICULO_UNIDADE_DT_INI' => ['A data do vínculo deve ser alterada quando a unidade vinculada ao veículo for alterada.']
+                if ($dataAntiga && $novaData < $dataAntiga) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'VEICULO_UNIDADE_DT_INI' => ['A data do novo vínculo não pode ser anterior à data do vínculo anterior.']
+                    ]);
+                }
+
+                // Unidade alterada: encerrar o vínculo anterior e criar o novo
+                $dataIniAntiga = Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI);
+                $dtFimAnterior = $dtIni->copy()->subDay();
+                $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = $dataIniAntiga->isAfter($dtFimAnterior) ? $dataIniAntiga : $dtFimAnterior;
+                $vinculoAtivo->save();
+
+                VeiculoUnidade::create([
+                    'VEICULO_ID' => $veiculo->VEICULO_ID,
+                    'UNIDADE_ID' => $novaUnidadeId,
+                    'VEICULO_UNIDADE_DT_INI' => $dtIni,
+                    'VEICULO_UNIDADE_DT_FIM' => null
                 ]);
+            } else if (!$vinculoAtivo) {
+                // Nenhum vínculo ativo: criar novo
+                VeiculoUnidade::create([
+                    'VEICULO_ID' => $veiculo->VEICULO_ID,
+                    'UNIDADE_ID' => $novaUnidadeId,
+                    'VEICULO_UNIDADE_DT_INI' => $dtIni,
+                    'VEICULO_UNIDADE_DT_FIM' => null
+                ]);
+            } else {
+                // Mesma unidade: apenas atualiza data se tiver sido alterada
+                $vinculoAtivo->VEICULO_UNIDADE_DT_INI = $dtIni;
+                $vinculoAtivo->save();
             }
 
-            if ($dataAntiga && $novaData < $dataAntiga) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'VEICULO_UNIDADE_DT_INI' => ['A data do novo vínculo não pode ser anterior à data do vínculo anterior.']
-                ]);
-            }
-
-            // Unidade alterada: encerrar o vínculo anterior e criar o novo
-            $dataIniAntiga = Carbon::parse($vinculoAtivo->VEICULO_UNIDADE_DT_INI);
-            $dtFimAnterior = $dtIni->copy()->subDay();
-            $vinculoAtivo->VEICULO_UNIDADE_DT_FIM = $dataIniAntiga->isAfter($dtFimAnterior) ? $dataIniAntiga : $dtFimAnterior;
-            $vinculoAtivo->save();
-
-            VeiculoUnidade::create([
-                'VEICULO_ID' => $veiculo->VEICULO_ID,
-                'UNIDADE_ID' => $novaUnidadeId,
-                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
-                'VEICULO_UNIDADE_DT_INI' => $dtIni,
-                'VEICULO_UNIDADE_DT_FIM' => null
-            ]);
-        } else if (!$vinculoAtivo) {
-            // Nenhum vínculo ativo: criar novo
-            VeiculoUnidade::create([
-                'VEICULO_ID' => $veiculo->VEICULO_ID,
-                'UNIDADE_ID' => $novaUnidadeId,
-                'VEICULO_IDENTIFICACAO' => mb_strtoupper($veiculo->VEICULO_IDENTIFICACAO, 'UTF-8'),
-                'VEICULO_UNIDADE_DT_INI' => $dtIni,
-                'VEICULO_UNIDADE_DT_FIM' => null
-            ]);
-        } else {
-            // Mesma unidade: apenas atualiza data se tiver sido alterada
-            $vinculoAtivo->VEICULO_UNIDADE_DT_INI = $dtIni;
-            $vinculoAtivo->save();
-        }
+            $veiculo->save();
+            return $veiculo;
+        });
 
         return response($veiculo->load(Veiculo::relacionamento()));
     }
