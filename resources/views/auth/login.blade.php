@@ -19,7 +19,7 @@
     <login
             app-name="{{ config('APP_NAME') .' - '. config('APP_DESCRICAO').' v'.config('vcp') }}"
             ambiente="{{ env('AMBIENTE') }}"
-            color="{{ env('AMBIENTE') === 'producao' ||  env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4' }}"
+            color="{{ env('AMBIENTE') === 'producao' ? '#37413A' : (env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4') }}"
     >
     </login>
 </div>
