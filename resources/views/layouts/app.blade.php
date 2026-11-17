@@ -23,7 +23,7 @@
         :usuario="{{ $usuario }}"
         :aplicacoes="{{ json_encode($aplicacoes) }}"
         app-name="{{ config('APP_NAME') }}"
-        color="{{ env('AMBIENTE') === 'producao' ||  env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4' }}"
+        color="{{ env('AMBIENTE') === 'producao' ? '#37413A' : (env('AMBIENTE') === 'desenv' ? 'primary' : 'orange darken-4') }}"
     >
         <template v-slot:conteudo>
             @yield('content')
