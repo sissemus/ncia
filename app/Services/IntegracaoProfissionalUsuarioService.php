@@ -170,9 +170,8 @@ class IntegracaoProfissionalUsuarioService
                     'PROFISSIONAL_WHATSAPP' => ['required', 'regex:/^[0-9]{10,11}$/'],
                 ])->validate();
                 $profissional->save();
-                // Credentials are managed by the dedicated password-change flow.
-                unset($dados['USUARIO_SENHA']);
-            } elseif (!empty($dados['USUARIO_SENHA'])) {
+            }
+            if (isset($dados['USUARIO_SENHA']) && $dados['USUARIO_SENHA'] !== '') {
                 $dados['USUARIO_SENHA'] = md5($dados['USUARIO_SENHA']);
             } else {
                 unset($dados['USUARIO_SENHA']);

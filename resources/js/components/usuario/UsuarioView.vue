@@ -62,7 +62,7 @@
 
                             <th class="text-left cursor-pointer"
                                 @click="ordenar('USUARIO_ULTIMO_ACESSO')">
-                                Inatividade
+                                Inatividade (dias)
                                 <v-icon small v-text="orderIcon('USUARIO_ULTIMO_ACESSO')"></v-icon>
                             </th>
 
@@ -97,7 +97,9 @@
                                 <span v-else>-</span>
                             </td>
 
-                            <td>{{ usuario.USUARIO_ULTIMO_ACESSO ? formatarData(usuario.USUARIO_ULTIMO_ACESSO, 'DD/MM/YYYY') : "" }}</td>
+                            <td :title="usuario.USUARIO_ULTIMO_ACESSO ? 'Último acesso: ' + formatarData(usuario.USUARIO_ULTIMO_ACESSO, 'DD/MM/YYYY') : ''">
+                                {{ formatarInatividade(usuario.USUARIO_ULTIMO_ACESSO) }}
+                            </td>
 
                             <td>
                                 <v-chip x-small v-if="usuario.USUARIO_ATIVO === 1" color="green" dark>Sim</v-chip>
@@ -107,6 +109,12 @@
                             <td>
                                 <v-btn icon @click="selecionar(usuario)" title="Editar">
                                     <v-icon>mdi-pencil</v-icon>
+                                </v-btn>
+                                <v-btn v-if="podeGerenciarAcesso" icon
+                                    :disabled="resetandoId !== null"
+                                    :loading="resetandoId === usuario.USUARIO_ID"
+                                    @click="resetarSenha(usuario)" title="Resetar senha">
+                                    <v-icon>mdi-lock-reset</v-icon>
                                 </v-btn>
                             </td>
                         </tr>
@@ -150,6 +158,8 @@ import TratarErroAjax from "../assets/TratarErroAjax";
 import MdNovoUsuario from "./MdNovoUsuario";
 import MdSelecionarPerfil from "../perfil/MdSelecionarPerfil";
 import UtilsMixins from "../../mixins/UtilsMixins";
+import Swal from "sweetalert2";
+import moment from "moment";
 
 export default {
     name: "UsuarioView",
@@ -161,6 +171,8 @@ export default {
             msgId: "msgUsuarioView",
             msgIdDebug: "msgUsuarioViewDebug",
             usuarios: [],
+            podeGerenciarAcesso: false,
+            resetandoId: null,
             usuarioPesquisa: {
                 USUARIO_NOME: null,
                 USUARIO_LOGIN: null,
@@ -184,9 +196,52 @@ export default {
     mounted() {
         this.$store.dispatch("UsuarioViewModule/setListar", this.listar);
         this.listar();
+        axios.get(`${this.baseUrl}/profissional/acesso-opcoes`)
+            .then(r => {
+                this.podeGerenciarAcesso = !!r.data.retorno.podeGerenciarAcesso;
+            })
+            .catch(e => {
+                this.$store.dispatch("TratarErroAjaxModule/tratarErro", {
+                    id: this.msgId,
+                    response: e.response
+                });
+            });
     },
 
     methods: {
+        formatarInatividade(ultimoAcesso) {
+            if (!ultimoAcesso) return 'Nunca acessou';
+            const data = moment(ultimoAcesso);
+            if (!data.isValid()) return '-';
+            const dias = Math.max(0, moment().startOf('day').diff(data.startOf('day'), 'days'));
+            return `${dias} ${dias === 1 ? 'dia' : 'dias'}`;
+        },
+
+        async resetarSenha(usuario) {
+            if (this.resetandoId !== null) return;
+            this.resetandoId = usuario.USUARIO_ID;
+            try {
+                const confirmacao = await Swal.fire({
+                    title: 'Resetar senha?',
+                    text: `A senha de ${usuario.USUARIO_NOME} (${usuario.USUARIO_LOGIN}) será resetada para 123. A troca será solicitada no próximo acesso, conforme a regra do sistema.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Resetar senha',
+                    cancelButtonText: 'Cancelar'
+                });
+                if (!confirmacao.isConfirmed) return;
+                await axios.put(`${this.baseUrl}/usuario/${usuario.USUARIO_ID}/resetar-senha`);
+                await Swal.fire('Sucesso', 'Senha resetada para 123 com sucesso', 'success');
+            } catch (e) {
+                this.$store.dispatch("TratarErroAjaxModule/tratarErro", {
+                    id: this.msgId,
+                    response: e.response
+                });
+            } finally {
+                this.resetandoId = null;
+            }
+        },
+
         listar() {
             this.$store.dispatch("TratarErroAjaxModule/fecharAlert", this.msgId);
 

@@ -7,7 +7,7 @@
             <v-alert v-if="usuario.profissional" type="info" outlined>
                 Este usuário está vinculado a um profissional. Nome, CPF e telefone são
                 atualizados nos dois cadastros. O login será mantido; a senha pode ser alterada
-                na opção de alteração de senha do próprio usuário.
+                nos campos abaixo. Deixe-os em branco para manter a senha atual.
             </v-alert>
 
             <v-row>
@@ -54,9 +54,8 @@
                 <v-col cols="md-6">
                     <v-text-field
                         label="Senha*"
-                        :disabled="!!usuario.profissional"
                         type="password"
-                        autocomplete="off"
+                        autocomplete="new-password"
                         v-model="senha"
                     >
                     </v-text-field>
@@ -66,9 +65,8 @@
                 <v-col cols="md-6">
                     <v-text-field
                         label="Confirmar Senha*"
-                        :disabled="!!usuario.profissional"
                         type="password"
-                        autocomplete="off"
+                        autocomplete="new-password"
                         v-model="confirmarSenha"
                     ></v-text-field>
                 </v-col>
@@ -173,7 +171,21 @@ export default {
             }
         },
     },
+    watch: {
+        'usuario.USUARIO_ID'() {
+            this.limparSenhas();
+        },
+    },
     methods: {
+
+        limparSenhas() {
+            this.senha = null;
+            this.confirmarSenha = null;
+            if (this.usuario) {
+                delete this.usuario.USUARIO_SENHA;
+                delete this.usuario.USUARIO_SENHA_CONFIRMATION;
+            }
+        },
 
         selecionarPessoa() {
             this.$store.dispatch(
@@ -204,6 +216,7 @@ export default {
                 .then(r => {
                     if (typeof this.listar === 'function') this.listar();
                     this.usuario = r.data['retorno'];
+                    this.limparSenhas();
                     Swal.fire('Sucesso', 'Salvo com sucesso', 'success')
                 })
                 .catch(e => {

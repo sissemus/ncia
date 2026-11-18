@@ -1,5 +1,15 @@
 ## SISINDICADORES
 
+### Inativação automática de usuários
+
+O comando `php artisan usuarios:inativar-inativos` inativa contas ativas cujo último
+acesso ocorreu há mais de 90 dias. Contas sem último acesso são preservadas.
+A execução está agendada diariamente às 00:10, no fuso configurado na aplicação.
+Para executar o agendamento, o servidor precisa chamar `php artisan schedule:run`
+a cada minuto (cron no Linux ou Agendador de Tarefas no Windows), com o diretório
+do projeto como diretório de trabalho. A mesma regra é aplicada ao tentar entrar,
+antes de atualizar a data do último acesso. Não é necessária migração de banco.
+
 ### Configurar o VirtualHost do wamp/xampp
 Abra o arquivo **httpd-vhosts.conf** e adicione as seguintes linhas:
 

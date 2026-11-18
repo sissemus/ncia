@@ -85,4 +85,19 @@ class UsuarioController extends Controller
             "retorno" => $usuario
         ], 200);
     }
+
+    public function resetarSenha(Request $request, $id, IntegracaoProfissionalUsuarioService $integracao)
+    {
+        abort_unless($integracao->podeGerenciarAcesso($request->user()), 403);
+
+        $usuario = Usuario::findOrFail($id);
+        $usuario->USUARIO_SENHA = md5('123');
+        $usuario->save();
+
+        return response([
+            'cod' => 1,
+            'msg' => 'Senha resetada para 123 com sucesso',
+            'retorno' => $usuario,
+        ], 200);
+    }
 }

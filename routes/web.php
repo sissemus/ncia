@@ -63,6 +63,7 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         // Route::get('alteracao_senha', [UsuarioController::class, "alterarSenhaView"])->name("usuario.alteracao_senha");
         Route::post('inserir', [UsuarioController::class, "inserir"]);
         Route::put('alterar', [UsuarioController::class, "alterar"]);
+        Route::put('{id}/resetar-senha', [UsuarioController::class, 'resetarSenha'])->where('id', '[0-9]+');
         // Route::put('alteracao-senha', [UsuarioController::class, 'alterarSenha'])->name('alterar-senha');
         Route::delete('deletar', [UsuarioController::class, "deletar"]);
         Route::match(['get', 'post'], 'listar', [UsuarioController::class, "listar"]);

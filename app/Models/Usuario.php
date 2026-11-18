@@ -52,6 +52,19 @@ class Usuario extends Authenticatable
         return $this->USUARIO_SENHA;
     }
 
+    public function inativarPorInatividade(): bool
+    {
+        if ($this->USUARIO_ATIVO !== 1 || !$this->USUARIO_ULTIMO_ACESSO
+            || !$this->USUARIO_ULTIMO_ACESSO->lt(now()->subDays(90))) {
+            return false;
+        }
+
+        $this->USUARIO_ATIVO = 0;
+        $this->save();
+
+        return true;
+    }
+
     public function setPasswordAttribute($value)
     {
         $this->attributes["USUARIO_SENHA"] = md5($value);

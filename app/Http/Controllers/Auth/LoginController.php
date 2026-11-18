@@ -8,6 +8,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class LoginController extends Controller {
@@ -49,25 +50,27 @@ class LoginController extends Controller {
     }
 
     protected function attemptLogin(Request $request): bool {
-        $user = Usuario::where([
-            'USUARIO_LOGIN' => $request->post('USUARIO_LOGIN'),
-            'USUARIO_SENHA' => md5($request->post('USUARIO_SENHA')),
-            'USUARIO_ATIVO' => 1
-        ])->first();
+        return DB::transaction(function () use ($request) {
+            $user = Usuario::where([
+                'USUARIO_LOGIN' => $request->post('USUARIO_LOGIN'),
+                'USUARIO_SENHA' => md5($request->post('USUARIO_SENHA')),
+                'USUARIO_ATIVO' => 1
+            ])->lockForUpdate()->first();
 
-        if($user) {
-            if ($user->USUARIO_VIGENCIA === null || Carbon::parse($user->USUARIO_VIGENCIA)->greaterThanOrEqualTo(Carbon::now())) {
-                //$this->guard()->login($user, false);
-                Auth::login($user, false);
-                $user->USUARIO_ULTIMO_ACESSO = date("Y-m-d H:i:s");
-                $user->save();
-                return true;
-            } else {
+            if (!$user || $user->inativarPorInatividade()) {
                 return false;
             }
-        } else {
-            return false;
-        }
+
+            if ($user->USUARIO_VIGENCIA !== null && Carbon::parse($user->USUARIO_VIGENCIA)->lessThan(Carbon::now())) {
+                return false;
+            }
+
+            $user->USUARIO_ULTIMO_ACESSO = now();
+            $user->save();
+            Auth::login($user, false);
+
+            return true;
+        }, 3);
     }
 
     protected function validateLogin(Request $request) {
