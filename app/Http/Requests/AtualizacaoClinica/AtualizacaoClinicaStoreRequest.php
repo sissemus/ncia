@@ -17,10 +17,13 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
 
     protected function prepareForValidation()
     {
+        $conselho = strtoupper(trim((string) $this->ATUALIZACAO_CLINICA_CONSELHO));
+        $numeroConselho = trim((string) $this->ATUALIZACAO_CLINICA_NUMERO_CONSELHO);
+
         $this->merge([
             "ATUALIZACAO_CLINICA_PROFISSIONAL" => trim((string) $this->ATUALIZACAO_CLINICA_PROFISSIONAL),
-            "ATUALIZACAO_CLINICA_CONSELHO" => strtoupper(trim((string) $this->ATUALIZACAO_CLINICA_CONSELHO)),
-            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => trim((string) $this->ATUALIZACAO_CLINICA_NUMERO_CONSELHO),
+            "ATUALIZACAO_CLINICA_CONSELHO" => $conselho === '' ? null : $conselho,
+            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => $numeroConselho === '' ? null : $numeroConselho,
             "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => trim((string) $this->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA),
         ]);
     }
@@ -36,14 +39,14 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
             "TG_TIPO_PRECAUCAO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_PRECAUCAO)->where("ATIVO", 1)],
             "TG_SUPORTE_O2_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_O2)->where("ATIVO", 1)],
             "TG_SUPORTE_HEMODINAMICO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_HEMODINAMICO)->where("ATIVO", 1)],
-            "ATUALIZACAO_CLINICA_TEMPERATURA" => ["required", "string", "max:20"],
-            "ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL" => ["required", "string", "max:20"],
-            "ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" => ["required", "string", "max:20"],
-            "ATUALIZACAO_CLINICA_SATURACAO_O2" => ["required", "string", "max:20"],
-            "ATUALIZACAO_CLINICA_ESCALA_GLASGOW" => ["required", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_TEMPERATURA" => ["nullable", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_PRESSAO_ARTERIAL" => ["nullable", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" => ["nullable", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_SATURACAO_O2" => ["nullable", "string", "max:20"],
+            "ATUALIZACAO_CLINICA_ESCALA_GLASGOW" => ["nullable", "string", "max:20"],
             "ATUALIZACAO_CLINICA_PROFISSIONAL" => ["required", "string", "max:150"],
-            "ATUALIZACAO_CLINICA_CONSELHO" => ["required", Rule::in(["CRM", "COREN"])],
-            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => ["required", "string", "max:50"],
+            "ATUALIZACAO_CLINICA_CONSELHO" => ["nullable", Rule::in(["CRM", "COREN"])],
+            "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => ["nullable", "string", "max:50"],
             "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => ["required", "string"],
         ];
     }

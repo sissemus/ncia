@@ -53,8 +53,8 @@ class AbrirChamadoRequest extends FormRequest
             "UNIDADE_ID_SOLICITANTE" => $regrasUnidadeSolicitante,
             "UNIDADE_ID_DESTINO" => ["required", "integer", Rule::exists("UNIDADE", "UNIDADE_ID")->where("UNIDADE_ATIVO", 1)],
             "CHAMADO_PROFISSIONAL_SOLICITANTE" => ["required", "string", "max:150"],
-            "CHAMADO_CONSELHO_PROFISSIONAL" => ["required", Rule::in(["CRM", "COREN"])],
-            "CHAMADO_NUMERO_CONSELHO" => ["required", "string", "max:50"],
+            "CHAMADO_CONSELHO_PROFISSIONAL" => ["nullable", Rule::in(["CRM", "COREN"])],
+            "CHAMADO_NUMERO_CONSELHO" => ["nullable", "string", "max:50"],
 
             "CHAMADO_HORARIO_ATENDIMENTO" => ["nullable", "date_format:H:i"],
             "CHAMADO_SETOR_SOLICITANTE" => ["required", "string", "max:150"],
@@ -66,16 +66,16 @@ class AbrirChamadoRequest extends FormRequest
             "DIAGNOSTICO_ID" => ["required", "integer", Rule::exists("DIAGNOSTICO", "DIAGNOSTICO_ID")->where("DIAGNOSTICO_ATIVO", 1)],
 
             "CHAMADO_DISPOSITIVOS" => ["required", "string", "max:500"],
-            "CHAMADO_PESO" => ["required", "numeric", "min:0", "max:9999.99"],
+            "CHAMADO_PESO" => ["nullable", "numeric", "min:0", "max:9999.99"],
 
             "TG_TIPO_PRECAUCAO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::TIPO_PRECAUCAO)->where("ATIVO", 1)],
             "TG_SUPORTE_O2_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_O2)->where("ATIVO", 1)],
             "TG_SUPORTE_HEMODINAMICO_ID" => ["required", "integer", Rule::exists("TABELA_GENERICA", "COLUNA_ID")->where("TABELA_ID", RTG::SUPORTE_HEMODINAMICO)->where("ATIVO", 1)],
-            "CHAMADO_TEMPERATURA" => ["required", "string", "max:20"],
-            "CHAMADO_FREQUENCIA_CARDIACA" => ["required", "string", "max:20"],
-            "CHAMADO_PRESSAO_ARTERIAL" => ["required", "string", "max:20"],
-            "CHAMADO_SATURACAO_O2" => ["required", "string", "max:20"],
-            "CHAMADO_ESCALA_GLASGOW" => ["required", "string", "max:20"],
+            "CHAMADO_TEMPERATURA" => ["nullable", "string", "max:20"],
+            "CHAMADO_FREQUENCIA_CARDIACA" => ["nullable", "string", "max:20"],
+            "CHAMADO_PRESSAO_ARTERIAL" => ["nullable", "string", "max:20"],
+            "CHAMADO_SATURACAO_O2" => ["nullable", "string", "max:20"],
+            "CHAMADO_ESCALA_GLASGOW" => ["nullable", "string", "max:20"],
 
             "CHAMADO_OBSERVACAO" => ["nullable", "string"],
         ];

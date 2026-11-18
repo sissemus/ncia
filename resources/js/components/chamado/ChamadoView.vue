@@ -248,11 +248,11 @@
                                         hide-details v-model="chamado.CHAMADO_PROFISSIONAL_SOLICITANTE"></v-text-field>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-select label="Conselho*" :items="['CRM', 'COREN']" clearable outlined dense
+                                        <v-select label="Conselho" :items="['CRM', 'COREN']" clearable outlined dense
                                             hide-details v-model="chamado.CHAMADO_CONSELHO_PROFISSIONAL"></v-select>
                                     </v-col>
                                     <v-col cols="6" sm="3">
-                                        <v-text-field label="Nº do Conselho*" autocomplete="off"
+                                        <v-text-field label="Nº do Conselho" autocomplete="off"
                                             maxlength="50" outlined dense hide-details
                                             v-model="chamado.CHAMADO_NUMERO_CONSELHO"></v-text-field>
                                     </v-col>
@@ -313,7 +313,7 @@
                                     outlined dense hide-details v-model="chamado.CHAMADO_DISPOSITIVOS"></v-text-field>
                             </v-col>
                             <v-col cols="12" md="3">
-                                <v-text-field label="Peso (kg)*" type="number" step="0.01" min="0" outlined dense
+                                <v-text-field label="Peso (kg)" type="number" step="0.01" min="0" outlined dense
                                     hide-details v-model="chamado.CHAMADO_PESO"></v-text-field>
                             </v-col>
                         </v-row>
@@ -340,23 +340,23 @@
                                     v-model="chamado.TG_SUPORTE_O2_ID"></v-select>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Temperatura*" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Temperatura" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_TEMPERATURA"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Pressão Arterial*" autocomplete="off" maxlength="20" outlined
+                                <v-text-field label="Pressão Arterial" autocomplete="off" maxlength="20" outlined
                                     dense hide-details v-model="chamado.CHAMADO_PRESSAO_ARTERIAL"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Freq. Cardíaca*" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Freq. Cardíaca" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_FREQUENCIA_CARDIACA"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Saturação O2*" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Saturação O2" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_SATURACAO_O2"></v-text-field>
                             </v-col>
                             <v-col cols="6" sm="3" md="3">
-                                <v-text-field label="Escala Glasgow*" autocomplete="off" maxlength="20" outlined dense
+                                <v-text-field label="Escala Glasgow" autocomplete="off" maxlength="20" outlined dense
                                     hide-details v-model="chamado.CHAMADO_ESCALA_GLASGOW"></v-text-field>
                             </v-col>
                         </v-row>
@@ -788,16 +788,6 @@ export default {
                 return false;
             }
 
-            if (!this.chamado.CHAMADO_CONSELHO_PROFISSIONAL) {
-                Swal.fire("Atenção", "Informe o conselho profissional.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_NUMERO_CONSELHO || !this.chamado.CHAMADO_NUMERO_CONSELHO.toString().trim()) {
-                Swal.fire("Atenção", "Informe o número do conselho.", "warning");
-                return false;
-            }
-
             if (this.chamado.CHAMADO_NUMERO_CONSELHO && this.chamado.CHAMADO_NUMERO_CONSELHO.length > 50) {
                 Swal.fire("Atenção", "O número do conselho deve conter no máximo 50 caracteres.", "warning");
                 return false;
@@ -828,11 +818,6 @@ export default {
                 return false;
             }
 
-            if (this.chamado.CHAMADO_PESO === null || this.chamado.CHAMADO_PESO === undefined || this.chamado.CHAMADO_PESO === "") {
-                Swal.fire("Atenção", "Informe o peso.", "warning");
-                return false;
-            }
-
             if (!this.chamado.TG_TIPO_PRECAUCAO_ID) {
                 Swal.fire("Atenção", "Informe o tipo de precaução.", "warning");
                 return false;
@@ -845,31 +830,6 @@ export default {
 
             if (!this.chamado.TG_SUPORTE_O2_ID) {
                 Swal.fire("Atenção", "Informe o suporte de O2.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_TEMPERATURA) {
-                Swal.fire("Atenção", "Informe a temperatura.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_PRESSAO_ARTERIAL) {
-                Swal.fire("Atenção", "Informe a pressão arterial.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_FREQUENCIA_CARDIACA) {
-                Swal.fire("Atenção", "Informe a frequência cardíaca.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_SATURACAO_O2) {
-                Swal.fire("Atenção", "Informe a saturação de O2.", "warning");
-                return false;
-            }
-
-            if (!this.chamado.CHAMADO_ESCALA_GLASGOW || !this.chamado.CHAMADO_ESCALA_GLASGOW.toString().trim()) {
-                Swal.fire("Atenção", "Informe a escala Glasgow.", "warning");
                 return false;
             }
 
