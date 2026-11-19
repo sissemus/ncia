@@ -109,7 +109,7 @@
 </template>
 
 <script>
-import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
+import UtilsMixins from "../../mixins/UtilsMixins";
 import Swal from "sweetalert2";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import ChamadoOperacional from "./ChamadoOperacional";
@@ -117,6 +117,7 @@ import SituacaoChamadoEnum from "../../enums/SituacaoChamadoEnum";
 import { mapGetters } from "vuex";
 
 export default {
+    mixins: [UtilsMixins],
     name: "AtendimentoEquipeView",
     components: { TratarErroAjax, ChamadoOperacional },
     props: {
@@ -172,7 +173,7 @@ export default {
     },
     mounted() { this.carregar(); },
     methods: {
-        formatarDataHora(valor) { return formatarDataHoraFortaleza(valor, true); },
+        formatarDataHora(valor) { return this.formatarDataHoraFortaleza(valor, true); },
         dado(item, campo) { return item && item[campo] ? item[campo] : "-"; },
         descricao(lista, id) {
             const item = (lista || []).find(valor => Number(valor.COLUNA_ID) === Number(id));

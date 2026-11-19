@@ -53,7 +53,6 @@
                             <v-col cols="6" md="2"><v-text-field label="Idade" readonly filled dense hide-details :value="idadePaciente" /></v-col>
                             <v-col cols="6" md="2"><v-text-field label="Sexo" readonly filled dense hide-details :value="descricao(sexos, paciente && paciente.TG_SEXO_ID)" /></v-col>
                             <v-col cols="6" md="3"><v-text-field label="Vulnerabilidade social" readonly filled dense hide-details :value="simNao(paciente && paciente.PACIENTE_VULNERABILIDADE_SOCIAL)" /></v-col>
-                            <v-col cols="6" md="3"><v-text-field label="Paciente temporário" readonly filled dense hide-details :value="simNao(paciente && paciente.PACIENTE_TEMPORARIO)" /></v-col>
                         </v-row>
                     </v-card-text>
                 </v-card>
@@ -170,7 +169,7 @@
 </template>
 
 <script>
-import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
+import UtilsMixins from "../../mixins/UtilsMixins";
 import moment from 'moment';
 import TratarErroAjax from '../assets/TratarErroAjax';
 import Swal from 'sweetalert2';
@@ -181,6 +180,7 @@ import SituacaoChamadoEnum, {
 } from '../../enums/SituacaoChamadoEnum';
 
 export default {
+    mixins: [UtilsMixins],
     name: 'ChamadoAnalisarView',
     components: { TratarErroAjax },
     props: {
@@ -248,7 +248,7 @@ export default {
         },
         idadePaciente() {
             const nascimento = this.paciente && this.paciente.PACIENTE_DT_NASCIMENTO;
-            return nascimento ? `${moment().diff(moment(nascimento), 'years')} anos` : '-';
+            return this.formatarIdade(nascimento);
         },
         procedimentosNome() {
             const itens = this.chamado && this.chamado.procedimentos || [];
@@ -371,7 +371,7 @@ export default {
         descricaoEquipe(equipe) { return equipe ? `Equipe Nº ${equipe.EQUIPE_ID}${equipe.EQUIPE_TURNO ? ` - ${equipe.EQUIPE_TURNO}` : ''}` : '-'; },
         valor(obj, campo) { return obj && obj[campo] ? obj[campo] : '-'; },
         descricao(lista, id) { const item = (lista || []).find(atual => Number(atual.COLUNA_ID) === Number(id)); return item ? item.DESCRICAO : '-'; },
-        formatarDataHora(data) { return formatarDataHoraFortaleza(data, true); },
+        formatarDataHora(data) { return this.formatarDataHoraFortaleza(data, true); },
         simNao(valor) { return valor === null || valor === undefined ? '-' : Number(valor) === 1 ? 'Sim' : 'Não'; },
         erro(error) {
             this.$store.dispatch('TratarErroAjaxModule/tratarErro', { id: this.msgId, response: error && error.response }, { root: true });

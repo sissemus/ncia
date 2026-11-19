@@ -45,11 +45,12 @@
 </template>
 
 <script>
-import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
+import UtilsMixins from "../../mixins/UtilsMixins";
 import { getPrioridadeColor } from "../../enums/PrioridadePacienteEnum";
 import SituacaoChamadoEnum, { getSituacaoChamadoColor } from "../../enums/SituacaoChamadoEnum";
 
 export default {
+    mixins: [UtilsMixins],
     name: "ChamadoOperacional",
     props: {
         chamado: { type: Object, required: true },
@@ -94,7 +95,7 @@ export default {
     methods: {
         unidade(item) { return item && item.UNIDADE_NOME ? item.UNIDADE_NOME : "-"; },
         formatarData(valor) {
-            return formatarDataHoraFortaleza(valor, true);
+            return this.formatarDataHoraFortaleza(valor, true);
         },
     },
 };

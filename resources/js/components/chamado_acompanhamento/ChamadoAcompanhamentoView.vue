@@ -197,10 +197,6 @@
                                     <v-text-field label="Vulnerabilidade Social" readonly filled dense hide-details
                                         :value="simNao(chamadoSelecionado.paciente ? chamadoSelecionado.paciente.PACIENTE_VULNERABILIDADE_SOCIAL : null)"></v-text-field>
                                 </v-col>
-                                <v-col cols="6" md="3">
-                                    <v-text-field label="Paciente Temporário" readonly filled dense hide-details
-                                        :value="simNao(chamadoSelecionado.paciente ? chamadoSelecionado.paciente.PACIENTE_TEMPORARIO : null)"></v-text-field>
-                                </v-col>
                             </v-row>
                         </v-card-text>
                     </v-card>
@@ -518,8 +514,6 @@
 </template>
 
 <script>
-import { formatarDataHoraFortaleza } from '../../helpers/DataHora';
-import moment from "moment";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import UtilsMixins from "../../mixins/UtilsMixins";
@@ -767,7 +761,7 @@ export default {
     },
 
     methods: {
-        formatarDataHora(valor) { return formatarDataHoraFortaleza(valor); },
+        formatarDataHora(valor) { return this.formatarDataHoraFortaleza(valor); },
         nomeViagemEvento(id) {
             const viagem = this.viagens.find(item => Number(item.CHAMADO_VIAGEM_ID) === Number(id));
             return viagem ? (viagem.RETORNO ? 'Volta' : 'Ida') + ' #' + viagem.NUMERO : 'Ida';
@@ -956,8 +950,7 @@ export default {
         },
 
         calcularIdade(data) {
-            if (!data) return "-";
-            return moment().diff(moment(data), "years") + " anos";
+            return this.formatarIdade(data);
         },
 
         getUnidadeSolicitanteNome(item) {

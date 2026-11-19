@@ -70,7 +70,7 @@
                             </td>
                             <td>{{ mascararCpf(paciente.PACIENTE_CPF) }}</td>
                             <td>{{ formatarDataBR(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
-                            <td>{{ calcularIdadeCompleta(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
+                            <td>{{ formatarIdade(paciente.PACIENTE_DT_NASCIMENTO) }}</td>
                             <td>{{ descricaoTabelaGenerica(sexosDominio, paciente.TG_SEXO_ID) }}</td>
 
                             <td>
@@ -112,7 +112,6 @@
 </template>
 
 <script>
-import moment from "moment";
 import { mapGetters } from "vuex";
 import TratarErroAjax from "../assets/TratarErroAjax";
 import MdNovoPaciente from "./MdNovoPaciente";
@@ -212,20 +211,6 @@ export default {
         descricaoTabelaGenerica(lista, colunaId) {
             let item = lista.find(item => Number(item.COLUNA_ID) === Number(colunaId));
             return item ? item.DESCRICAO : "-";
-        },
-
-        calcularIdadeCompleta(data) {
-            if (!data) return "-";
-
-            let nascimento = moment(data);
-            let hoje = moment();
-            let anos = hoje.diff(nascimento, "years");
-
-            nascimento.add(anos, "years");
-
-            let meses = hoje.diff(nascimento, "months");
-
-            return `${anos} ano${anos !== 1 ? "s" : ""} e ${meses} ${meses !== 1 ? "meses" : "mês"}`;
         },
 
         mascararCpf(cpf) {
