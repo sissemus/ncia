@@ -167,31 +167,52 @@ class EquipeController extends Controller
     {
         
         $EQUIPE_ID = isset($request['EQUIPE_ID']) ? $request['EQUIPE_ID'] : null;
-        // $EQUIPE_ATIVO = isset($request['EQUIPE_ATIVO']) ? $request['EQUIPE_ATIVO'] : null;
-        // $VEICULO_ID = isset($request['VEICULO_ID']) ? $request['VEICULO_ID'] : null;
 
-        //VERIFICAR SE A EQUIPE JÁ FOI UTILIZADA
+        // Valida antes de apagar qualquer coisa: se a equipe já foi usada em
+        // algum chamado, não pode ser excluída (violaria a FK em CHAMADO_EQUIPE
+        // e deixaria chamados órfãos).
+        $temChamado = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->exists();
 
-        // $equipe = Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+        if ($temChamado) {
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
+            ], 422);
+        }
 
-        //verifico se a equipe foi utilizada em algum chamado
+        // Exclusão física, mas arquivando antes no histórico e tudo dentro de
+        // uma transação (tudo-ou-nada): se qualquer passo falhar, nada é
+        // apagado e nada fica pela metade.
+        DB::transaction(function () use ($EQUIPE_ID) {
+            // 1) Arquiva a equipe em EQUIPE_HISTORICO.
+            DB::insert(
+                'INSERT INTO EQUIPE_HISTORICO
+                    (EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_TURNO)
+                 SELECT EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_TURNO
+                 FROM EQUIPE
+                 WHERE EQUIPE_ID = ?',
+                [$EQUIPE_ID]
+            );
 
-        // $chamado_equipe = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->first();
+            // 2) Arquiva os profissionais em EQUIPE_HISTORICO_PROFISSIONAL.
+            //    EQUIPE_PROFISSIONAL_ID é IDENTITY no histórico, então é omitido
+            //    (o banco gera um novo).
+            DB::insert(
+                'INSERT INTO EQUIPE_HISTORICO_PROFISSIONAL
+                    (EQUIPE_ID, PROFISSIONAL_ID, EQUIPE_PROFISSIONAL_ATIVO, USUARIO_ID_CAD)
+                 SELECT EQUIPE_ID, PROFISSIONAL_ID, EQUIPE_PROFISSIONAL_ATIVO, USUARIO_ID_CAD
+                 FROM EQUIPE_PROFISSIONAL
+                 WHERE EQUIPE_ID = ?',
+                [$EQUIPE_ID]
+            );
 
-        // if ($chamado_equipe != null){
+            // 3) Exclusão física: profissionais primeiro, depois a equipe.
+            EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
+                ->delete();
 
-        //     return response()->json([
-        //         'sucesso' => false,
-        //         'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
-        //     ], 422);
-
-        // }
-
-        EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
-            ->delete();
-        
-        Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
-            ->delete();
+            Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
+                ->delete();
+        });
 
         return response()->json([
             'sucesso' => true,
