@@ -91,7 +91,8 @@ class ChamadoAnalisarController extends Controller
                 PlantaoEquipeService::filtrarEncaminhamento($query)
                     ->whereHas('equipeProfissional', function ($profissionais) {
                         $profissionais->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
-                    });
+                    })
+                    ;
             })
             ->orderBy('VEICULO_IDENTIFICACAO')
             ->get();

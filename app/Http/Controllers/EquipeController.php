@@ -216,10 +216,10 @@ class EquipeController extends Controller
             //mudança
             if ($temChamado) {
                 //desativa a equipe
-                EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
-                ->update([
-                    'EQUIPE_PROFISSIONAL_ATIVO' => 0
-                ]);
+                // EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
+                // ->update([
+                //     'EQUIPE_PROFISSIONAL_ATIVO' => 0
+                // ]);
 
                 Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
                 ->update([

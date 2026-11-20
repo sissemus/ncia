@@ -56,7 +56,8 @@ class EquipeAssistencialService
             ->when($somenteAtivos, function ($query) {
                 $query->where('p.PROFISSIONAL_ATIVO', 1)
                     ->where('ep.EQUIPE_PROFISSIONAL_ATIVO', 1)
-                    ->where('e.EQUIPE_ATIVO', 1);
+                    ->where('e.EQUIPE_ATIVO', 1)
+                    ;
             })
             ->distinct()
             ->pluck('ep.EQUIPE_ID')
@@ -108,7 +109,8 @@ class EquipeAssistencialService
                 ->whereIn('ce_acesso.EQUIPE_ID', $equipeIds)
                 ->when($somenteVinculosAtivos, function ($consulta) {
                     $consulta->where('ce_acesso.CHAMADO_EQUIPE_ATIVO', 1);
-                });
+                })
+                ;
         });
     }
 }
