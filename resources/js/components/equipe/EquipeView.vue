@@ -25,6 +25,8 @@
                     <v-col class="text-right">
                         <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
                         <v-btn color="red" dark tile @click="clear">limpar</v-btn>
+                        <v-btn color="red" dark tile @click="desativarEquipes">Desativar Equipes Anteriores</v-btn>
+                        <v-btn color="red" dark tile @click="desativarEquipesTodas">Desativar Todas as Equipes</v-btn>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -365,6 +367,76 @@ export default {
                     .catch(error => {
                         Swal.fire(
                             'Exclusão não permitida',
+                            this.mensagemErro(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
+            })
+        },
+        desativarEquipes() {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja desativar as equipes anteriores?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = 0;
+
+                axios.post(`${this.baseUrl}/equipe/desativarEquipes`)
+                    .then(response => {
+                        return Swal.fire(
+                            'Equipes anteriores desativadas com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Desativação não permitida',
+                            this.mensagemErro(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
+            })
+        },
+        desativarEquipesTodas() {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja desativar todas as equipes?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = 0;
+
+                axios.post(`${this.baseUrl}/equipe/desativarEquipesTodas`)
+                    .then(response => {
+                        return Swal.fire(
+                            'Equipes desativadas com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Desativação não permitida',
                             this.mensagemErro(error),
                             'warning'
                         );

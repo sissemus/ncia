@@ -248,4 +248,40 @@ class EquipeController extends Controller
         ]);
 
     }
+
+    public function desativarEquipes(Request $request)
+    {
+        //desativa todas as equipes anteriores a data de hoje
+        $hoje   = Carbon::today();
+        // DD($hoje);
+
+        Equipe::where('EQUIPE_DATA', '<', $hoje->toDateString())
+            ->where('EQUIPE_ATIVO', '=', 1)
+            ->update([
+                'EQUIPE_ATIVO' => 0,
+                'USUARIO_ID_CAD' => Auth::id(),
+            ]);
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Equipe anterior desativada com sucesso.'
+        ]);
+
+    }
+
+    public function desativarEquipesTodas(Request $request)
+    {
+        //desativa todas as equipes anteriores a data de hoje
+        Equipe::where('EQUIPE_ATIVO', '=', 1)
+            ->update([
+                'EQUIPE_ATIVO' => 0,
+                'USUARIO_ID_CAD' => Auth::id(),
+            ]);
+
+        return response()->json([
+            'sucesso' => true,
+            'mensagem' => 'Equipe anterior desativada com sucesso.'
+        ]);
+
+    }
 }

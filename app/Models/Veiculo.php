@@ -45,14 +45,21 @@ class Veiculo extends Model
 
     public function equipe()
     {
+        //MUDANDO PARA EQUIPES ATIVAS
         return $this->hasOne(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
-            ->where('EQUIPE_DATA', now()->format('Y-m-d'));
+            ->where('EQUIPE_ATIVO', '=', 1);
+        // ->where('EQUIPE_DATA', now()->format('Y-m-d')
+        
     }
 
     public function equipes()
     {
         return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
-            ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+            // ->where('EQUIPE_DATA', now()->format('Y-m-d'))
+            // ->whereBetween('EQUIPE_DATA', [
+            //     now()->startOfDay(),
+            //     now()->addDay()->endOfDay(),
+            // ])
             ->where('EQUIPE_ATIVO', '=', 1);
     }
 
@@ -109,22 +116,26 @@ class Veiculo extends Model
             "tipoVeiculo",
             "situacaoVeiculo",
             "equipe",
-            'equipesAtivas' => function ($query) use ($hoje) {
-                $query->where(function ($query) use ($hoje) {
-                    $query->whereDate('EQUIPE_DATA', $hoje->toDateString())
-                        ->orWhere(function ($query) use ($hoje) {
-                            // Manter a SN anterior acessível para entregar sua fila à SD.
-                            $query->whereDate('EQUIPE_DATA', $hoje->copy()->subDay()->toDateString())
-                                ->where('EQUIPE_TURNO', 'SN')
-                                ->whereExists(function ($query) {
-                                    $query->selectRaw('1')->from('CHAMADO_EQUIPE as ce_plantao')
-                                        ->whereColumn('ce_plantao.EQUIPE_ID', 'EQUIPE.EQUIPE_ID')
-                                        ->where('ce_plantao.CHAMADO_EQUIPE_ATIVO', 1);
-                                });
-                        });
-                })->orderBy('EQUIPE_DATA')->orderBy('EQUIPE_ID');
-            },
-            'equipesAtivas.equipeProfissional.profissional',
+            'equipesAtivas'
+                => function($query){
+                    $query->where('EQUIPE_ATIVO', '=', 1);
+                }
+            //  => function ($query) use ($hoje) {
+            //     $query->where(function ($query) use ($hoje) {
+            //         $query->whereDate('EQUIPE_DATA', $hoje->toDateString())
+            //             ->orWhere(function ($query) use ($hoje) {
+            //                 // Manter a SN anterior acessível para entregar sua fila à SD.
+            //                 $query->whereDate('EQUIPE_DATA', $hoje->copy()->subDay()->toDateString())
+            //                     ->where('EQUIPE_TURNO', 'SN')
+            //                     ->whereExists(function ($query) {
+            //                         $query->selectRaw('1')->from('CHAMADO_EQUIPE as ce_plantao')
+            //                             ->whereColumn('ce_plantao.EQUIPE_ID', 'EQUIPE.EQUIPE_ID')
+            //                             ->where('ce_plantao.CHAMADO_EQUIPE_ATIVO', 1);
+            //                     });
+            //             });
+            //     })->orderBy('EQUIPE_DATA')->orderBy('EQUIPE_ID');
+            // },
+            , 'equipesAtivas.equipeProfissional.profissional',
             'equipesAtivas.equipeProfissional.profissional.tipoProfissional',
             "vinculoAtivo",
             "vinculoAtivo.unidade",

@@ -284,6 +284,8 @@ Route::middleware(['auth', 'web', 'CompartilharVariaveis', 'alteracao.senha'])->
         Route::post("pesquisar", [EquipeController::class, "pesquisar"]);
         Route::get("buscar/{id}", [EquipeController::class, "buscar"]);
         Route::get('search', [EquipeController::class, 'search']);
+        Route::post("desativarEquipes", [EquipeController::class, "desativarEquipes"]);
+        Route::post("desativarEquipesTodas", [EquipeController::class, "desativarEquipesTodas"]);
     });
     
     Route::prefix("equipeProfissional")->group(function () {
