@@ -25,8 +25,8 @@
                     <v-col class="text-right">
                         <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
                         <v-btn color="red" dark tile @click="clear">limpar</v-btn>
-                        <v-btn color="green" dark tile @click="desativarEquipes">Desativar Equipes Anteriores</v-btn>
-                        <v-btn color="purple" dark tile @click="desativarEquipesTodas">Desativar Todas as Equipes</v-btn>
+                        <v-btn color="warning" outlined tile class="btn-desativar-equipes" @click="desativarEquipes">Desativar antigas</v-btn>
+                        <v-btn color="info" outlined tile class="btn-desativar-equipes" @click="desativarEquipesTodas">Desativar todas</v-btn>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -504,4 +504,9 @@ export default {
 }
 </script>
 
-<style></style>
+<style scoped>
+.btn-desativar-equipes {
+    border: 1px solid currentColor;
+    background-color: transparent;
+}
+</style>
