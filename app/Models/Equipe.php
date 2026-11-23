@@ -16,6 +16,7 @@ class Equipe extends Model
     protected $fillable = [
         "VEICULO_ID",
         "EQUIPE_DATA",
+        "EQUIPE_DATA_FIM",
         "EQUIPE_TURNO",
         "EQUIPE_ATIVO",
         "USUARIO_ID_CAD",
@@ -24,7 +25,8 @@ class Equipe extends Model
     protected $casts = [
         "EQUIPE_ID" => "integer",
         "VEICULO_ID" => "integer",
-        "EQUIPE_DATA" => "date",
+        "EQUIPE_DATA" => "datetime",
+        "EQUIPE_DATA_FIM" => "datetime",
         "EQUIPE_TURNO" => "string",
         "EQUIPE_ATIVO" => "integer",
         "USUARIO_ID_CAD" => "integer",

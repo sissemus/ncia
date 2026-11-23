@@ -72,22 +72,71 @@ class EquipeController extends Controller
         ]);
     }
 
+    // public function inserir(EquipeCreateRequest $request)
+    // {
+    //     $equipeId = DB::transaction(function () use ($request) {
+    //         // Serializar cadastros da mesma ambulância antes de verificar a duplicidade.
+    //         $veiculo = Veiculo::lockForUpdate()->findOrFail($request->input('VEICULO_ID'));
+    //         $data = Carbon::now()->toDateString();
+    //         $turno = $request->input('EQUIPE_TURNO');
+    //         $this->validarDuplicidade($veiculo->VEICULO_ID, $data, $turno);
+
+    //         $equipe = Equipe::create([
+    //             'VEICULO_ID' => $veiculo->VEICULO_ID,
+    //             'EQUIPE_DATA' => $data,
+    //             'EQUIPE_TURNO' => $turno,
+    //             'EQUIPE_ATIVO' => 1,
+    //             'USUARIO_ID_CAD' => Auth::id(),
+    //         ]);
+    //         foreach ($request->input('equipeProfissionais') as $dados) {
+    //             Profissional::findOrFail($dados['PROFISSIONAL_ID']);
+    //             $profissional = new EquipeProfissional($dados);
+    //             $profissional->EQUIPE_ID = $equipe->EQUIPE_ID;
+    //             $profissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
+    //             $profissional->USUARIO_ID_CAD = Auth::id();
+    //             $profissional->save();
+    //         }
+
+    //         return $equipe->EQUIPE_ID;
+    //     }, 3);
+
+    //     return response(Equipe::where('EQUIPE_ID', $equipeId)->get(), 201);
+    // }
     public function inserir(EquipeCreateRequest $request)
     {
         $equipeId = DB::transaction(function () use ($request) {
             // Serializar cadastros da mesma ambulância antes de verificar a duplicidade.
             $veiculo = Veiculo::lockForUpdate()->findOrFail($request->input('VEICULO_ID'));
-            $data = Carbon::now()->toDateString();
+
             $turno = $request->input('EQUIPE_TURNO');
-            $this->validarDuplicidade($veiculo->VEICULO_ID, $data, $turno);
+
+            $horas = ['SD' => 7, 'SN' => 19];
+
+            if(!isset($horas[$turno])){
+
+                throw new \InvalidArgumentException("Turno inválido: {$turno}");
+
+            }
+
+            $horaInicio = $horas[$turno];
+
+            $dataInicio = Carbon::today()->setTime($horaInicio, 0, 0);
+
+            $dataFim = $dataInicio->copy()->addHours(12);
+
+            // dd($dataInicio, $dataFim);
+
+            $this->validarDuplicidade($veiculo->VEICULO_ID, $dataInicio->toDateString(), $turno);
 
             $equipe = Equipe::create([
                 'VEICULO_ID' => $veiculo->VEICULO_ID,
-                'EQUIPE_DATA' => $data,
+                'EQUIPE_DATA' => $dataInicio->format('Y-m-d H:i:s'),
+                'EQUIPE_DATA_FIM' => $dataFim->format('Y-m-d H:i:s'),
                 'EQUIPE_TURNO' => $turno,
                 'EQUIPE_ATIVO' => 1,
                 'USUARIO_ID_CAD' => Auth::id(),
             ]);
+
             foreach ($request->input('equipeProfissionais') as $dados) {
                 Profissional::findOrFail($dados['PROFISSIONAL_ID']);
                 $profissional = new EquipeProfissional($dados);
@@ -102,7 +151,6 @@ class EquipeController extends Controller
 
         return response(Equipe::where('EQUIPE_ID', $equipeId)->get(), 201);
     }
-
     public function listar()
     {
         $equipe = Equipe::where('EQUIPE_EXCLUSAO', null)
@@ -191,8 +239,8 @@ class EquipeController extends Controller
             if(!$equipeHistorico){
                 DB::insert(
                     'INSERT INTO EQUIPE_HISTORICO
-                        (EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_TURNO)
-                    SELECT EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_TURNO
+                        (EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_DATA_FIM, EQUIPE_TURNO)
+                    SELECT EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_DATA_FIM, EQUIPE_TURNO
                     FROM EQUIPE
                     WHERE EQUIPE_ID = ?',
                     [$EQUIPE_ID]
@@ -215,31 +263,22 @@ class EquipeController extends Controller
 
             //mudança
             if ($temChamado) {
-                //desativa a equipe
-                // EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
-                // ->update([
-                //     'EQUIPE_PROFISSIONAL_ATIVO' => 0
-                // ]);
 
                 Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
                 ->update([
                     'EQUIPE_ATIVO' => 0
                 ]);
 
-                // return response()->json([
-                //     'sucesso' => false,
-                //     'mensagem' => 'Equipe já está fazendo atendimento de chamados!'
-                // ], 422);
-                
-                // 3) Exclusão física: profissionais primeiro, depois a equipe.
             }
             else{
+
                 EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
                 ->delete();
                 
                 Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
                     ->delete();
             }
+            
         });
 
         return response()->json([
