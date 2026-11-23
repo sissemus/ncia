@@ -25,8 +25,8 @@ class Equipe extends Model
     protected $casts = [
         "EQUIPE_ID" => "integer",
         "VEICULO_ID" => "integer",
-        "EQUIPE_DATA" => "datetime",
-        "EQUIPE_DATA_FIM" => "datetime",
+        "EQUIPE_DATA" => "datetime:Y-m-d H:i:s",
+        "EQUIPE_DATA_FIM" => "datetime:Y-m-d H:i:s",
         "EQUIPE_TURNO" => "string",
         "EQUIPE_ATIVO" => "integer",
         "USUARIO_ID_CAD" => "integer",

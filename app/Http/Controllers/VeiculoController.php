@@ -62,6 +62,7 @@ class VeiculoController extends Controller
 
     public function search(Request $request)
     {
+        // dd(now()->startOfDay(), now()->addDay()->endOfDay());
         return response(Veiculo::pesquisar($request));
     }
 

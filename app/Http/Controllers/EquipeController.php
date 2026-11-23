@@ -278,7 +278,7 @@ class EquipeController extends Controller
                 Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
                     ->delete();
             }
-            
+
         });
 
         return response()->json([
@@ -290,20 +290,26 @@ class EquipeController extends Controller
 
     public function desativarEquipes(Request $request)
     {
-        //desativa todas as equipes anteriores a data de hoje
-        $hoje   = Carbon::today();
-        // DD($hoje);
 
-        Equipe::where('EQUIPE_DATA', '<', $hoje->toDateString())
-            ->where('EQUIPE_ATIVO', '=', 1)
+        $agora = Carbon::now(); // com timezone America/Fortaleza no config/app.php
+
+        Equipe::where('EQUIPE_ATIVO', 1)
+            ->where(function ($q) use ($agora) {
+                $q->where('EQUIPE_DATA_FIM', '<=', $agora->format('Y-m-d H:i:s'))
+                // Registros antigos, sem EQUIPE_DATA_FIM: desativa se a data já passou
+                ->orWhere(function ($q2) use ($agora) {
+                    $q2->whereNull('EQUIPE_DATA_FIM')
+                        ->where('EQUIPE_DATA', '<', $agora->copy()->startOfDay()->format('Y-m-d H:i:s'));
+                });
+            })
             ->update([
-                'EQUIPE_ATIVO' => 0,
-                'USUARIO_ID_CAD' => Auth::id(),
+                  'EQUIPE_ATIVO' => 0
+                , 'USUARIO_ID_CAD' => Auth::id()
             ]);
 
         return response()->json([
             'sucesso' => true,
-            'mensagem' => 'Equipe anterior desativada com sucesso.'
+            'mensagem' => 'Equipe(s) anterior(es) desativada(s) com sucesso.'
         ]);
 
     }
@@ -319,7 +325,7 @@ class EquipeController extends Controller
 
         return response()->json([
             'sucesso' => true,
-            'mensagem' => 'Equipe anterior desativada com sucesso.'
+            'mensagem' => 'Equipe(s) desativada(s) com sucesso.'
         ]);
 
     }

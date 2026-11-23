@@ -54,12 +54,12 @@ class Veiculo extends Model
 
     public function equipes()
     {
+
         return $this->hasMany(Equipe::class, 'VEICULO_ID', 'VEICULO_ID')
-            // ->where('EQUIPE_DATA', now()->format('Y-m-d'))
-            // ->whereBetween('EQUIPE_DATA', [
-            //     now()->startOfDay(),
-            //     now()->addDay()->endOfDay(),
-            // ])
+            ->whereBetween('EQUIPE_DATA_FIM', [
+                 now()->startOfDay(),
+                 now()->addDay()->endOfDay(),
+            ])
             ->where('EQUIPE_ATIVO', '=', 1);
     }
 
@@ -90,6 +90,7 @@ class Veiculo extends Model
 
     public static function pesquisar($requisicao)
     {
+        
         return self::with(self::relacionamento())
             ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
                 return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");
@@ -144,6 +145,7 @@ class Veiculo extends Model
 
     public static function pesquisarCadastrar($requisicao)
     {
+        
         $veiculos = self::with(self::relacionamentoCadastrar())
             ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
                 return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");

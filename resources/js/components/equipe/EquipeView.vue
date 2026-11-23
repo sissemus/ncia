@@ -53,7 +53,8 @@
                                     <tbody>
                                         <tr>
                                             <td style="font-weight: bold;">Equipe(s)</td>
-                                            <td style="text-align: center;font-weight: bold;">Data</td>
+                                            <td style="text-align: center;font-weight: bold;">Data Início</td>
+                                            <td style="text-align: center;font-weight: bold;">Data Fim</td>
                                             <td style="text-align: center;font-weight: bold;">Turno</td>
                                             <td style="text-align: center;font-weight: bold;">Ação</td>
                                         </tr>
@@ -73,6 +74,10 @@
 
                                             <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
                                                 {{ formatarData(eqp.EQUIPE_DATA) }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
+                                                {{ formatarData(eqp.EQUIPE_DATA_FIM) }}
                                             </td>
 
                                             <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:7%;">
@@ -229,10 +234,11 @@ export default {
             set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
         },
         veiculos: {
+
             get() {
                 return this.$store.getters['VeiculoViewModule/getVeiculos']
                     .filter(veiculo =>
-                    veiculo.VEICULO_ATIVO == 1
+                        veiculo.VEICULO_ATIVO == 1
                         // && veiculo.TG_SITUACAO_VEICULO_ID == 1
                     )
             },
@@ -471,15 +477,22 @@ export default {
                 return '';
             }
 
-            const dataParte = data.substring(0, 10);
+            // Aceita "2026-11-22 07:00:00" e "2026-11-22T07:00:00"
+            const [dataParte, horaParte] = data.replace('T', ' ').split(' ');
             const partes = dataParte.split('-');
 
             if (partes.length !== 3) {
                 return '';
             }
 
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        },   
+            const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+            if (!horaParte) {
+                return dataFormatada;
+            }
+
+            return `${dataFormatada} ${horaParte.substring(0, 5)}`;
+        },  
         preencherComProfissional(equipes) {
             if (!equipes || equipes.length === 0) {
                 return '';

@@ -82,10 +82,10 @@ export default {
 
         search(context, msgId) {
             
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-            console.log('VUEX -> search');
-            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-                        
+            // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            // console.log('VUEX -> search');
+            // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                     
             let baseUrl = context.rootGetters['getBaseUrl'];
             let page = context.state.pagination.current_page;
 
@@ -113,7 +113,6 @@ export default {
             console.log('################################');
             console.log('VUEX -> searchCadastrar');
             console.log('################################');
-            
             let baseUrl = context.rootGetters['getBaseUrl'];
             let page = context.state.pagination.current_page;
 
