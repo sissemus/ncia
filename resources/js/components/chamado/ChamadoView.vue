@@ -158,7 +158,7 @@
                                 </v-col>
                                 <v-col cols="6" sm="3" md="2">
                                     <v-text-field label="Idade" readonly dense hide-details filled
-                                        :value="calcularIdade(paciente.PACIENTE_DT_NASCIMENTO)"></v-text-field>
+                                        :value="formatarIdade(paciente.PACIENTE_DT_NASCIMENTO)"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" sm="6" md="2">
                                     <v-text-field label="Sexo" readonly dense hide-details filled
