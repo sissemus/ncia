@@ -56,9 +56,9 @@ class Profissional extends Model
     }
 
     public function equipeProfissional(){
-        return $this->hasOne(EquipeProfissional::class, 'PROFISSIONAL_ID', 'PROFISSIONAL_ID')
-            ->whereHas('EQUIPE', function($q){
-                $q->whereDate('EQUIPE_DATA_FIM', '>=', now());
+        return $this->hasMany(EquipeProfissional::class, 'PROFISSIONAL_ID', 'PROFISSIONAL_ID')
+            ->whereHas('equipe', function($q){
+                return $q->where('EQUIPE_DATA_FIM', '>=', now());
             });
 
     }

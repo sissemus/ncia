@@ -1,0 +1,526 @@
+<template>
+    <div>
+        <v-card>
+            <v-toolbar class="elevation-1">
+                <v-icon class="mr-1">mdi-database</v-icon>
+                <v-toolbar-title>Cadastro de Equipes</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn title="Nova equipe" fab small elevation="2" color="primary" dark @click="novoEquipe">
+                    <v-icon>mdi-plus</v-icon>
+                </v-btn>
+            </v-toolbar>
+            <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
+            <div :id="msgIdDebug"></div>
+            <v-card-text>
+                <v-row>
+                    <v-col>
+                        <v-text-field label="Equipe" autocomplete="off" hide-details
+                            v-model="equipePesquisa.EQUIPE_ID"></v-text-field>
+                    </v-col>
+                </v-row>
+                <v-row>
+
+                </v-row>
+                <v-row>
+                    <v-col class="text-right">
+                        <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
+                        <v-btn color="red" dark tile @click="clear">limpar</v-btn>
+                        <v-btn color="warning" outlined tile class="btn-desativar-equipes" @click="desativarEquipes">Desativar antigas</v-btn>
+                        <v-btn color="info" outlined tile class="btn-desativar-equipes" @click="desativarEquipesTodas">Desativar todas</v-btn>
+                    </v-col>
+                </v-row>
+            </v-card-text>
+            <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
+                <template v-slot:default>
+                    <tbody>
+                        <tr>
+                            <td class="text-left">Id</td>
+                            <td class="text-left">Veículo</td>
+                            <td colspan="4">&nbsp;</td>
+                        </tr>
+
+                        <tr v-for="(veiculo, indexVeiculo) in veiculos" :key="veiculo.VEICULO_ID">
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ String(veiculo.VEICULO_ID).padStart(5, '0') }}
+                            </td>
+
+                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                {{ veiculo.VEICULO_IDENTIFICACAO }}
+                            </td>
+
+                            <td v-if="veiculo.equipes && veiculo.equipes.length > 0">
+                                <table width="100%">
+                                    <tbody>
+                                        <tr>
+                                            <td style="font-weight: bold;">Equipe(s)</td>
+                                            <td style="text-align: center;font-weight: bold;">Data Início</td>
+                                            <td style="text-align: center;font-weight: bold;">Data Fim</td>
+                                            <td style="text-align: center;font-weight: bold;">Turno</td>
+                                            <td style="text-align: center;font-weight: bold;">Ação</td>
+                                        </tr>
+
+                                        <tr>
+                                            <td colspan="4"><hr></td>
+                                        </tr>
+
+                                        <tr v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:68%;padding:0 10px 0 0;">
+                                                <span v-for="(prf, idxPrf) in eqp.equipeProfissional" :key="idxPrf">
+                                                    {{ prf.profissional.PROFISSIONAL_NOME }}
+                                                    - ({{ prf.profissional.tipoProfissional.DESCRICAO }})
+                                                    <br>
+                                                </span>
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
+                                                {{ formatarData(eqp.EQUIPE_DATA) }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
+                                                {{ formatarData(eqp.EQUIPE_DATA_FIM) }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:7%;">
+                                                {{ eqp.EQUIPE_TURNO }}
+                                            </td>
+
+                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:15%;white-space:nowrap;">
+                                                <v-tooltip v-if="podeTrocarPlantao" bottom>
+                                                    <template v-slot:activator="{ on, attrs }">
+                                                        <v-btn icon v-bind="attrs" v-on="on"
+                                                            aria-label="Trocar plantão"
+                                                            :disabled="processandoEquipeId !== null || dialogPlantao || processandoPlantao"
+                                                            @click="abrirTrocaPlantao(veiculo, eqp)">
+                                                            <v-icon>mdi-account-switch</v-icon>
+                                                        </v-btn>
+                                                    </template>
+                                                    <span>Trocar plantão</span>
+                                                </v-tooltip>
+                                                <v-btn
+                                                    icon
+                                                    :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                                    :disabled="processandoEquipeId !== null || dialogPlantao"
+                                                    @click="deletar(eqp, veiculo)"
+                                                    title="Remover equipe"
+                                                >
+                                                    <v-icon>mdi-delete</v-icon>
+                                                </v-btn>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
+                                &nbsp;
+                            </td>
+
+                        </tr>
+            
+                    </tbody>
+                </template>
+            </v-simple-table>
+            <v-divider></v-divider>
+            <v-card-actions>
+                <v-row>
+                    <v-col>
+                        <v-pagination v-show="pagination.total" v-model="pagination.current_page"
+                            :length="pagination.last_page" total-visible="10" @input="onPageChange"></v-pagination>
+                    </v-col>
+                </v-row>
+            </v-card-actions>
+            <v-divider></v-divider>
+            <v-card-actions class="text-center">
+                <v-row>
+                    <v-col>
+                        <v-chip>
+                            {{ pagination.total }} registro{{ pagination.total > 1 ? 's' : '' }}
+                        </v-chip>
+                    </v-col>
+                </v-row>
+            </v-card-actions>
+        </v-card>
+        <v-dialog v-model="dialogPlantao" max-width="720" persistent>
+            <v-card>
+                <v-card-title>Trocar plantão — {{ veiculoPlantao && veiculoPlantao.VEICULO_IDENTIFICACAO }}</v-card-title>
+                <v-card-text>
+                    <p v-if="equipeOrigemPlantao"><strong>Equipe de origem:</strong>
+                        Nº {{ equipeOrigemPlantao.EQUIPE_ID }} — {{ formatarData(equipeOrigemPlantao.EQUIPE_DATA) }} — {{ equipeOrigemPlantao.EQUIPE_TURNO }}</p>
+                    <p>Selecione a equipe que assumirá os chamados em fila desta ambulância.
+                        Os chamados em atendimento continuarão com a equipe anterior até a conclusão.</p>
+                    <v-select v-model="equipePlantaoId" :items="equipesPlantao"
+                        item-value="EQUIPE_ID" item-text="descricaoPlantao" label="Equipe que assumirá"
+                        :loading="carregandoPlantao" :disabled="carregandoPlantao || processandoPlantao"
+                        no-data-text="Não há equipe substituta ativa com turno e data compatíveis nesta ambulância.">
+                        <template v-slot:item="{ item }">
+                            <v-list-item-content>
+                                <v-list-item-title>Equipe Nº {{ item.EQUIPE_ID }} — {{ formatarData(item.EQUIPE_DATA) }} — {{ item.EQUIPE_TURNO }}</v-list-item-title>
+                                <v-list-item-subtitle class="text-wrap">{{ item.profissionaisPlantao }}</v-list-item-subtitle>
+                            </v-list-item-content>
+                        </template>
+                    </v-select>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text :disabled="processandoPlantao || carregandoPlantao" @click="dialogPlantao = false">Cancelar</v-btn>
+                    <v-btn color="primary" :loading="processandoPlantao"
+                        :disabled="carregandoPlantao || processandoPlantao || !equipePlantaoId"
+                        @click="confirmarTrocaPlantao">Confirmar troca</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+        <MdNovoEquipe></MdNovoEquipe>
+    </div>
+</template>
+
+<script>
+import Swal from 'sweetalert2';
+import { mapGetters } from "vuex";
+import TratarErroAjax from "../assets/TratarErroAjax";
+import MdNovoEquipe from "./MdNovoEquipe";
+
+export default {
+    name: "EquipeView",
+    components: { MdNovoEquipe, TratarErroAjax },
+    props:{
+        tiposProfissional: {type: Array, default: () => []},
+        profissionais: {type: Array, default: () => []},
+        tiposVeiculo: {type: Array, default: () => []},
+        podeTrocarPlantao: {type: Boolean, default: false},
+    },
+    data() {
+        return {
+            msgId: 'msgEquipeView',
+            msgIdDebug: 'msgEquipeViewDebug',
+
+            idxEqp: 0,
+            processandoEquipeId: null,
+            dialogPlantao: false,
+            carregandoPlantao: false,
+            processandoPlantao: false,
+            veiculoPlantao: null,
+            equipeOrigemPlantao: null,
+            equipePlantaoId: null,
+            equipesPlantao: [],
+        }
+    },
+    mounted() {
+        this.$store.dispatch('DominioModule/setTipoProfissionais', 
+            this.tiposProfissional
+        );
+
+        this.$store.dispatch('ProfissionalViewModule/setProfissionais',
+            this.profissionais
+        );
+
+        // console.log(this.profissionais);
+    },
+    computed: {
+        ...mapGetters({
+            baseUrl: 'getBaseUrl'
+        }),
+        equipes: {
+            get() { return this.$store.getters['EquipeViewModule/getEquipes'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipes', newValue) }
+        },
+        pagination: {
+            get() { return this.$store.getters['VeiculoViewModule/getPagination']},
+            set(newValue) { this.$store.dispatch('VeiculoViewModule/setPagination', newValue) }
+        },
+        equipePesquisa: {
+            get() { return this.$store.getters['EquipeViewModule/getEquipePesquisa'] },
+            set(newValue) { this.$store.dispatch('EquipeViewModule/setEquipePesquisa', newValue) }
+        },
+        veiculoPesquisa: {
+            get() { return this.$store.getters['VeiculoViewModule/getVeiculoPesquisa'] },
+            set(newValue) { this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', newValue) }
+        },
+        veiculos: {
+
+            get() {
+                return this.$store.getters['VeiculoViewModule/getVeiculos']
+                    .filter(veiculo =>
+                        veiculo.VEICULO_ATIVO == 1
+                        // && veiculo.TG_SITUACAO_VEICULO_ID == 1
+                    )
+            },
+            set(newValue) {
+                this.$store.dispatch(
+                    'VeiculoViewModule/setVeiculoPesquisa',
+                    newValue
+                )
+            }
+        }
+    },
+    methods: {
+        async abrirTrocaPlantao(veiculo, equipeOrigem) {
+            if (this.dialogPlantao || this.processandoEquipeId !== null) return;
+            this.veiculoPlantao = veiculo;
+            this.equipeOrigemPlantao = equipeOrigem;
+            this.equipePlantaoId = null;
+            this.equipesPlantao = [];
+            this.dialogPlantao = true;
+            this.carregandoPlantao = true;
+            try {
+                const { data } = await axios.get(`${this.baseUrl}/equipe/equipes-plantao`, {
+                    params: { VEICULO_ID: veiculo.VEICULO_ID, EQUIPE_ORIGEM_ID: equipeOrigem.EQUIPE_ID }
+                });
+                this.equipesPlantao = data.map(equipe => {
+                    const profissionais = (equipe.equipeProfissional || [])
+                        .map(vinculo => vinculo.profissional && vinculo.profissional.PROFISSIONAL_NOME)
+                        .filter(Boolean).join(', ');
+                    return {
+                        ...equipe,
+                        profissionaisPlantao: profissionais,
+                        descricaoPlantao: `Nº ${equipe.EQUIPE_ID} — ${this.formatarData(equipe.EQUIPE_DATA)} — ${equipe.EQUIPE_TURNO} — ${profissionais}`
+                    };
+                });
+            } catch (error) {
+                this.dialogPlantao = false;
+                Swal.fire('Não foi possível carregar as equipes',
+                    this.mensagemErro(error, 'Tente novamente.'), 'error');
+            } finally {
+                this.carregandoPlantao = false;
+            }
+        },
+
+        async confirmarTrocaPlantao() {
+            if (this.processandoPlantao || this.carregandoPlantao || !this.equipePlantaoId) return;
+            this.processandoPlantao = true;
+            try {
+                const { data } = await axios.post(`${this.baseUrl}/equipe/trocar-plantao`, {
+                    VEICULO_ID: this.veiculoPlantao.VEICULO_ID,
+                    EQUIPE_ORIGEM_ID: this.equipeOrigemPlantao.EQUIPE_ID,
+                    EQUIPE_ID: this.equipePlantaoId
+                });
+                this.dialogPlantao = false;
+                this.search();
+                await Swal.fire(data.transferidos ? 'Plantão atualizado' : 'Nenhuma transferência',
+                    data.mensagem, data.transferidos ? 'success' : 'info');
+            } catch (error) {
+                Swal.fire('Não foi possível trocar o plantão',
+                    this.mensagemErro(error, 'Tente novamente.'), 'error');
+            } finally {
+                this.processandoPlantao = false;
+            }
+        },
+
+        search() {
+            this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
+                msgId: this.msgId,
+                TG_SITUACAO_VEICULO_ID: 1,
+                VEICULO_ATIVO: 1
+            });
+        },
+
+        onPageChange() {
+            this.search();
+        },
+
+        pesquisar() {
+            this.pagination.current_page = 1;
+            this.search();
+        },
+
+        clear() {
+            this.veiculoPesquisa = {
+                VEICULO_ID: null,
+            };
+            this.pagination.current_page = 1;
+            this.search();
+        },
+
+        novoEquipe() {
+            this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
+        },
+
+        selecionar(equipe) {
+            this.$store.dispatch('MdNovoEquipeModule/setEquipe', equipe)
+            this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
+        },
+
+        deletar(equipe, veiculo) {
+            if (this.dialogPlantao || this.processandoEquipeId !== null) return;
+            if (!equipe || !equipe.EQUIPE_ID) {
+                Swal.fire('Erro', 'Não foi possível identificar a equipe selecionada.', 'error');
+                return;
+            }
+
+            let params = {
+                EQUIPE_ID: equipe.EQUIPE_ID
+            }
+
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja excluir a equipe Nº ${equipe.EQUIPE_ID} do veículo ${veiculo.VEICULO_IDENTIFICACAO}?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = equipe.EQUIPE_ID;
+                axios.delete(`${this.baseUrl}/equipe/deletar`, { params })
+                    .then(response => {
+                        return Swal.fire(
+                            'Excluído com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Exclusão não permitida',
+                            this.mensagemErro(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
+            })
+        },
+        desativarEquipes() {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja desativar as equipes anteriores?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = 0;
+
+                axios.post(`${this.baseUrl}/equipe/desativarEquipes`)
+                    .then(response => {
+                        return Swal.fire(
+                            'Equipes anteriores desativadas com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Desativação não permitida',
+                            this.mensagemErro(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
+            })
+        },
+        desativarEquipesTodas() {
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Alerta',
+                text: `Deseja desativar todas as equipes?`,
+                showDenyButton: true,
+                showCancelButton: false,
+                confirmButtonText: 'Confirmar',
+                denyButtonText: `Cancelar`,
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                this.processandoEquipeId = 0;
+
+                axios.post(`${this.baseUrl}/equipe/desativarEquipesTodas`)
+                    .then(response => {
+                        return Swal.fire(
+                            'Equipes desativadas com sucesso!',
+                            response.data.mensagem || '',
+                            'success'
+                        ).then(() => this.search());
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Desativação não permitida',
+                            this.mensagemErro(error),
+                            'warning'
+                        );
+                    })
+                    .finally(() => {
+                        this.processandoEquipeId = null;
+                    });
+            })
+        },
+
+        mensagemErro(error, fallback = 'Não foi possível excluir a equipe. Tente novamente.') {
+            const response = error && error.response;
+            const data = response && response.data;
+            if (data && data.mensagem) return data.mensagem;
+            if (data && data.message) return data.message;
+            if (data && data.errors) {
+                const campo = Object.keys(data.errors)[0];
+                if (campo && data.errors[campo] && data.errors[campo][0]) {
+                    return data.errors[campo][0];
+                }
+            }
+            return fallback;
+        },
+
+        truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        },
+        formatarData(data) {
+            if (!data) {
+                return '';
+            }
+
+            // Aceita "2026-11-22 07:00:00" e "2026-11-22T07:00:00"
+            const [dataParte, horaParte] = data.replace('T', ' ').split(' ');
+            const partes = dataParte.split('-');
+
+            if (partes.length !== 3) {
+                return '';
+            }
+
+            const dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+            if (!horaParte) {
+                return dataFormatada;
+            }
+
+            return `${dataFormatada} ${horaParte.substring(0, 5)}`;
+        },  
+        preencherComProfissional(equipes) {
+            if (!equipes || equipes.length === 0) {
+                return '';
+            }
+
+            let acumulador = [];
+            
+            for (let equipe of equipes) {
+                for (let prf of equipe.equipeProfissional) {
+                    // Cria o texto de cada profissional
+                    let nomeProfissional = `${prf.profissional.PROFISSIONAL_NOME} (${prf.profissional.tipoProfissional.DESCRICAO})`;
+                    acumulador.push(nomeProfissional);
+                }
+            }
+            
+            // Une todos os profissionais colocando um <br> entre eles
+            return acumulador.join('\n');
+        }
+
+        
+    }
+}
+</script>
+
+<style scoped>
+.btn-desativar-equipes {
+    border: 1px solid currentColor;
+    background-color: transparent;
+}
+</style>

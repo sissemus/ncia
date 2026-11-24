@@ -213,7 +213,7 @@ export default {
             this.profissionais
         )
 
-        console.log(this.profissionais);
+        //console.log(this.profissionais);
     },
     computed: {
         ...mapGetters({

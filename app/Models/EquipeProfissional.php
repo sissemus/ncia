@@ -35,7 +35,7 @@ class EquipeProfissional extends Model
     }
 
     public function equipe(){
-        return $this->belongsTo(Equipe::class, 'EQUIPE_ID', 'EQUIPE_ID');
+        return $this->hasOne(Equipe::class, 'EQUIPE_ID', 'EQUIPE_ID');
     }
     public static function pesquisar($requisicao)
     {
