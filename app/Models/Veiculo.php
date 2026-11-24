@@ -111,15 +111,17 @@ class Veiculo extends Model
     // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
     public static function relacionamentoCadastrar()
     {
-        $hoje = Carbon::now();
+        // $hoje = Carbon::now();
+        $hoje = Carbon::now()->format('Y-m-d H:i');
 
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
             "equipe",
             'equipesAtivas'
-                => function($query){
-                    $query->where('EQUIPE_ATIVO', '=', 1);
+                => function($q) use($hoje){
+                    $q->where('EQUIPE_ATIVO', '=', 1)
+                    ->where('EQUIPE_DATA_FIM', '>=', $hoje);
                 }
             //  => function ($query) use ($hoje) {
             //     $query->where(function ($query) use ($hoje) {

@@ -55,12 +55,23 @@ class Profissional extends Model
             ->where('TABELA_ID', RTG::TIPO_PROFISSIONAL);
     }
 
+    public function equipeProfissional(){
+        return $this->hasOne(EquipeProfissional::class, 'PROFISSIONAL_ID', 'PROFISSIONAL_ID')
+            ->whereHas('EQUIPE', function($q){
+                $q->whereDate('EQUIPE_DATA_FIM', '>=', now());
+            });
+
+    }
+
     public static function relacionamento()
     {
         return [
             "sexo",
             "tipoProfissional",
             "usuario",
+            "equipeProfissional",
+            "equipeProfissional.equipe",
+            "equipeProfissional.equipe.veiculo",
         ];
     }
 
@@ -104,7 +115,7 @@ class Profissional extends Model
         $tg_sexo_id = isset($request['TG_SEXO_ID']) ? $request['TG_SEXO_ID'] : null;
         $tg_tipo_profissional_id = isset($request['TG_TIPO_PROFISSIONAL_ID']) ? $request['TG_TIPO_PROFISSIONAL_ID'] : null;
         $profissional_ativo = isset($request['PROFISSIONAL_ATIVO']) ? $request['PROFISSIONAL_ATIVO'] : 1;
-
+        
         return self::with(self::relacionamento())
             ->when($profissional_nome, function (Builder $query) use ($profissional_nome) {
                 return $query->where(
@@ -132,17 +143,18 @@ class Profissional extends Model
             ->when($profissional_ativo, function (Builder $query) use ($profissional_ativo) {
                 return $query->where("PROFISSIONAL_ATIVO", $profissional_ativo);
             })
-            ->where(function($q){
-                return $q->whereNotExists(function($sub){
-                    $sub->select(DB::raw(1))
-                    ->from('EQUIPE_PROFISSIONAL as ep')
-                    ->join('EQUIPE as e', 'ep.EQUIPE_ID', 'e.EQUIPE_ID')
-                    ->whereColumn(
-                        'ep.PROFISSIONAL_ID', 'PROFISSIONAL.PROFISSIONAL_ID'
-                    )
-                    ->whereDate('e.EQUIPE_DATA', today());
-                });
-            })
+            // ->where(function($q){
+            //     return $q->whereNotExists(function($sub){
+            //         $sub->select(DB::raw(1))
+            //         ->from('EQUIPE_PROFISSIONAL as ep')
+            //         ->join('EQUIPE as e', 'ep.EQUIPE_ID', 'e.EQUIPE_ID')
+            //         ->whereColumn(
+            //             'ep.PROFISSIONAL_ID', 'PROFISSIONAL.PROFISSIONAL_ID'
+            //         )
+            //         ->whereDate('e.EQUIPE_DATA_FIM', today())
+            //         ->where('e.EQUIPE_ATIVO', '=', 1);
+            //     });
+            // })
             ->orderBy("PROFISSIONAL_NOME")
             ->get();
     }
