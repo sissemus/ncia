@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class LoginController extends Controller {
@@ -50,27 +51,55 @@ class LoginController extends Controller {
     }
 
     protected function attemptLogin(Request $request): bool {
-        return DB::transaction(function () use ($request) {
-            $user = Usuario::where([
-                'USUARIO_LOGIN' => $request->post('USUARIO_LOGIN'),
-                'USUARIO_SENHA' => md5($request->post('USUARIO_SENHA')),
-                'USUARIO_ATIVO' => 1
-            ])->lockForUpdate()->first();
+        $login = trim((string) $request->post('USUARIO_LOGIN'));
 
-            if (!$user || $user->inativarPorInatividade()) {
-                return false;
+        $motivo = DB::transaction(function () use ($request, $login) {
+            $usuarios = Usuario::where('USUARIO_LOGIN', $login)->lockForUpdate()->get();
+            if ($usuarios->isEmpty()) {
+                return 'login_inexistente';
+            }
+
+            $hash = md5((string) $request->post('USUARIO_SENHA'));
+            $candidatos = $usuarios->filter(function (Usuario $u) use ($hash) {
+                return strtolower((string) $u->USUARIO_SENHA) === $hash;
+            });
+            $user = $candidatos->firstWhere('USUARIO_ATIVO', 1) ?? $candidatos->first();
+            if (!$user) {
+                return 'senha_incorreta';
+            }
+
+            if ($user->USUARIO_ATIVO !== 1) {
+                return 'usuario_inativo';
+            }
+
+            if ($user->inativarPorInatividade()) {
+                return 'inativado_por_inatividade';
             }
 
             if ($user->USUARIO_VIGENCIA !== null && Carbon::parse($user->USUARIO_VIGENCIA)->lessThan(Carbon::now())) {
-                return false;
+                return 'vigencia_expirada';
             }
 
             $user->USUARIO_ULTIMO_ACESSO = now();
             $user->save();
             Auth::login($user, false);
 
-            return true;
+            return null;
         }, 3);
+
+        if ($motivo === null) {
+            return true;
+        }
+
+        // Diagnóstico de falhas de login (nunca registrar a senha).
+        Log::warning('login_falhou', [
+            'login' => $login,
+            'motivo' => $motivo,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        return false;
     }
 
     protected function validateLogin(Request $request) {
