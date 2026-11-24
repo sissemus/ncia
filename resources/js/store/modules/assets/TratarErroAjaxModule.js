@@ -38,6 +38,9 @@ export default {
                     }
                 } else if (response.status === 419) {
                     mensagem = (response.data && response.data.message) || 'A sessão expirou.';
+                } else if (response.status === 403) {
+                    mensagem = (response.data && response.data.message)
+                        || response.status + ' - ' + (response.statusText || 'Erro na requisição');
                 } else {
                     mensagem = response.status + ' - ' + (response.statusText || 'Erro na requisição');
                 }

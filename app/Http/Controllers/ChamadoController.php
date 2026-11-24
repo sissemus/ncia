@@ -121,9 +121,10 @@ class ChamadoController extends Controller
         abort_if($ultima->NUMERO > 1 && (int) $ultima->TG_SITUACAO_ID !== SituacaoChamadoEnum::CANCELADO,
             422, 'Este chamado já possui retorno.');
         $dados = $ida->DADOS;
-        $autorizado = DB::table('USUARIO_UNIDADE')->where('USUARIO_ID', Auth::id())
-            ->where('UNIDADE_ID', $dados['UNIDADE_ID_SOLICITANTE'])->exists();
-        abort_unless($autorizado, 403);
+        $autorizado = UnidadeSolicitanteService::podeEscolherQualquerUnidade(Auth::id())
+            || DB::table('USUARIO_UNIDADE')->where('USUARIO_ID', Auth::id())
+                ->where('UNIDADE_ID', $dados['UNIDADE_ID_SOLICITANTE'])->exists();
+        abort_unless($autorizado, 403, 'Você não tem permissão para solicitar o retorno deste chamado.');
     }
 
     public function verificarDuplicidade(Request $request)

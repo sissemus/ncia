@@ -13,7 +13,7 @@ class UnidadeSolicitanteService
         return DB::table('USUARIO_PERFIL')
             ->where('USUARIO_ID', $usuarioId)
             ->where('USUARIO_PERFIL_ATIVO', 1)
-            ->whereIn('PERFIL_ID', [PerfilEnum::REGULADOR_CIA, PerfilEnum::ADMINISTRADOR])
+            ->whereIn('PERFIL_ID', [PerfilEnum::DESENVOLVEDOR, PerfilEnum::REGULADOR_CIA, PerfilEnum::ADMINISTRADOR])
             ->exists();
     }
 
