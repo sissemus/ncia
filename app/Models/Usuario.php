@@ -47,6 +47,18 @@ class Usuario extends Authenticatable
         'USUARIO_LOGIN_UNICO',
     ];
 
+    protected static function booted()
+    {
+        // Ao reativar, renova o último acesso; senão o login/cron inativa de novo por inatividade.
+        static::saving(function (Usuario $usuario) {
+            if ($usuario->exists && $usuario->isDirty('USUARIO_ATIVO')
+                && (int) $usuario->USUARIO_ATIVO === 1
+                && (int) $usuario->getOriginal('USUARIO_ATIVO') === 0) {
+                $usuario->USUARIO_ULTIMO_ACESSO = now();
+            }
+        });
+    }
+
     public function getAuthPassword()
     {
         return $this->USUARIO_SENHA;
