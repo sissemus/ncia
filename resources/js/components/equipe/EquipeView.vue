@@ -212,6 +212,8 @@ export default {
         this.$store.dispatch('ProfissionalViewModule/setProfissionais',
             this.profissionais
         )
+
+        console.log(this.profissionais);
     },
     computed: {
         ...mapGetters({
@@ -304,7 +306,6 @@ export default {
         },
 
         search() {
-            
             this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
                 msgId: this.msgId,
                 TG_SITUACAO_VEICULO_ID: 1,

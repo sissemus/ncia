@@ -95,7 +95,7 @@
                                     label="Profissional*"
                                     :items="profissionais"
                                     item-value="PROFISSIONAL_ID"
-                                    item-text="PROFISSIONAL_NOME"
+                                    :item-text="textoProfissional"
                                     v-model="PROFISSIONAL_ID"
                                 ></v-select>
                             </v-col>
@@ -336,6 +336,15 @@ export default {
     },
 
     methods: {
+        textoProfissional(item){
+            const veiculo_identificacao = item.equipeProfissional?.equipe?.veiculo?.VEICULO_IDENTIFICACAO;
+            const equipe_turno = item.equipeProfissional?.equipe?.EQUIPE_TURNO;
+            
+            return veiculo_identificacao
+                ? `${item.PROFISSIONAL_NOME} - (Veículo: ${veiculo_identificacao} | 
+                 Turno: ${equipe_turno})`
+                : item.PROFISSIONAL_NOME
+        },
         clearFormAndClose() {
 
             this.resetarFormulario();

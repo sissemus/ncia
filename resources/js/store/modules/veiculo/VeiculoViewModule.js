@@ -110,9 +110,9 @@ export default {
 
         searchCadastrar(context, msgId) {
 
-            console.log('################################');
-            console.log('VUEX -> searchCadastrar');
-            console.log('################################');
+            // console.log('################################');
+            // console.log('VUEX -> searchCadastrar');
+            // console.log('################################');
             let baseUrl = context.rootGetters['getBaseUrl'];
             let page = context.state.pagination.current_page;
 
