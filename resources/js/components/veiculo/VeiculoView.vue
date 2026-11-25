@@ -74,8 +74,9 @@
                                 <v-chip x-small v-else color="red" dark>Não</v-chip>
                             </td>
                             <td>
-                                <v-btn icon @click="selecionar(veiculo)" title="Editar">
-                                    <v-icon>mdi-pencil</v-icon>
+                                <v-btn v-show="veiculo.VEICULO_ATIVO === 1" icon @click="selecionar(veiculo)"
+                                    title="mdi-pencil">
+                                    <v-icon>mdi-delete</v-icon>
                                 </v-btn>
                                 <v-btn v-show="veiculo.VEICULO_ATIVO === 1" icon @click="deletar(veiculo)"
                                     title="Inativar">

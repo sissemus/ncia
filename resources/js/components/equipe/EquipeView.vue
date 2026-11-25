@@ -100,11 +100,20 @@
                                                     icon
                                                     :loading="processandoEquipeId === eqp.EQUIPE_ID"
                                                     :disabled="processandoEquipeId !== null || dialogPlantao"
-                                                    @click="deletar(eqp, veiculo)"
-                                                    title="Remover equipe"
+                                                    @click="selecionar(eqp)"
+                                                    title="Editar equipe"
                                                 >
-                                                    <v-icon>mdi-delete</v-icon>
+                                                    <v-icon>mdi-pencil</v-icon>
                                                 </v-btn>
+                                                <v-btn
+                                                icon
+                                                :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                                :disabled="processandoEquipeId !== null || dialogPlantao"
+                                                @click="deletar(eqp, veiculo)"
+                                                title="Remover equipe"
+                                                >
+                                                <v-icon>mdi-delete</v-icon>
+                                            </v-btn>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -336,6 +345,7 @@ export default {
         },
 
         selecionar(equipe) {
+            console.log(equipe)
             this.$store.dispatch('MdNovoEquipeModule/setEquipe', equipe)
             this.$store.dispatch('MdNovoEquipeModule/setShowModal', true)
         },
