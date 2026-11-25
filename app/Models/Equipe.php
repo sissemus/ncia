@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\MyLibs\RTG;
+use App\MyLibs\SituacaoChamadoEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -42,6 +43,44 @@ class Equipe extends Model
 
     public function chamadoEquipe(){
         return $this->hasMany(ChamadoEquipe::class, 'EQUIPE_ID', 'EQUIPE_ID');
+    }
+
+    /**
+     * Vínculos ativos com chamados cuja situação ATUAL (última por data/ID) é
+     * EM ATENDIMENTO ou EM FILA. Equipe nessa condição não pode ser desativada
+     * (nem pela rotina, nem pelos botões, nem pela lixeira) até trocar o
+     * plantão ou concluir/cancelar o chamado.
+     */
+    public function chamadosPendentes()
+    {
+        return $this->chamadoEquipe()->where(function ($q) {
+            self::filtrarVinculoPendente($q);
+        });
+    }
+
+    public function scopeComChamadoPendente(Builder $query)
+    {
+        return $query->whereHas('chamadoEquipe', function ($q) {
+            self::filtrarVinculoPendente($q);
+        });
+    }
+
+    public function scopeSemChamadoPendente(Builder $query)
+    {
+        return $query->whereDoesntHave('chamadoEquipe', function ($q) {
+            self::filtrarVinculoPendente($q);
+        });
+    }
+
+    private static function filtrarVinculoPendente($query)
+    {
+        $query->where('CHAMADO_EQUIPE.CHAMADO_EQUIPE_ATIVO', 1)
+            ->whereRaw(
+                '(SELECT TOP 1 CS.TG_SITUACAO_ID FROM CHAMADO_SITUACAO CS'
+                . ' WHERE CS.CHAMADO_ID = CHAMADO_EQUIPE.CHAMADO_ID'
+                . ' ORDER BY CS.CHAMADO_SITUACAO_DATA DESC, CS.CHAMADO_SITUACAO_ID DESC) IN (?, ?)',
+                [SituacaoChamadoEnum::EM_ATENDIMENTO, SituacaoChamadoEnum::EM_FILA]
+            );
     }
 
     public static function pesquisar($requisicao)

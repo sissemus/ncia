@@ -320,6 +320,18 @@ class EquipeController extends Controller
         // algum chamado, não pode ser excluída (violaria a FK em CHAMADO_EQUIPE
         // e deixaria chamados órfãos).
         
+        // Equipe com chamado em fila / em atendimento não pode sair: primeiro
+        // troca o plantão ou conclui/cancela o chamado.
+        $pendentes = Equipe::where('EQUIPE_ID', $EQUIPE_ID)->first();
+        $pendentes = $pendentes ? $pendentes->chamadosPendentes()->pluck('CHAMADO_ID') : collect();
+        if ($pendentes->isNotEmpty()) {
+            return response()->json([
+                'sucesso' => false,
+                'mensagem' => "A equipe Nº {$EQUIPE_ID} possui chamado em fila ou em atendimento (chamado Nº "
+                    . $pendentes->implode(', ') . '). Troque o plantão ou conclua/cancele o chamado antes de removê-la.',
+            ], 422);
+        }
+
         // Exclusão física, mas arquivando antes no histórico e tudo dentro de
         // uma transação (tudo-ou-nada): se qualquer passo falhar, nada é
         // apagado e nada fica pela metade.
@@ -391,40 +403,54 @@ class EquipeController extends Controller
 
         $agora = Carbon::now(); // com timezone America/Fortaleza no config/app.php
 
-        Equipe::where('EQUIPE_ATIVO', 1)
-            ->where(function ($q) use ($agora) {
-                $q->where('EQUIPE_DATA_FIM', '<=', $agora->format('Y-m-d H:i:s'))
-                // Registros antigos, sem EQUIPE_DATA_FIM: desativa se a data já passou
-                ->orWhere(function ($q2) use ($agora) {
-                    $q2->whereNull('EQUIPE_DATA_FIM')
-                        ->where('EQUIPE_DATA', '<', $agora->copy()->startOfDay()->format('Y-m-d H:i:s'));
+        $vencidas = function () use ($agora) {
+            return Equipe::where('EQUIPE_ATIVO', 1)
+                ->where(function ($q) use ($agora) {
+                    $q->where('EQUIPE_DATA_FIM', '<=', $agora->format('Y-m-d H:i:s'))
+                    // Registros antigos, sem EQUIPE_DATA_FIM: desativa se a data já passou
+                    ->orWhere(function ($q2) use ($agora) {
+                        $q2->whereNull('EQUIPE_DATA_FIM')
+                            ->where('EQUIPE_DATA', '<', $agora->copy()->startOfDay()->format('Y-m-d H:i:s'));
+                    });
                 });
-            })
-            ->update([
-                  'EQUIPE_ATIVO' => 0
-                , 'USUARIO_ID_CAD' => Auth::id()
-            ]);
+        };
 
-        return response()->json([
-            'sucesso' => true,
-            'mensagem' => 'Equipe(s) anterior(es) desativada(s) com sucesso.'
-        ]);
-
+        return $this->desativarSemPendencia($vencidas, 'Equipe(s) anterior(es) desativada(s) com sucesso.');
     }
 
     public function desativarEquipesTodas(Request $request)
     {
-        //desativa todas as equipes anteriores a data de hoje
-        Equipe::where('EQUIPE_ATIVO', '=', 1)
-            ->update([
-                'EQUIPE_ATIVO' => 0,
-                'USUARIO_ID_CAD' => Auth::id(),
-            ]);
+        $ativas = function () {
+            return Equipe::where('EQUIPE_ATIVO', '=', 1);
+        };
+
+        return $this->desativarSemPendencia($ativas, 'Equipe(s) desativada(s) com sucesso.');
+    }
+
+    /**
+     * Desativa as equipes da consulta, mantendo as que têm chamado em fila /
+     * em atendimento (essas só saem depois da troca de plantão ou do
+     * encerramento do chamado).
+     */
+    private function desativarSemPendencia(\Closure $consulta, $mensagem)
+    {
+        $mantidas = $consulta()->comChamadoPendente()->pluck('EQUIPE_ID');
+
+        $desativadas = $consulta()->semChamadoPendente()->update([
+            'EQUIPE_ATIVO' => 0,
+            'USUARIO_ID_CAD' => Auth::id(),
+        ]);
+
+        if ($mantidas->isNotEmpty()) {
+            $mensagem = "{$desativadas} equipe(s) desativada(s). Mantida(s) por ter chamado em fila ou em atendimento: Nº "
+                . $mantidas->implode(', ') . '.';
+        }
 
         return response()->json([
             'sucesso' => true,
-            'mensagem' => 'Equipe(s) desativada(s) com sucesso.'
+            'desativadas' => $desativadas,
+            'mantidas' => $mantidas,
+            'mensagem' => $mensagem,
         ]);
-
     }
 }

@@ -205,6 +205,7 @@ export default {
                 }
             ],
             equipeProfissionais:[],
+            todosVeiculos: [],
             VEICULO_ID: null,
             EQUIPE_ID: null,
             EQUIPE_TURNO: null,
@@ -216,14 +217,7 @@ export default {
     },
     
     mounted() {
-        this.$store.dispatch(
-            'VeiculoViewModule/searchCadastrar',
-            {
-                msgId: this.msgId,
-                VEICULO_ATIVO: 1
-            }
-        );
-
+        this.carregarVeiculos();
     },
 
     computed: {
@@ -277,8 +271,10 @@ export default {
             }
         },
 
+        // Lista própria (todos os veículos ativos), independente da página e dos
+        // filtros da grade do Cadastro de Equipes.
         veiculos() {
-            return this.$store.getters['VeiculoViewModule/getVeiculos']
+            return this.todosVeiculos
                 .filter(veiculo =>
                     veiculo.TG_SITUACAO_VEICULO_ID == 1 &&
                     veiculo.VEICULO_ATIVO == 1
@@ -341,7 +337,8 @@ export default {
                 return;
             }
 
-            // Sempre abre com a lista de profissionais atualizada (vínculos com equipes).
+            // Sempre abre com veículos e profissionais atualizados.
+            this.carregarVeiculos();
             this.recarregarProfissionais();
 
             // Edição: EquipeView.selecionar() grava a equipe no store antes de abrir.
@@ -364,6 +361,16 @@ export default {
     },
 
     methods: {
+        carregarVeiculos() {
+            return axios.get(`${this.baseUrl}/veiculo/listar`)
+                .then(response => { this.todosVeiculos = response.data || []; })
+                .catch(error => {
+                    this.$store.dispatch('TratarErroAjaxModule/tratarErro', {
+                        id: this.msgId,
+                        response: error.response
+                    });
+                });
+        },
         recarregarProfissionais() {
             return this.$store.dispatch(
                 'ProfissionalViewModule/searchNEquipe',

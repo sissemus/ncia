@@ -1,152 +1,212 @@
 <template>
     <div>
         <v-card>
-            <v-toolbar class="elevation-1">
-                <v-icon class="mr-1">mdi-database</v-icon>
+            <v-toolbar flat class="elevation-1">
+                <v-icon color="primary" class="mr-2">mdi-account-group</v-icon>
                 <v-toolbar-title>Cadastro de Equipes</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn title="Nova equipe" fab small elevation="2" color="primary" dark @click="novoEquipe">
-                    <v-icon>mdi-plus</v-icon>
-                </v-btn>
+                <v-tooltip bottom>
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-btn fab small elevation="2" color="primary" dark v-bind="attrs" v-on="on" @click="novoEquipe">
+                            <v-icon>mdi-plus</v-icon>
+                        </v-btn>
+                    </template>
+                    <span>Nova equipe</span>
+                </v-tooltip>
             </v-toolbar>
             <tratar-erro-ajax :id="msgId"></tratar-erro-ajax>
             <div :id="msgIdDebug"></div>
-            <v-card-text>
-                <v-row>
-                    <v-col>
-                        <v-text-field label="Equipe" autocomplete="off" hide-details
-                            v-model="equipePesquisa.EQUIPE_ID"></v-text-field>
-                    </v-col>
-                </v-row>
-                <v-row>
 
-                </v-row>
-                <v-row>
-                    <v-col class="text-right">
-                        <v-btn color="primary" tile @click="pesquisar">pesquisar</v-btn>
-                        <v-btn color="red" dark tile @click="clear">limpar</v-btn>
-                        <v-btn color="warning" outlined tile class="btn-desativar-equipes" @click="desativarEquipes">Desativar antigas</v-btn>
-                        <v-btn color="info" outlined tile class="btn-desativar-equipes" @click="desativarEquipesTodas">Desativar todas</v-btn>
+            <!-- Filtros -->
+            <v-card-text class="pb-0">
+                <v-row dense align="center">
+                    <v-col cols="12" sm="4" md="3">
+                        <v-text-field label="Nº da equipe" prepend-inner-icon="mdi-pound" outlined dense hide-details
+                            clearable autocomplete="off" v-model="equipePesquisa.EQUIPE_ID"
+                            @keyup.enter="pesquisar"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="4" md="3">
+                        <v-text-field label="Veículo" prepend-inner-icon="mdi-ambulance" outlined dense hide-details
+                            clearable autocomplete="off" v-model="filtros.VEICULO_IDENTIFICACAO"
+                            @keyup.enter="pesquisar"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="4" md="6" class="d-flex flex-wrap justify-end align-center">
+                        <v-btn color="primary" depressed class="mr-2" @click="pesquisar">
+                            <v-icon left>mdi-magnify</v-icon> Pesquisar
+                        </v-btn>
+                        <v-btn outlined color="grey darken-1" class="mr-2" @click="clear">
+                            <v-icon left>mdi-eraser</v-icon> Limpar
+                        </v-btn>
+                        <v-menu offset-y left>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-btn outlined color="warning" v-bind="attrs" v-on="on"
+                                    :disabled="processandoEquipeId !== null">
+                                    <v-icon left>mdi-account-cancel</v-icon> Desativar equipes
+                                    <v-icon right>mdi-menu-down</v-icon>
+                                </v-btn>
+                            </template>
+                            <v-list dense>
+                                <v-list-item @click="desativarEquipes">
+                                    <v-list-item-icon class="mr-3"><v-icon color="warning">mdi-history</v-icon></v-list-item-icon>
+                                    <v-list-item-content>
+                                        <v-list-item-title>Desativar antigas</v-list-item-title>
+                                        <v-list-item-subtitle>Plantões já encerrados</v-list-item-subtitle>
+                                    </v-list-item-content>
+                                </v-list-item>
+                                <v-list-item @click="desativarEquipesTodas">
+                                    <v-list-item-icon class="mr-3"><v-icon color="error">mdi-alert</v-icon></v-list-item-icon>
+                                    <v-list-item-content>
+                                        <v-list-item-title>Desativar todas</v-list-item-title>
+                                        <v-list-item-subtitle>Inclusive plantões em andamento</v-list-item-subtitle>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </v-list>
+                        </v-menu>
                     </v-col>
                 </v-row>
+                <v-row dense align="center" class="mt-1">
+                    <v-col cols="12" sm="4" md="2">
+                        <v-select label="Turno" prepend-inner-icon="mdi-weather-sunset" outlined dense hide-details
+                            :items="opcoesTurno" v-model="filtros.EQUIPE_TURNO" @change="pesquisar"></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="8" md="4">
+                        <v-text-field label="Profissional" prepend-inner-icon="mdi-account-search" outlined dense hide-details
+                            clearable autocomplete="off" placeholder="Nome do integrante"
+                            v-model="filtros.PROFISSIONAL_NOME" @keyup.enter="pesquisar"
+                            @click:clear="filtros.PROFISSIONAL_NOME = null; pesquisar()"></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3">
+                        <v-select label="Situação do plantão" prepend-inner-icon="mdi-list-status" outlined dense hide-details
+                            :items="opcoesSituacao" v-model="filtros.SITUACAO_PLANTAO" @change="pesquisar"></v-select>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="3">
+                        <v-switch v-model="filtros.SOMENTE_COM_EQUIPE" inset dense hide-details class="mt-0"
+                            label="Somente veículos com equipe" @change="pesquisar"></v-switch>
+                    </v-col>
+                </v-row>
+                <div v-if="filtrosAtivos.length" class="mt-2">
+                    <span class="caption grey--text text--darken-1 mr-1">Filtros:</span>
+                    <v-chip v-for="filtro in filtrosAtivos" :key="filtro.chave" small close class="mr-1 mb-1"
+                        color="primary" outlined @click:close="removerFiltro(filtro.chave)">
+                        {{ filtro.texto }}
+                    </v-chip>
+                </div>
             </v-card-text>
-            <v-simple-table dense v-show="(veiculos ? veiculos.length : 0)" class="mb-0">
-                <template v-slot:default>
-                    <tbody>
-                        <tr>
-                            <td class="text-left">Id</td>
-                            <td class="text-left">Veículo</td>
-                            <td colspan="4">&nbsp;</td>
-                        </tr>
 
-                        <tr v-for="(veiculo, indexVeiculo) in veiculos" :key="veiculo.VEICULO_ID">
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
-                                {{ String(veiculo.VEICULO_ID).padStart(5, '0') }}
-                            </td>
+            <v-card-text>
+                <!-- Veículos com equipe -->
+                <v-card v-for="veiculo in veiculosComEquipe" :key="veiculo.VEICULO_ID" outlined class="mb-3 veiculo-card">
+                    <v-card-title class="py-2 subtitle-1 blue-grey lighten-5">
+                        <v-icon color="primary" class="mr-2">mdi-ambulance</v-icon>
+                        <span class="font-weight-bold">{{ veiculo.VEICULO_IDENTIFICACAO }}</span>
+                        <v-spacer></v-spacer>
+                        <span class="caption grey--text text--darken-1">
+                            {{ veiculo.equipes.length }} equipe{{ veiculo.equipes.length > 1 ? 's' : '' }}
+                        </span>
+                    </v-card-title>
 
-                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
-                                {{ veiculo.VEICULO_IDENTIFICACAO }}
-                            </td>
+                    <div v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
+                        <v-divider v-if="idxEqp > 0"></v-divider>
+                        <v-row no-gutters align="center" class="px-4 py-3">
+                            <!-- Identificação, turno, período e status -->
+                            <v-col cols="12" md="4" class="pr-md-4 mb-2 mb-md-0">
+                                <div class="d-flex align-center flex-wrap">
+                                    <span class="equipe-numero mr-3">Nº {{ eqp.EQUIPE_ID }}</span>
+                                    <v-chip small dark :color="corTurno(eqp.EQUIPE_TURNO)" class="font-weight-bold">
+                                        <v-icon small left>{{ iconeTurno(eqp.EQUIPE_TURNO) }}</v-icon>
+                                        {{ eqp.EQUIPE_TURNO }}
+                                    </v-chip>
+                                </div>
+                                <div class="body-2 grey--text text--darken-2 mt-1">
+                                    <v-icon small class="mr-1">mdi-clock-outline</v-icon>{{ formatarPeriodo(eqp) }}
+                                </div>
+                                <v-chip x-small label class="mt-1" :color="statusPlantao(eqp).cor" text-color="white">
+                                    <v-icon x-small left>{{ statusPlantao(eqp).icone }}</v-icon>
+                                    {{ statusPlantao(eqp).texto }}
+                                </v-chip>
+                            </v-col>
 
-                            <td v-if="veiculo.equipes && veiculo.equipes.length > 0">
-                                <table width="100%">
-                                    <tbody>
-                                        <tr>
-                                            <td style="font-weight: bold;">Equipe(s)</td>
-                                            <td style="text-align: center;font-weight: bold;">Data Início</td>
-                                            <td style="text-align: center;font-weight: bold;">Data Fim</td>
-                                            <td style="text-align: center;font-weight: bold;">Turno</td>
-                                            <td style="text-align: center;font-weight: bold;">Ação</td>
-                                        </tr>
+                            <!-- Profissionais -->
+                            <v-col cols="12" md="6">
+                                <div v-for="prf in (eqp.equipeProfissional || [])" :key="prf.EQUIPE_PROFISSIONAL_ID"
+                                    class="d-flex align-center profissional">
+                                    <v-icon small color="grey" class="mr-2">mdi-account</v-icon>
+                                    <span class="body-2 font-weight-medium mr-2">
+                                        {{ prf.profissional ? prf.profissional.PROFISSIONAL_NOME : '-' }}
+                                    </span>
+                                    <span class="caption grey--text">
+                                        {{ prf.profissional && prf.profissional.tipoProfissional ? prf.profissional.tipoProfissional.DESCRICAO : '' }}
+                                    </span>
+                                </div>
+                                <div v-if="!(eqp.equipeProfissional || []).length" class="caption grey--text">
+                                    Nenhum profissional ativo
+                                </div>
+                            </v-col>
 
-                                        <tr>
-                                            <td colspan="4"><hr></td>
-                                        </tr>
+                            <!-- Ações -->
+                            <v-col cols="12" md="2" class="text-md-right mt-2 mt-md-0">
+                                <v-tooltip v-if="podeTrocarPlantao" bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn icon v-bind="attrs" v-on="on" color="primary"
+                                            aria-label="Trocar plantão"
+                                            :disabled="processandoEquipeId !== null || dialogPlantao || processandoPlantao"
+                                            @click="abrirTrocaPlantao(veiculo, eqp)">
+                                            <v-icon>mdi-account-switch</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <span>Trocar plantão</span>
+                                </v-tooltip>
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn icon v-bind="attrs" v-on="on" aria-label="Editar equipe"
+                                            :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                            :disabled="processandoEquipeId !== null || dialogPlantao"
+                                            @click="selecionar(eqp)">
+                                            <v-icon>mdi-pencil</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <span>Editar equipe</span>
+                                </v-tooltip>
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn icon v-bind="attrs" v-on="on" color="error" aria-label="Remover equipe"
+                                            :loading="processandoEquipeId === eqp.EQUIPE_ID"
+                                            :disabled="processandoEquipeId !== null || dialogPlantao"
+                                            @click="deletar(eqp, veiculo)">
+                                            <v-icon>mdi-delete</v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <span>Remover equipe</span>
+                                </v-tooltip>
+                            </v-col>
+                        </v-row>
+                    </div>
+                </v-card>
 
-                                        <tr v-for="(eqp, idxEqp) in veiculo.equipes" :key="eqp.EQUIPE_ID">
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;width:68%;padding:0 10px 0 0;">
-                                                <span v-for="(prf, idxPrf) in eqp.equipeProfissional" :key="idxPrf">
-                                                    {{ prf.profissional.PROFISSIONAL_NOME }}
-                                                    - ({{ prf.profissional.tipoProfissional.DESCRICAO }})
-                                                    <br>
-                                                </span>
-                                            </td>
+                <!-- Veículos sem equipe (compacto) -->
+                <div v-if="veiculosSemEquipe.length" class="sem-equipe pa-3 rounded">
+                    <div class="caption grey--text text--darken-2 mb-2">
+                        <v-icon small class="mr-1">mdi-ambulance</v-icon>
+                        Veículos sem equipe ativa nesta página
+                    </div>
+                    <v-chip v-for="veiculo in veiculosSemEquipe" :key="veiculo.VEICULO_ID"
+                        small outlined class="mr-1 mb-1" color="grey darken-1">
+                        {{ veiculo.VEICULO_IDENTIFICACAO }}
+                    </v-chip>
+                </div>
 
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
-                                                {{ formatarData(eqp.EQUIPE_DATA) }}
-                                            </td>
+                <v-alert v-if="!veiculosComEquipe.length" type="info" outlined dense class="mt-3 mb-0">
+                    Nenhuma equipe ativa encontrada{{ filtrosAtivos.length ? ' para o filtro informado' : '' }}.
+                </v-alert>
+            </v-card-text>
 
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:10%;">
-                                                {{ formatarData(eqp.EQUIPE_DATA_FIM) }}
-                                            </td>
-
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:7%;">
-                                                {{ eqp.EQUIPE_TURNO }}
-                                            </td>
-
-                                            <td style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;text-align:center;vertical-align:middle!important;width:15%;white-space:nowrap;">
-                                                <v-tooltip v-if="podeTrocarPlantao" bottom>
-                                                    <template v-slot:activator="{ on, attrs }">
-                                                        <v-btn icon v-bind="attrs" v-on="on"
-                                                            aria-label="Trocar plantão"
-                                                            :disabled="processandoEquipeId !== null || dialogPlantao || processandoPlantao"
-                                                            @click="abrirTrocaPlantao(veiculo, eqp)">
-                                                            <v-icon>mdi-account-switch</v-icon>
-                                                        </v-btn>
-                                                    </template>
-                                                    <span>Trocar plantão</span>
-                                                </v-tooltip>
-                                                <v-btn
-                                                    icon
-                                                    :loading="processandoEquipeId === eqp.EQUIPE_ID"
-                                                    :disabled="processandoEquipeId !== null || dialogPlantao"
-                                                    @click="selecionar(eqp)"
-                                                    title="Editar equipe"
-                                                >
-                                                    <v-icon>mdi-pencil</v-icon>
-                                                </v-btn>
-                                                <v-btn
-                                                icon
-                                                :loading="processandoEquipeId === eqp.EQUIPE_ID"
-                                                :disabled="processandoEquipeId !== null || dialogPlantao"
-                                                @click="deletar(eqp, veiculo)"
-                                                title="Remover equipe"
-                                                >
-                                                <v-icon>mdi-delete</v-icon>
-                                            </v-btn>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-
-                            <td v-else colspan="4" style="border-bottom:solid 0.2px rgba(0, 0, 0, 0.12)!important;">
-                                &nbsp;
-                            </td>
-
-                        </tr>
-            
-                    </tbody>
-                </template>
-            </v-simple-table>
             <v-divider></v-divider>
-            <v-card-actions>
-                <v-row>
-                    <v-col>
-                        <v-pagination v-show="pagination.total" v-model="pagination.current_page"
-                            :length="pagination.last_page" total-visible="10" @input="onPageChange"></v-pagination>
-                    </v-col>
-                </v-row>
-            </v-card-actions>
-            <v-divider></v-divider>
-            <v-card-actions class="text-center">
-                <v-row>
-                    <v-col>
-                        <v-chip>
-                            {{ pagination.total }} registro{{ pagination.total > 1 ? 's' : '' }}
-                        </v-chip>
-                    </v-col>
-                </v-row>
+            <v-card-actions class="flex-column py-3">
+                <v-pagination v-show="pagination.total" v-model="pagination.current_page"
+                    :length="pagination.last_page" total-visible="10" @input="onPageChange"></v-pagination>
+                <v-chip small class="mt-2">
+                    {{ pagination.total }} veículo{{ pagination.total !== 1 ? 's' : '' }}
+                </v-chip>
             </v-card-actions>
         </v-card>
         <v-dialog v-model="dialogPlantao" max-width="720" persistent>
@@ -211,10 +271,29 @@ export default {
             equipeOrigemPlantao: null,
             equipePlantaoId: null,
             equipesPlantao: [],
+
+            filtros: {
+                VEICULO_IDENTIFICACAO: null,
+                EQUIPE_TURNO: null,
+                PROFISSIONAL_NOME: null,
+                SITUACAO_PLANTAO: null,
+                SOMENTE_COM_EQUIPE: true,
+            },
+            opcoesTurno: [
+                { text: 'Todos', value: null },
+                { text: 'SD (07h às 19h)', value: 'SD' },
+                { text: 'SN (19h às 07h)', value: 'SN' },
+            ],
+            opcoesSituacao: [
+                { text: 'Todas', value: null },
+                { text: 'Em plantão', value: 'VIGENTE' },
+                { text: 'Encerrado com chamado pendente', value: 'PENDENTE' },
+            ],
+            agora: new Date(),
         }
     },
     mounted() {
-        this.$store.dispatch('DominioModule/setTipoProfissionais', 
+        this.$store.dispatch('DominioModule/setTipoProfissionais',
             this.tiposProfissional
         );
 
@@ -222,7 +301,12 @@ export default {
             this.profissionais
         )
 
-        //console.log(this.profissionais);
+        this.pesquisar();
+        // Atualiza o status "Em plantão / encerrado" sem precisar recarregar.
+        this.relogio = setInterval(() => { this.agora = new Date(); }, 60000);
+    },
+    beforeDestroy() {
+        clearInterval(this.relogio);
     },
     computed: {
         ...mapGetters({
@@ -259,6 +343,24 @@ export default {
                     newValue
                 )
             }
+        },
+        veiculosComEquipe() {
+            return this.veiculos.filter(veiculo => veiculo.equipes && veiculo.equipes.length);
+        },
+        veiculosSemEquipe() {
+            return this.veiculos.filter(veiculo => !veiculo.equipes || !veiculo.equipes.length);
+        },
+        filtrosAtivos() {
+            const ativos = [];
+            const turno = this.opcoesTurno.find(item => item.value === this.filtros.EQUIPE_TURNO);
+            const situacao = this.opcoesSituacao.find(item => item.value === this.filtros.SITUACAO_PLANTAO);
+
+            if (this.equipePesquisa.EQUIPE_ID) ativos.push({ chave: 'EQUIPE_ID', texto: `Equipe Nº ${this.equipePesquisa.EQUIPE_ID}` });
+            if (this.filtros.VEICULO_IDENTIFICACAO) ativos.push({ chave: 'VEICULO_IDENTIFICACAO', texto: `Veículo: ${this.filtros.VEICULO_IDENTIFICACAO}` });
+            if (this.filtros.EQUIPE_TURNO) ativos.push({ chave: 'EQUIPE_TURNO', texto: `Turno: ${turno ? turno.text : this.filtros.EQUIPE_TURNO}` });
+            if (this.filtros.PROFISSIONAL_NOME) ativos.push({ chave: 'PROFISSIONAL_NOME', texto: `Profissional: ${this.filtros.PROFISSIONAL_NOME}` });
+            if (this.filtros.SITUACAO_PLANTAO) ativos.push({ chave: 'SITUACAO_PLANTAO', texto: situacao ? situacao.text : this.filtros.SITUACAO_PLANTAO });
+            return ativos;
         }
     },
     methods: {
@@ -315,6 +417,19 @@ export default {
         },
 
         search() {
+            const texto = valor => (valor === null || valor === undefined ? '' : String(valor).trim()) || null;
+            const equipeId = this.equipePesquisa ? texto(this.equipePesquisa.EQUIPE_ID) : null;
+
+            this.$store.dispatch('VeiculoViewModule/setVeiculoPesquisa', {
+                ...this.veiculoPesquisa,
+                EQUIPE_ID: equipeId,
+                VEICULO_IDENTIFICACAO: texto(this.filtros.VEICULO_IDENTIFICACAO),
+                EQUIPE_TURNO: this.filtros.EQUIPE_TURNO,
+                PROFISSIONAL_NOME: texto(this.filtros.PROFISSIONAL_NOME),
+                SITUACAO_PLANTAO: this.filtros.SITUACAO_PLANTAO,
+                SOMENTE_COM_EQUIPE: this.filtros.SOMENTE_COM_EQUIPE ? 1 : null,
+            });
+
             this.$store.dispatch('VeiculoViewModule/searchCadastrar', {
                 msgId: this.msgId,
                 TG_SITUACAO_VEICULO_ID: 1,
@@ -332,12 +447,64 @@ export default {
         },
 
         clear() {
+            this.equipePesquisa = { ...this.equipePesquisa, EQUIPE_ID: null };
+            this.filtros = {
+                VEICULO_IDENTIFICACAO: null,
+                EQUIPE_TURNO: null,
+                PROFISSIONAL_NOME: null,
+                SITUACAO_PLANTAO: null,
+                SOMENTE_COM_EQUIPE: true,
+            };
             this.veiculoPesquisa = {
                 VEICULO_ID: null,
             };
-            this.pagination.current_page = 1;
-            this.search();
-        
+            this.pesquisar();
+        },
+
+        removerFiltro(chave) {
+            if (chave === 'EQUIPE_ID') {
+                this.equipePesquisa = { ...this.equipePesquisa, EQUIPE_ID: null };
+            } else {
+                this.filtros[chave] = null;
+            }
+            this.pesquisar();
+        },
+
+        corTurno(turno) {
+            return turno === 'SN' ? 'indigo' : 'amber darken-2';
+        },
+
+        iconeTurno(turno) {
+            return turno === 'SN' ? 'mdi-weather-night' : 'mdi-weather-sunny';
+        },
+
+        paraData(valor) {
+            if (!valor) return null;
+            const data = new Date(String(valor).replace(' ', 'T'));
+            return isNaN(data.getTime()) ? null : data;
+        },
+
+        formatarPeriodo(eqp) {
+            const inicio = this.formatarData(eqp.EQUIPE_DATA);
+            const fim = this.formatarData(eqp.EQUIPE_DATA_FIM);
+            // Mesmo dia: mostra só a hora no fim (25/11/2026 07:00 → 19:00)
+            const fimCurto = inicio && fim && inicio.substring(0, 10) === fim.substring(0, 10)
+                ? fim.substring(11)
+                : fim;
+            return `${inicio || '-'} → ${fimCurto || '-'}`;
+        },
+
+        statusPlantao(eqp) {
+            const inicio = this.paraData(eqp.EQUIPE_DATA);
+            const fim = this.paraData(eqp.EQUIPE_DATA_FIM);
+
+            if (fim && this.agora > fim) {
+                return { texto: 'Plantão encerrado – chamado pendente', cor: 'orange darken-2', icone: 'mdi-alert' };
+            }
+            if (inicio && this.agora < inicio) {
+                return { texto: 'Aguardando início', cor: 'blue-grey', icone: 'mdi-clock-start' };
+            }
+            return { texto: 'Em plantão', cor: 'green darken-1', icone: 'mdi-check-circle' };
         },
 
         novoEquipe() {
@@ -530,8 +697,22 @@ export default {
 </script>
 
 <style scoped>
-.btn-desativar-equipes {
-    border: 1px solid currentColor;
-    background-color: transparent;
+.veiculo-card {
+    border-left: 4px solid #546e7a !important;
+}
+
+.equipe-numero {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #263238;
+}
+
+.profissional + .profissional {
+    margin-top: 2px;
+}
+
+.sem-equipe {
+    background-color: #fafafa;
+    border: 1px dashed #cfd8dc;
 }
 </style>
