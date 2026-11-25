@@ -4,6 +4,7 @@
             <v-dialog
                 v-model="showModal"
                 persistent
+                :retain-focus="false"
                 width="800"
                 scrollable
                 :fullscreen="fullScreen"
@@ -117,7 +118,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="row in equipeProfissionais" :key="row['EQUIPE_ID']">
+                                    <tr v-for="row in equipeProfissionais" :key="row.PROFISSIONAL_ID">
                                         <td>{{ row['PROFISSIONAL_ID'] }}</td>
 
                                         <td>
@@ -229,7 +230,6 @@ export default {
         ...mapGetters({
             baseUrl: 'getBaseUrl',
             tiposProfissional: 'DominioModule/getTipoProfissionais',
-            profissionais: 'ProfissionalViewModule/getProfissionais',
             tiposVeiculo: 'DominioModule/getTipoVeiculos',
         }),
         showModal: {
@@ -335,9 +335,45 @@ export default {
         },
     },
 
+    watch: {
+        showModal(aberto) {
+            if (!aberto) {
+                return;
+            }
+
+            // Sempre abre com a lista de profissionais atualizada (vínculos com equipes).
+            this.recarregarProfissionais();
+
+            // Edição: EquipeView.selecionar() grava a equipe no store antes de abrir.
+            const equipe = this.equipe;
+            if (equipe && equipe.EQUIPE_ID) {
+                this.EQUIPE_ID = equipe.EQUIPE_ID;
+                this.VEICULO_ID = equipe.VEICULO_ID;
+                this.EQUIPE_TURNO = equipe.EQUIPE_TURNO;
+                this.equipeProfissionais = (equipe.equipeProfissional || [])
+                    .filter(ep => ep.profissional && ep.EQUIPE_PROFISSIONAL_ATIVO != 0)
+                    .map(ep => ({
+                        EQUIPE_ID: equipe.EQUIPE_ID,
+                        TG_TIPO_PROFISSIONAL_ID: ep.profissional.TG_TIPO_PROFISSIONAL_ID,
+                        PROFISSIONAL_ID: ep.PROFISSIONAL_ID,
+                        PROFISSIONAL_NOME: ep.profissional.PROFISSIONAL_NOME,
+                        tipoProfissional: ep.profissional.tipoProfissional
+                    }));
+            }
+        }
+    },
+
     methods: {
+        recarregarProfissionais() {
+            return this.$store.dispatch(
+                'ProfissionalViewModule/searchNEquipe',
+                this.msgId
+            );
+        },
         textoProfissional(item) {
             const equipes = (item.equipeProfissional || [])
+                // Na edição, não indica a própria equipe como "ocupando" o profissional.
+                .filter(ep => !this.EQUIPE_ID || ep.EQUIPE_ID !== this.EQUIPE_ID)
                 .map(ep => ep.equipe)
                 .filter(Boolean)
 
@@ -354,14 +390,6 @@ export default {
             this.resetarFormulario();
 
             this.showModal = false;
-            this.equipeProfissionaisSelecionados = [];
-            
-            this.$store.dispatch('ProfissionalViewModule/setProfissionais',
-                this.profissionais
-            )
-
-            console.log(this.profissionais);
-
         },
         salvar() {
             this.$store.dispatch(
@@ -411,6 +439,9 @@ export default {
             })
             .then(() => {
                 this.clearFormAndClose();
+
+                // Atualiza "(Veíc.: X - turno)" ao lado dos nomes sem precisar de refresh.
+                this.recarregarProfissionais();
 
                 Swal.fire(
                     'Sucesso',
@@ -625,8 +656,10 @@ export default {
 
             this.equipeProfissionais = [];
 
+            this.EQUIPE_ID = null;
             this.VEICULO_ID = null;
             this.EQUIPE_TURNO = null;
+            this.TG_TIPO_PROFISSIONAL_ID = null;
             this.PROFISSIONAL_ID = null;
 
             this.equipe = null;

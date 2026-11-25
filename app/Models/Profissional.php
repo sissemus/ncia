@@ -56,9 +56,13 @@ class Profissional extends Model
     }
 
     public function equipeProfissional(){
+        // Só vínculos ativos em equipes ativas e com plantão ainda vigente:
+        // equipes desativadas/excluídas liberam o profissional.
         return $this->hasMany(EquipeProfissional::class, 'PROFISSIONAL_ID', 'PROFISSIONAL_ID')
+            ->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
             ->whereHas('equipe', function($q){
-                return $q->where('EQUIPE_DATA_FIM', '>=', now());
+                return $q->where('EQUIPE_ATIVO', 1)
+                    ->where('EQUIPE_DATA_FIM', '>=', now());
             });
 
     }

@@ -110,8 +110,7 @@ class ProfissionalController extends Controller
 
     public function pesquisarNEquipe(Request $request)
     {
-        $profissionais = Profissional::listarNPesquisa($request)
-            ->get();
+        $profissionais = Profissional::listarNPesquisa($request);
 
         return response([
             "cod" => 1,

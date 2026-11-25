@@ -110,21 +110,7 @@ class EquipeController extends Controller
 
             $turno = $request->input('EQUIPE_TURNO');
 
-            $horas = ['SD' => 7, 'SN' => 19];
-
-            if(!isset($horas[$turno])){
-
-                throw new \InvalidArgumentException("Turno inválido: {$turno}");
-
-            }
-
-            $horaInicio = $horas[$turno];
-
-            $dataInicio = Carbon::today()->setTime($horaInicio, 0, 0);
-
-            $dataFim = $dataInicio->copy()->addHours(12);
-
-            // dd($dataInicio, $dataFim);
+            [$dataInicio, $dataFim] = $this->periodoTurno(Carbon::today(), $turno);
 
             $this->validarDuplicidade($veiculo->VEICULO_ID, $dataInicio->toDateString(), $turno);
 
@@ -138,31 +124,17 @@ class EquipeController extends Controller
             ]);
 
             foreach ($request->input('equipeProfissionais') as $dados) {
+                $profissionalId = (int) $dados['PROFISSIONAL_ID'];
 
-                Profissional::findOrFail($dados['PROFISSIONAL_ID']);
-                $profissional = new EquipeProfissional($dados);
-                $profissional->EQUIPE_ID = $equipe->EQUIPE_ID;
-                $profissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
-                $profissional->USUARIO_ID_CAD = Auth::id();
+                // Profissional não pode estar em outra equipe ativa no mesmo dia e turno.
+                $this->validarProfissionalLivre($profissionalId, $dataInicio->toDateString(), $turno, $equipe->EQUIPE_ID);
 
-                //verifico se o profissional está na mesma data, no mesmo turno 
-                $jaEstaNaMesmaData = EquipeProfissional::where('PROFISSIONAL_ID', $dados['PROFISSIONAL_ID'])
-                    ->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
-                    ->where('EQUIPE_ID', '<>', $equipe->EQUIPE_ID) // ignora a própria equipe (útil na edição)
-                    ->whereHas('equipe', function ($q) use ($equipe) {
-                        $q->where('EQUIPE_DATA_FIM', $equipe->EQUIPE_DATA_FIM)
-                        ->where('EQUIPE_TURNO', $equipe->EQUIPE_TURNO);
-                    })
-                    ->exists();
-
-                if ($jaEstaNaMesmaData) {
-                    // throw new \InvalidArgumentException('O profissional ' . $dados['PROFISSIONAL_NOME'] . ' já está em outra equipe nesta data e turno.');
-                    throw ValidationException::withMessages([
-                        'O profissional ' . $dados['PROFISSIONAL_NOME'] . ' já está em outra equipe nesta data e turno.',
-                    ]);
-                }
-
-                $profissional->save();
+                EquipeProfissional::create([
+                    'EQUIPE_ID' => $equipe->EQUIPE_ID,
+                    'PROFISSIONAL_ID' => $profissionalId,
+                    'EQUIPE_PROFISSIONAL_ATIVO' => 1,
+                    'USUARIO_ID_CAD' => Auth::id(),
+                ]);
             }
 
             return $equipe->EQUIPE_ID;
@@ -201,16 +173,36 @@ class EquipeController extends Controller
             'VEICULO_ID' => 'required|integer|min:1',
             'EQUIPE_TURNO' => 'required|string|in:SD,SN',
             'EQUIPE_ATIVO' => 'sometimes|required|integer|in:0,1',
+            'equipeProfissionais' => 'required|array|min:1',
+            'equipeProfissionais.*.PROFISSIONAL_ID' => 'required|integer|distinct',
+        ], [], [
+            'equipeProfissionais' => '<b>PROFISSIONAIS SELECIONADOS</b>',
         ]);
         $equipe = DB::transaction(function () use ($dados) {
             $equipe = Equipe::lockForUpdate()->findOrFail($dados['EQUIPE_ID']);
             Veiculo::lockForUpdate()->findOrFail($dados['VEICULO_ID']);
-            // Editar uma equipe não deve mudar a data original de seu plantão.
-            $this->validarDuplicidade($dados['VEICULO_ID'], $equipe->EQUIPE_DATA->toDateString(),
+
+            // Editar uma equipe não muda o dia original do plantão; se o turno
+            // mudar, recalcula apenas o horário de início/fim.
+            $dia = $equipe->EQUIPE_DATA->copy()->startOfDay();
+            [$dataInicio, $dataFim] = $this->periodoTurno($dia, $dados['EQUIPE_TURNO']);
+            $this->validarDuplicidade($dados['VEICULO_ID'], $dia->toDateString(),
                 $dados['EQUIPE_TURNO'], $equipe->EQUIPE_ID);
-            $equipe->fill($dados);
+
+            $equipe->VEICULO_ID = $dados['VEICULO_ID'];
+            $equipe->EQUIPE_TURNO = $dados['EQUIPE_TURNO'];
+            if (isset($dados['EQUIPE_ATIVO'])) {
+                $equipe->EQUIPE_ATIVO = $dados['EQUIPE_ATIVO'];
+            }
+            if ($equipe->isDirty('EQUIPE_TURNO')) {
+                $equipe->EQUIPE_DATA = $dataInicio;
+                $equipe->EQUIPE_DATA_FIM = $dataFim;
+            }
             $equipe->USUARIO_ID_CAD = Auth::id();
             $equipe->save();
+
+            $this->sincronizarProfissionais($equipe,
+                array_map('intval', array_column($dados['equipeProfissionais'], 'PROFISSIONAL_ID')));
 
             return $equipe;
         }, 3);
@@ -218,10 +210,97 @@ class EquipeController extends Controller
         return response($equipe);
     }
 
+    /**
+     * Sincroniza os integrantes da equipe usando exclusão lógica, para manter
+     * o rastreio dos profissionais vinculados aos chamados já atendidos.
+     */
+    private function sincronizarProfissionais(Equipe $equipe, array $profissionalIds)
+    {
+        $data = $equipe->EQUIPE_DATA->toDateString();
+        $vinculos = EquipeProfissional::where('EQUIPE_ID', $equipe->EQUIPE_ID)->get();
+
+        // Remove (logicamente) quem saiu da equipe.
+        EquipeProfissional::where('EQUIPE_ID', $equipe->EQUIPE_ID)
+            ->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
+            ->whereNotIn('PROFISSIONAL_ID', $profissionalIds)
+            ->update(['EQUIPE_PROFISSIONAL_ATIVO' => 0, 'USUARIO_ID_CAD' => Auth::id()]);
+
+        foreach ($profissionalIds as $profissionalId) {
+            $this->validarProfissionalLivre($profissionalId, $data, $equipe->EQUIPE_TURNO, $equipe->EQUIPE_ID);
+
+            $ativo = $vinculos->first(function ($v) use ($profissionalId) {
+                return $v->PROFISSIONAL_ID === $profissionalId && $v->EQUIPE_PROFISSIONAL_ATIVO === 1;
+            });
+            if ($ativo) {
+                continue;
+            }
+
+            $inativo = $vinculos->firstWhere('PROFISSIONAL_ID', $profissionalId);
+            if ($inativo) {
+                $inativo->EQUIPE_PROFISSIONAL_ATIVO = 1;
+                $inativo->USUARIO_ID_CAD = Auth::id();
+                $inativo->save();
+                continue;
+            }
+
+            EquipeProfissional::create([
+                'EQUIPE_ID' => $equipe->EQUIPE_ID,
+                'PROFISSIONAL_ID' => $profissionalId,
+                'EQUIPE_PROFISSIONAL_ATIVO' => 1,
+                'USUARIO_ID_CAD' => Auth::id(),
+            ]);
+        }
+    }
+
+    /**
+     * Retorna [início, fim] do plantão do turno no dia informado (SD 07h, SN 19h, 12h de duração).
+     */
+    private function periodoTurno(Carbon $dia, $turno)
+    {
+        $horas = ['SD' => 7, 'SN' => 19];
+
+        if (!isset($horas[$turno])) {
+            throw ValidationException::withMessages([
+                'EQUIPE_TURNO' => "Turno inválido: {$turno}",
+            ]);
+        }
+
+        $inicio = $dia->copy()->setTime($horas[$turno], 0, 0);
+
+        return [$inicio, $inicio->copy()->addHours(12)];
+    }
+
+    /**
+     * Impede que o profissional esteja em duas equipes ativas no mesmo dia e turno.
+     */
+    private function validarProfissionalLivre($profissionalId, $data, $turno, $ignorarEquipeId = null)
+    {
+        $profissional = Profissional::findOrFail($profissionalId);
+
+        $ocupado = EquipeProfissional::where('PROFISSIONAL_ID', $profissionalId)
+            ->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
+            ->when($ignorarEquipeId, function ($q) use ($ignorarEquipeId) {
+                $q->where('EQUIPE_ID', '<>', $ignorarEquipeId);
+            })
+            ->whereHas('equipe', function ($q) use ($data, $turno) {
+                $q->where('EQUIPE_ATIVO', 1)
+                    ->whereDate('EQUIPE_DATA', $data)
+                    ->where('EQUIPE_TURNO', $turno);
+            })
+            ->exists();
+
+        if ($ocupado) {
+            throw ValidationException::withMessages([
+                'equipeProfissionais' => "O profissional {$profissional->PROFISSIONAL_NOME} já está em outra equipe nesta data e turno.",
+            ]);
+        }
+    }
+
     private function validarDuplicidade($veiculoId, $data, $turno, $ignorarId = null)
     {
         $consulta = Equipe::where('VEICULO_ID', $veiculoId)->whereDate('EQUIPE_DATA', $data)
-            ->where('EQUIPE_TURNO', $turno);
+            ->where('EQUIPE_TURNO', $turno)
+            ->where('EQUIPE_ATIVO', 1);
         if ($ignorarId !== null) {
             $consulta->where('EQUIPE_ID', '!=', $ignorarId);
         }

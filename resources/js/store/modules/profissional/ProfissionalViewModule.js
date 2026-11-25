@@ -89,17 +89,12 @@ export default {
                     })
                 })
         },
-        searchNEquipe({ state, commit, rootGetters }, msgId) {
-            let profissionalPesquisa = JSON.parse(JSON.stringify(state.profissionalPesquisa))
-            profissionalPesquisa.page = state.pagination.current_page
-
-            if (profissionalPesquisa.PROFISSIONAL_CPF)
-                profissionalPesquisa.PROFISSIONAL_CPF = profissionalPesquisa.PROFISSIONAL_CPF.replace(/\D/g, '')
-
-            axios.post(`${rootGetters.getBaseUrl}/profissional/pesquisarNEquipe`, profissionalPesquisa)
+        // Recarrega todos os profissionais ativos com suas equipes vigentes
+        // (usado no modal de equipe; não mexe na paginação da tela de profissionais).
+        searchNEquipe({ commit, rootGetters }, msgId) {
+            return axios.post(`${rootGetters.getBaseUrl}/profissional/pesquisarNEquipe`, { PROFISSIONAL_ATIVO: 1 })
                 .then(r => {
-                    commit('setProfissionais', r.data.retorno.data)
-                    commit('setPagination', r.data)
+                    commit('setProfissionais', r.data.retorno)
                 })
                 .catch(e => {
                     console.error('ERRO: ', e)

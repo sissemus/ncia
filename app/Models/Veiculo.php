@@ -138,7 +138,11 @@ class Veiculo extends Model
             //             });
             //     })->orderBy('EQUIPE_DATA')->orderBy('EQUIPE_ID');
             // },
-            , 'equipesAtivas.equipeProfissional.profissional',
+            // Somente integrantes ativos: removidos na edição saem da grade (exclusão lógica).
+            , 'equipesAtivas.equipeProfissional' => function ($q) {
+                $q->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
+            },
+            'equipesAtivas.equipeProfissional.profissional',
             'equipesAtivas.equipeProfissional.profissional.tipoProfissional',
             "vinculoAtivo",
             "vinculoAtivo.unidade",
