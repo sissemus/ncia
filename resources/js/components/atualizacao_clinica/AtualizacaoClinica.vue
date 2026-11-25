@@ -39,7 +39,7 @@
                                 </div>
                                 <div class="caption grey--text text--darken-2 text-truncate mt-1"
                                     :title="item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA || '-'">
-                                    <strong>Justificativa médica:</strong>
+                                    <strong>Justificativa clínica:</strong>
                                     {{ item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA || '-' }}
                                 </div>
                             </div>
@@ -59,7 +59,7 @@
                                 <v-col cols="6" md="3"><v-text-field label="Frequência cardíaca" readonly filled dense hide-details :value="item.ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA" /></v-col>
                                 <v-col cols="6" md="3"><v-text-field label="Saturação O2" readonly filled dense hide-details :value="item.ATUALIZACAO_CLINICA_SATURACAO_O2" /></v-col>
                                 <v-col cols="6" md="3"><v-text-field label="Escala Glasgow" readonly filled dense hide-details :value="item.ATUALIZACAO_CLINICA_ESCALA_GLASGOW || '-'" /></v-col>
-                                <v-col cols="12"><v-textarea label="Justificativa médica" readonly filled dense rows="2" auto-grow hide-details :value="item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" /></v-col>
+                                <v-col cols="12"><v-textarea label="Justificativa clínica" readonly filled dense rows="2" auto-grow hide-details :value="item.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" /></v-col>
                             </v-row>
                         </v-expansion-panel-content>
                     </v-expansion-panel>
@@ -100,7 +100,7 @@
                                 <v-col cols="12" md="3"><v-text-field label="Data/hora de abertura" readonly filled dense hide-details :value="formatarDataHora(chamado.CHAMADO_DATA)" /></v-col>
                                 <v-col cols="12" md="3"><v-text-field label="Tipo de chamado" readonly filled dense hide-details :value="descricao(tiposChamado, chamado.TG_CHAMADO_ID)" /></v-col>
                                 <v-col cols="12" md="3"><v-text-field label="Prioridade atual" readonly filled dense hide-details :value="descricao(prioridades, chamado.TG_PRIORIDADE_ID)" /></v-col>
-                                <v-col cols="12" md="3"><v-text-field label="Horário de atendimento" readonly filled dense hide-details :value="chamado.CHAMADO_HORARIO_ATENDIMENTO || '-'" /></v-col>
+                                <v-col cols="12" md="3"><v-text-field label="Horário agendado de atendimento" readonly filled dense hide-details :value="chamado.CHAMADO_HORARIO_ATENDIMENTO || '-'" /></v-col>
                                 <v-col cols="12" md="6"><v-text-field label="Unidade de origem" readonly filled dense hide-details :value="unidadeNome('unidadeSolicitante', 'unidade_solicitante')" /></v-col>
                                 <v-col cols="6" md="3"><v-text-field label="Setor de origem" readonly filled dense hide-details :value="chamado.CHAMADO_SETOR_SOLICITANTE || '-'" /></v-col>
                                 <v-col cols="6" md="3"><v-text-field label="Leito de origem" readonly filled dense hide-details :value="chamado.CHAMADO_LEITO_SOLICITANTE || '-'" /></v-col>
@@ -133,7 +133,7 @@
                                 <v-col cols="12" md="6"><v-text-field label="Profissional responsável*" maxlength="150" outlined dense v-model="form.ATUALIZACAO_CLINICA_PROFISSIONAL" /></v-col>
                                 <v-col cols="6" md="3"><v-select label="Conselho" :items="['CRM', 'COREN']" clearable outlined dense v-model="form.ATUALIZACAO_CLINICA_CONSELHO" /></v-col>
                                 <v-col cols="6" md="3"><v-text-field label="Nº do conselho" maxlength="50" outlined dense v-model="form.ATUALIZACAO_CLINICA_NUMERO_CONSELHO" /></v-col>
-                                <v-col cols="12"><v-textarea label="Justificativa médica*" outlined rows="4" v-model="form.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" /></v-col>
+                                <v-col cols="12"><v-textarea label="Justificativa clínica*" outlined rows="4" v-model="form.ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" /></v-col>
                             </v-row>
                         </v-card-text>
                     </v-card>

@@ -209,20 +209,20 @@
                         </v-card-title>
                         <v-card-text class="pt-3">
                             <v-row dense class="mb-2">
-                                <v-col cols="12" md="4">
+                                <v-col cols="12" md="3">
                                     <v-text-field label="Tipo de Chamado" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(tiposChamado, chamadoSelecionado.TG_CHAMADO_ID)"></v-text-field>
                                 </v-col>
-                                <v-col cols="12" md="4">
+                                <v-col cols="12" md="3">
                                     <v-text-field label="Prioridade" readonly filled dense hide-details
                                         :value="descricaoTabelaGenerica(prioridades, chamadoSelecionado.TG_PRIORIDADE_ID)"></v-text-field>
                                 </v-col>
-                                <v-col cols="6" md="2">
-                                    <v-text-field label="Data Abertura" readonly filled dense hide-details
-                                        :value="formatarDataBR(chamadoSelecionado.CHAMADO_DATA)"></v-text-field>
+                                <v-col cols="6" md="3">
+                                    <v-text-field label="Data/Hora de abertura" readonly filled dense hide-details
+                                        :value="formatarDataHora(chamadoSelecionado.CHAMADO_DATA)"></v-text-field>
                                 </v-col>
-                                <v-col cols="6" md="2">
-                                    <v-text-field label="Horário Atendimento" readonly filled dense hide-details
+                                <v-col cols="6" md="3">
+                                    <v-text-field label="Horário agendado de atendimento" readonly filled dense hide-details
                                         :value="chamadoSelecionado.CHAMADO_HORARIO_ATENDIMENTO || '-'"></v-text-field>
                                 </v-col>
                             </v-row>
@@ -277,6 +277,10 @@
                                 <v-col cols="6" md="3">
                                     <v-text-field label="Ambulância Extra" readonly filled dense hide-details
                                         :value="simNao(chamadoSelecionado.CHAMADO_AMBULANCIA_EXTRA)"></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-textarea label="Observações" readonly filled dense hide-details rows="2" auto-grow
+                                        :value="chamadoSelecionado.CHAMADO_OBSERVACAO || '-'"></v-textarea>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -359,17 +363,6 @@
                         </v-card-text>
                     </v-card>
 
-                    <!-- Observações -->
-                    <v-card outlined class="mb-4" v-if="chamadoSelecionado.CHAMADO_OBSERVACAO">
-                        <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
-                            <v-icon small left color="primary">mdi-comment-text-outline</v-icon>
-                            Observações
-                        </v-card-title>
-                        <v-card-text class="pt-3">
-                            <div class="body-2 font-italic">{{ chamadoSelecionado.CHAMADO_OBSERVACAO }}</div>
-                        </v-card-text>
-                    </v-card>
-
                     <!-- Histórico de Situações -->
                     <v-card outlined>
                         <v-card-title class="subtitle-2 font-weight-bold blue-grey lighten-5 py-2">
@@ -425,10 +418,10 @@
                                                 </div>
                                             </template>
                                             <template v-else>
-                                            <!-- Apenas na abertura (Aberto / 1) exibir Registrado por -->
-                                            <div v-if="isSituacaoAberto(evento.item.TG_SITUACAO_ID)" class="caption mb-1">
+                                            <!-- Usuário responsável por cada mudança de situação -->
+                                            <div class="caption mb-1">
                                                 <v-icon x-small color="grey darken-2">mdi-account-check</v-icon>
-                                                <span class="font-weight-medium">Registrado por:</span> {{ getNomeUsuarioRegistro(evento.item) }}
+                                                <span class="font-weight-medium">{{ rotuloUsuarioSituacao(evento.item.TG_SITUACAO_ID) }}:</span> {{ getNomeUsuarioRegistro(evento.item) }}
                                             </div>
 
                                             <!-- Detalhes para acompanhamento da etapa -->
@@ -998,9 +991,20 @@ export default {
         },
 
         getNomeUsuarioRegistro(sit) {
-            if (!sit) return "Unidade Solicitante";
-            let usuario = sit.usuario || sit.USUARIO;
-            return usuario ? usuario.USUARIO_NOME : "Unidade Solicitante";
+            let usuario = sit && (sit.usuario || sit.USUARIO);
+            return usuario && usuario.USUARIO_NOME ? usuario.USUARIO_NOME : "-";
+        },
+
+        rotuloUsuarioSituacao(situacaoId) {
+            switch (Number(situacaoId)) {
+                case SituacaoChamadoEnum.ABERTO: return "Aberto por";
+                case SituacaoChamadoEnum.EM_ANALISE: return "Recebido para análise por";
+                case SituacaoChamadoEnum.EM_FILA: return "Encaminhado para fila por";
+                case SituacaoChamadoEnum.EM_ATENDIMENTO: return "Atendimento iniciado por";
+                case SituacaoChamadoEnum.CONCLUIDO: return "Concluído por";
+                case SituacaoChamadoEnum.CANCELADO: return "Cancelado por";
+                default: return "Registrado por";
+            }
         },
 
         getDetalheAcompanhamento(situacaoId) {

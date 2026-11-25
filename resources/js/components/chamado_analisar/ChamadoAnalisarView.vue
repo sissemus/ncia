@@ -19,6 +19,14 @@
                         </v-chip>
                         <v-chip small dark :color="corSituacao">{{ situacaoAtual }}</v-chip>
                     </div>
+                    <div class="body-2 mt-2">
+                        <v-icon small class="mr-1">mdi-account</v-icon>
+                        <strong>Aberto por:</strong> {{ valor(usuarioAbertura, 'USUARIO_NOME') }}
+                        <span class="mx-2">·</span>
+                        <strong>Unidade:</strong> {{ valor(unidadeSolicitante, 'UNIDADE_NOME') }}
+                        <span class="mx-2">·</span>
+                        <strong>Contato:</strong> {{ valor(usuarioAbertura, 'USUARIO_CONTATO') }}
+                    </div>
                 </v-alert>
 
                 <v-alert v-if="chamadoEmFila || chamadoEmAtendimento" :type="encaminhadoAgora ? 'success' : 'info'" outlined class="mb-4">
@@ -64,7 +72,7 @@
                             <v-col cols="12" md="3"><v-text-field label="Tipo de chamado" readonly filled dense hide-details :value="descricao(tiposChamado, chamado.TG_CHAMADO_ID)" /></v-col>
                             <v-col cols="12" md="3"><v-text-field label="Prioridade" readonly filled dense hide-details :color="corPrioridade" :value="descricao(prioridades, chamado.TG_PRIORIDADE_ID)" /></v-col>
                             <v-col cols="12" md="3"><v-text-field label="Data/Hora de abertura" readonly filled dense hide-details :value="formatarDataHora(chamado.CHAMADO_DATA)" /></v-col>
-                            <v-col cols="12" md="3"><v-text-field label="Horário de atendimento" readonly filled dense hide-details :value="chamado.CHAMADO_HORARIO_ATENDIMENTO || '-'" /></v-col>
+                            <v-col cols="12" md="3"><v-text-field label="Horário agendado de atendimento" readonly filled dense hide-details :value="chamado.CHAMADO_HORARIO_ATENDIMENTO || '-'" /></v-col>
 
                             <v-col cols="12" md="6"><v-text-field label="Unidade de origem" readonly filled dense hide-details color="green" :value="valor(unidadeSolicitante, 'UNIDADE_NOME')" /></v-col>
                             <v-col cols="12" md="6"><v-text-field label="Unidade de destino" readonly filled dense hide-details color="deep-orange" :value="valor(unidadeDestino, 'UNIDADE_NOME')" /></v-col>
@@ -216,6 +224,15 @@ export default {
         paciente() { return this.chamado ? this.chamado.paciente : null; },
         unidadeSolicitante() { return this.chamado && (this.chamado.unidadeSolicitante || this.chamado.unidade_solicitante); },
         unidadeDestino() { return this.chamado && (this.chamado.unidadeDestino || this.chamado.unidade_destino); },
+        // Usuário que abriu a viagem atual (ida ou retorno); se não houver, a primeira abertura do chamado.
+        usuarioAbertura() {
+            const situacoes = this.chamado && this.chamado.situacoes || [];
+            const aberturas = situacoes.filter(item => Number(item.TG_SITUACAO_ID) === SituacaoChamadoEnum.ABERTO);
+            const viagemId = this.chamado && this.chamado.viagemAtual && this.chamado.viagemAtual.CHAMADO_VIAGEM_ID;
+            const abertura = aberturas.filter(item => viagemId && Number(item.CHAMADO_VIAGEM_ID) === Number(viagemId)).pop()
+                || aberturas[0];
+            return abertura && abertura.usuario || null;
+        },
         statusId() {
             const situacao = this.chamado && (this.chamado.situacaoAtual || this.chamado.situacao_atual);
             return situacao ? Number(situacao.TG_SITUACAO_ID) : null;

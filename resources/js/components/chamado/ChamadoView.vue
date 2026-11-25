@@ -92,7 +92,7 @@
                             <v-col cols="12" sm="3"><v-text-field label="Peso" filled readonly
                                 :value="retornoConsulta.DADOS.CHAMADO_PESO || '-'"></v-text-field></v-col>
                             <v-col cols="12" sm="3"><v-text-field label="Horário de atendimento" filled readonly
-                                :value="retornoConsulta.DADOS.CHAMADO_HORARIO_ATENDIMENTO || '-'"></v-text-field></v-col>
+                                :value="retornoConsulta.DADOS.CHAMADO_HORARIO_ATENDIMENTO ? String(retornoConsulta.DADOS.CHAMADO_HORARIO_ATENDIMENTO).slice(0, 5) : '-'"></v-text-field></v-col>
                         </v-row>
                     </v-card-text>
                     <v-card-actions v-if="retornoConsulta">

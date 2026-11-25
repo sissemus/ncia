@@ -66,7 +66,7 @@ class AtualizacaoClinicaStoreRequest extends FormRequest
             "ATUALIZACAO_CLINICA_PROFISSIONAL" => "<b>PROFISSIONAL RESPONSÁVEL</b>",
             "ATUALIZACAO_CLINICA_CONSELHO" => "<b>CONSELHO</b>",
             "ATUALIZACAO_CLINICA_NUMERO_CONSELHO" => "<b>NÚMERO DO CONSELHO</b>",
-            "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => "<b>JUSTIFICATIVA MÉDICA</b>",
+            "ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA" => "<b>JUSTIFICATIVA CLÍNICA</b>",
         ];
     }
 }

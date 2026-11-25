@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\HoraMinuto;
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
 use Carbon\Carbon;
@@ -51,6 +52,7 @@ class Chamado extends Model
         "UNIDADE_ID_SOLICITANTE" => "integer",
         "UNIDADE_ID_DESTINO" => "integer",
         "CHAMADO_DATA" => "datetime",
+        "CHAMADO_HORARIO_ATENDIMENTO" => HoraMinuto::class,
         "CHAMADO_PESO" => "decimal:2",
         "TG_TIPO_PRECAUCAO_ID" => "integer",
         "TG_SUPORTE_O2_ID" => "integer",
@@ -387,7 +389,7 @@ class Chamado extends Model
                 . '     <b>Frequência cardíaca:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_FREQUENCIA_CARDIACA) . '<br/>'
                 . '<b>Saturação O2:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_SATURACAO_O2)
                 . '     <b>Escala Glasgow:</b> ' . $escapar($atualizacao->ATUALIZACAO_CLINICA_ESCALA_GLASGOW) . '<br/>'
-                . '<b>Justificativa médica:</b> ' . nl2br($escapar($atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA), false);
+                . '<b>Justificativa clínica:</b> ' . nl2br($escapar($atualizacao->ATUALIZACAO_CLINICA_JUSTIFICATIVA_MEDICA), false);
         })->implode('<br/><br/>');
 
         return $eventos->map(function ($evento) use (
