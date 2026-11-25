@@ -40,13 +40,18 @@ class Equipe extends Model
         return $this->hasMany(EquipeProfissional::class, 'EQUIPE_ID', 'EQUIPE_ID');
     }
 
+    public function chamadoEquipe(){
+        return $this->hasMany(ChamadoEquipe::class, 'EQUIPE_ID', 'EQUIPE_ID');
+    }
+
     public static function pesquisar($requisicao)
     {
         return self::with([
                 'veiculo',
                 'equipeProfissional',
                 'equipeProfissional.profissional',
-                'equipeProfissional.profissional.tipoProfissional'
+                'equipeProfissional.profissional.tipoProfissional',
+                'chamadoEquipe'
             ])
             ->when($requisicao->EQUIPE_ID, function (Builder $query) use ($requisicao) {
                 return $query->where("EQUIPE_ID", "=", $requisicao->EQUIPE_ID);

@@ -328,6 +328,7 @@ export default {
             };
             this.pagination.current_page = 1;
             this.search();
+        
         },
 
         novoEquipe() {

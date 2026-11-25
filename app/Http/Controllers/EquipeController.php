@@ -138,11 +138,30 @@ class EquipeController extends Controller
             ]);
 
             foreach ($request->input('equipeProfissionais') as $dados) {
+
                 Profissional::findOrFail($dados['PROFISSIONAL_ID']);
                 $profissional = new EquipeProfissional($dados);
                 $profissional->EQUIPE_ID = $equipe->EQUIPE_ID;
                 $profissional->EQUIPE_PROFISSIONAL_ATIVO = 1;
                 $profissional->USUARIO_ID_CAD = Auth::id();
+
+                //verifico se o profissional está na mesma data, no mesmo turno 
+                $jaEstaNaMesmaData = EquipeProfissional::where('PROFISSIONAL_ID', $dados['PROFISSIONAL_ID'])
+                    ->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
+                    ->where('EQUIPE_ID', '<>', $equipe->EQUIPE_ID) // ignora a própria equipe (útil na edição)
+                    ->whereHas('equipe', function ($q) use ($equipe) {
+                        $q->where('EQUIPE_DATA_FIM', $equipe->EQUIPE_DATA_FIM)
+                        ->where('EQUIPE_TURNO', $equipe->EQUIPE_TURNO);
+                    })
+                    ->exists();
+
+                if ($jaEstaNaMesmaData) {
+                    // throw new \InvalidArgumentException('O profissional ' . $dados['PROFISSIONAL_NOME'] . ' já está em outra equipe nesta data e turno.');
+                    throw ValidationException::withMessages([
+                        'O profissional ' . $dados['PROFISSIONAL_NOME'] . ' já está em outra equipe nesta data e turno.',
+                    ]);
+                }
+
                 $profissional->save();
             }
 

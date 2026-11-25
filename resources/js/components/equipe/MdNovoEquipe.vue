@@ -128,7 +128,7 @@
                                         </td>                            
 
                                         <td>
-                                            <v-btn icon @click="deletarEquipeProfissional(row)" title="Remover">
+                                            <v-btn icon @click="deletarProfissional(row)" title="Remover da Equipe">
                                                 <v-icon>mdi-delete</v-icon>
                                             </v-btn>
                                         </td>
@@ -355,6 +355,13 @@ export default {
 
             this.showModal = false;
             this.equipeProfissionaisSelecionados = [];
+            
+            this.$store.dispatch('ProfissionalViewModule/setProfissionais',
+                this.profissionais
+            )
+
+            console.log(this.profissionais);
+
         },
         salvar() {
             this.$store.dispatch(
@@ -586,8 +593,10 @@ export default {
             
         },
         async deletarProfissional(profissional) {
-
-            let id = equipeProfissional.EQUIPE_PROFISSIONAL_ID
+            
+            // console.log(this.equipeProfissionais);
+            
+            let id = profissional.PROFISSIONAL_ID
 
             const result = await Swal.fire({
                 icon: 'warning',
@@ -598,6 +607,8 @@ export default {
                 confirmButtonText: 'Confirmar',
                 denyButtonText: 'Cancelar',
             })
+
+            // console.log(id);
 
             // Só remove se o usuário clicou em Confirmar
             if (result.isConfirmed) {
