@@ -111,15 +111,17 @@ class Veiculo extends Model
     // diferença é que relacionamento usa equipe e relacionamentoCadastrar usa equipes
     public static function relacionamentoCadastrar()
     {
+        // $hoje = Carbon::now();
+        $hoje = Carbon::now()->format('Y-m-d H:i');
 
         return [
             "tipoVeiculo",
             "situacaoVeiculo",
             "equipe",
             'equipesAtivas'
-                => function($q) {
-                    self::filtrarEquipesVisiveis($q);
-                    $q->orderBy('EQUIPE_DATA');
+                => function($q) use($hoje){
+                    $q->where('EQUIPE_ATIVO', '=', 1)
+                    ->where('EQUIPE_DATA_FIM', '>=', $hoje);
                 }
             //  => function ($query) use ($hoje) {
             //     $query->where(function ($query) use ($hoje) {
@@ -147,81 +149,10 @@ class Veiculo extends Model
         ];
     }
 
-    /**
-     * Equipes exibidas no Cadastro de Equipes: ativas com plantão em vigor OU
-     * seguras por chamado em fila/em atendimento (precisam continuar visíveis
-     * para "Trocar plantão" e, depois, a lixeira).
-     */
-    public static function filtrarEquipesVisiveis($query)
-    {
-        $agora = Carbon::now()->format('Y-m-d H:i');
-
-        return $query->where('EQUIPE_ATIVO', '=', 1)
-            ->where(function ($w) use ($agora) {
-                $w->where('EQUIPE_DATA_FIM', '>=', $agora)
-                    ->orWhere(function ($p) {
-                        $p->comChamadoPendente();
-                    });
-            });
-    }
-
-    /**
-     * Filtros de equipe da tela Cadastro de Equipes (Nº, turno, profissional, situação).
-     */
-    private static function filtrarEquipesPesquisa($query, array $filtros)
-    {
-        $agora = Carbon::now()->format('Y-m-d H:i');
-
-        return $query
-            ->when($filtros['EQUIPE_ID'], function ($q, $id) {
-                $q->where('EQUIPE_ID', $id);
-            })
-            ->when($filtros['EQUIPE_TURNO'], function ($q, $turno) {
-                $q->where('EQUIPE_TURNO', $turno);
-            })
-            ->when($filtros['PROFISSIONAL_NOME'], function ($q, $nome) {
-                $q->whereHas('equipeProfissional', function ($ep) use ($nome) {
-                    $ep->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
-                        ->whereHas('profissional', function ($p) use ($nome) {
-                            $p->where('PROFISSIONAL_NOME', 'like', '%' . $nome . '%');
-                        });
-                });
-            })
-            ->when($filtros['SITUACAO_PLANTAO'] === 'VIGENTE', function ($q) use ($agora) {
-                $q->where('EQUIPE_DATA_FIM', '>=', $agora);
-            })
-            ->when($filtros['SITUACAO_PLANTAO'] === 'PENDENTE', function ($q) use ($agora) {
-                $q->where('EQUIPE_DATA_FIM', '<', $agora);
-            });
-    }
-
     public static function pesquisarCadastrar($requisicao)
     {
-        $filtros = [
-            'EQUIPE_ID' => (int) $requisicao->EQUIPE_ID ?: null,
-            'EQUIPE_TURNO' => in_array($requisicao->EQUIPE_TURNO, ['SD', 'SN'], true) ? $requisicao->EQUIPE_TURNO : null,
-            'PROFISSIONAL_NOME' => trim((string) $requisicao->PROFISSIONAL_NOME) ?: null,
-            'SITUACAO_PLANTAO' => in_array($requisicao->SITUACAO_PLANTAO, ['VIGENTE', 'PENDENTE'], true) ? $requisicao->SITUACAO_PLANTAO : null,
-        ];
-        $temFiltroEquipe = (bool) array_filter($filtros);
-
-        // IDs das equipes que atendem aos filtros (para limitar as equipes exibidas de cada veículo)
-        $idsFiltrados = null;
-        if ($temFiltroEquipe) {
-            $idsFiltrados = self::filtrarEquipesPesquisa(self::filtrarEquipesVisiveis(Equipe::query()), $filtros)
-                ->pluck('EQUIPE_ID')->all();
-        }
-
+        
         $veiculos = self::with(self::relacionamentoCadastrar())
-            // Com filtro de equipe (ou "somente com equipe"), só veículos com equipe que atenda
-            ->when($temFiltroEquipe || $requisicao->SOMENTE_COM_EQUIPE, function (Builder $query) use ($idsFiltrados) {
-                return $query->whereHas('equipesAtivas', function ($q) use ($idsFiltrados) {
-                    self::filtrarEquipesVisiveis($q);
-                    if ($idsFiltrados !== null) {
-                        $q->whereIn('EQUIPE_ID', $idsFiltrados ?: [0]);
-                    }
-                });
-            })
             ->when($requisicao->VEICULO_IDENTIFICACAO, function (Builder $query) use ($requisicao) {
                 return $query->where("VEICULO_IDENTIFICACAO", "like", "%" . $requisicao->VEICULO_IDENTIFICACAO . "%");
             })
@@ -237,12 +168,8 @@ class Veiculo extends Model
             ->orderBy("VEICULO_IDENTIFICACAO")
             ->paginate();
 
-        $veiculos->getCollection()->each(function ($veiculo) use ($idsFiltrados) {
-            $equipes = $veiculo->getRelation('equipesAtivas');
-            if ($idsFiltrados !== null) {
-                $equipes = $equipes->whereIn('EQUIPE_ID', $idsFiltrados)->values();
-            }
-            $veiculo->setRelation('equipes', $equipes);
+        $veiculos->getCollection()->each(function ($veiculo) {
+            $veiculo->setRelation('equipes', $veiculo->getRelation('equipesAtivas'));
             $veiculo->unsetRelation('equipesAtivas');
         });
 

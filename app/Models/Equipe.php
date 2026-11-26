@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\MyLibs\RTG;
 use App\MyLibs\SituacaoChamadoEnum;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -31,6 +32,7 @@ class Equipe extends Model
         "EQUIPE_TURNO" => "string",
         "EQUIPE_ATIVO" => "integer",
         "USUARIO_ID_CAD" => "integer",
+        "CHAMADOS_PENDENTES" => "integer",
     ];
 
     public function veiculo(){
@@ -72,7 +74,20 @@ class Equipe extends Model
         });
     }
 
-    private static function filtrarVinculoPendente($query)
+    /**
+     * Equipes com ao menos um integrante ativo cujo nome contenha o texto.
+     */
+    public function scopeComProfissionalNome(Builder $query, $nome)
+    {
+        return $query->whereHas('equipeProfissional', function ($ep) use ($nome) {
+            $ep->where('EQUIPE_PROFISSIONAL_ATIVO', 1)
+                ->whereHas('profissional', function ($p) use ($nome) {
+                    $p->where('PROFISSIONAL_NOME', 'like', '%' . $nome . '%');
+                });
+        });
+    }
+
+    public static function filtrarVinculoPendente($query)
     {
         $query->where('CHAMADO_EQUIPE.CHAMADO_EQUIPE_ATIVO', 1)
             ->whereRaw(
@@ -83,23 +98,66 @@ class Equipe extends Model
             );
     }
 
+    /**
+     * Lista paginada do Cadastro de Equipes (uma linha por equipe, com seus
+     * profissionais). Filtros: SITUACAO (ATIVAS padrão / DESATIVADAS / TODAS),
+     * EQUIPE_ID, VEICULO_ID, VEICULO_IDENTIFICACAO, EQUIPE_TURNO,
+     * PROFISSIONAL_NOME e SITUACAO_PLANTAO (VIGENTE / ENCERRADO).
+     */
     public static function pesquisar($requisicao)
     {
+        $agora = Carbon::now()->format('Y-m-d H:i:s');
+        $situacao = in_array($requisicao->SITUACAO, ['ATIVAS', 'DESATIVADAS', 'TODAS'], true)
+            ? $requisicao->SITUACAO
+            : 'ATIVAS';
+        $turno = in_array($requisicao->EQUIPE_TURNO, ['SD', 'SN'], true) ? $requisicao->EQUIPE_TURNO : null;
+        $veiculo = trim((string) $requisicao->VEICULO_IDENTIFICACAO);
+        $profissional = trim((string) $requisicao->PROFISSIONAL_NOME);
+
         return self::with([
                 'veiculo',
-                'equipeProfissional',
+                'equipeProfissional' => function ($q) {
+                    $q->where('EQUIPE_PROFISSIONAL_ATIVO', 1);
+                },
                 'equipeProfissional.profissional',
                 'equipeProfissional.profissional.tipoProfissional',
-                'chamadoEquipe'
             ])
+            ->withCount(['chamadoEquipe as CHAMADOS_PENDENTES' => function ($q) {
+                self::filtrarVinculoPendente($q);
+            }])
+            ->when($situacao === 'ATIVAS', function (Builder $query) {
+                $query->where('EQUIPE_ATIVO', 1);
+            })
+            ->when($situacao === 'DESATIVADAS', function (Builder $query) {
+                $query->where('EQUIPE_ATIVO', 0);
+            })
             ->when($requisicao->EQUIPE_ID, function (Builder $query) use ($requisicao) {
-                return $query->where("EQUIPE_ID", "=", $requisicao->EQUIPE_ID);
+                $query->where('EQUIPE_ID', (int) $requisicao->EQUIPE_ID);
             })
             ->when($requisicao->VEICULO_ID, function (Builder $query) use ($requisicao) {
-                return $query->where("VEICULO_ID", "=", $requisicao->VEICULO_ID);
+                $query->where('VEICULO_ID', (int) $requisicao->VEICULO_ID);
             })
-            ->orderBy('VEICULO_ID')
-            ->paginate();
+            ->when($veiculo !== '', function (Builder $query) use ($veiculo) {
+                $query->whereHas('veiculo', function ($v) use ($veiculo) {
+                    $v->where('VEICULO_IDENTIFICACAO', 'like', '%' . $veiculo . '%');
+                });
+            })
+            ->when($turno, function (Builder $query) use ($turno) {
+                $query->where('EQUIPE_TURNO', $turno);
+            })
+            ->when($profissional !== '', function (Builder $query) use ($profissional) {
+                $query->comProfissionalNome($profissional);
+            })
+            ->when($requisicao->SITUACAO_PLANTAO === 'VIGENTE', function (Builder $query) use ($agora) {
+                $query->where('EQUIPE_DATA_FIM', '>=', $agora);
+            })
+            ->when($requisicao->SITUACAO_PLANTAO === 'ENCERRADO', function (Builder $query) use ($agora) {
+                $query->where('EQUIPE_DATA_FIM', '<', $agora);
+            })
+            ->orderByDesc('EQUIPE_ATIVO')
+            ->orderByDesc('EQUIPE_DATA')
+            ->orderByDesc('EQUIPE_ID')
+            ->paginate(15);
     }
 
     public static function buscar($id)

@@ -455,12 +455,9 @@ export default {
                     'Salvo com sucesso',
                     'success'
                 ).then(() => {
+                    // Recarrega a lista do Cadastro de Equipes (paginada por equipe)
                     this.$store.dispatch(
                         'EquipeViewModule/search',
-                        this.msgId
-                    );
-                    this.$store.dispatch(
-                        'VeiculoViewModule/searchCadastrar',
                         this.msgId
                     );
                 });

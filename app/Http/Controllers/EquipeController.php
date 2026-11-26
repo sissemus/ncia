@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Equipe\EquipeCreateRequest;
-use App\Models\ChamadoEquipe;
 use App\Models\Equipe;
-use App\Models\EquipeHistorico;
-use App\Models\EquipeHistoricoProfissional;
 use App\Models\EquipeProfissional;
 use App\Models\Profissional;
 use App\Models\TabelaGenerica;
@@ -110,7 +107,7 @@ class EquipeController extends Controller
 
             $turno = $request->input('EQUIPE_TURNO');
 
-            [$dataInicio, $dataFim] = $this->periodoTurno(Carbon::today(), $turno);
+            [$dataInicio, $dataFim] = $this->periodoTurno($this->dataBaseTurno($turno), $turno);
 
             $this->validarDuplicidade($veiculo->VEICULO_ID, $dataInicio->toDateString(), $turno);
 
@@ -253,6 +250,22 @@ class EquipeController extends Controller
     }
 
     /**
+     * Dia-base do plantão ao cadastrar: SN cadastrado de madrugada (antes das
+     * 07h) é o SN que está em curso, iniciado às 19h de ONTEM (mesma regra de
+     * PlantaoEquipeService::vigente()). Nos demais casos, hoje.
+     */
+    private function dataBaseTurno($turno)
+    {
+        $vigente = PlantaoEquipeService::vigente();
+
+        if ($turno === 'SN' && $vigente['turno'] === 'SN') {
+            return Carbon::parse($vigente['data'])->startOfDay();
+        }
+
+        return Carbon::today();
+    }
+
+    /**
      * Retorna [início, fim] do plantão do turno no dia informado (SD 07h, SN 19h, 12h de duração).
      */
     private function periodoTurno(Carbon $dia, $turno)
@@ -311,111 +324,48 @@ class EquipeController extends Controller
         }
     }
 
+    /**
+     * "Desativar equipe" (antiga lixeira). Nunca remove fisicamente: só marca
+     * EQUIPE_ATIVO = 0, preservando os vínculos com profissionais e chamados.
+     * Bloqueada enquanto houver chamado em fila (trocar plantão) ou em
+     * atendimento (concluir/cancelar).
+     */
     public function deletar(Request $request)
     {
-        
-        $EQUIPE_ID = isset($request['EQUIPE_ID']) ? $request['EQUIPE_ID'] : null;
-
-        // Valida antes de apagar qualquer coisa: se a equipe já foi usada em
-        // algum chamado, não pode ser excluída (violaria a FK em CHAMADO_EQUIPE
-        // e deixaria chamados órfãos).
-        
-        // Equipe com chamado em fila / em atendimento não pode sair: primeiro
-        // troca o plantão ou conclui/cancela o chamado.
-        $pendentes = Equipe::where('EQUIPE_ID', $EQUIPE_ID)->first();
-        $pendentes = $pendentes ? $pendentes->chamadosPendentes()->pluck('CHAMADO_ID') : collect();
-        if ($pendentes->isNotEmpty()) {
-            return response()->json([
-                'sucesso' => false,
-                'mensagem' => "A equipe Nº {$EQUIPE_ID} possui chamado em fila ou em atendimento (chamado Nº "
-                    . $pendentes->implode(', ') . '). Troque o plantão ou conclua/cancele o chamado antes de removê-la.',
-            ], 422);
-        }
-
-        // Exclusão física, mas arquivando antes no histórico e tudo dentro de
-        // uma transação (tudo-ou-nada): se qualquer passo falhar, nada é
-        // apagado e nada fica pela metade.
-        DB::transaction(function () use ($EQUIPE_ID) {
-
-            //verifico uso em chamado
-            $temChamado = ChamadoEquipe::where('EQUIPE_ID', '=', $EQUIPE_ID)->exists();
-
-            //verifica se já houve a inserção da equipe em EQUIPE_HISTORICO
-            $equipeHistorico = EquipeHistorico::where('EQUIPE_ID', '=', $EQUIPE_ID)->exists();
-            
-            //verifica se já houve a inserção da equipe em EQUIPE_HISTORICO_PROFISSIONAL
-            $equipeHistoricoProfissional = EquipeHistoricoProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)->exists();
-
-            if(!$equipeHistorico){
-                DB::insert(
-                    'INSERT INTO EQUIPE_HISTORICO
-                        (EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_DATA_FIM, EQUIPE_TURNO)
-                    SELECT EQUIPE_ID, VEICULO_ID, EQUIPE_ATIVO, USUARIO_ID_CAD, EQUIPE_DATA, EQUIPE_DATA_FIM, EQUIPE_TURNO
-                    FROM EQUIPE
-                    WHERE EQUIPE_ID = ?',
-                    [$EQUIPE_ID]
-                );
-            }
-
-            if(!$equipeHistoricoProfissional){
-                // 2) Arquiva os profissionais em EQUIPE_HISTORICO_PROFISSIONAL.
-                //    EQUIPE_PROFISSIONAL_ID é IDENTITY no histórico, então é omitido
-                //    (o banco gera um novo).
-                DB::insert(
-                    'INSERT INTO EQUIPE_HISTORICO_PROFISSIONAL
-                        (EQUIPE_ID, PROFISSIONAL_ID, EQUIPE_PROFISSIONAL_ATIVO, USUARIO_ID_CAD)
-                    SELECT EQUIPE_ID, PROFISSIONAL_ID, EQUIPE_PROFISSIONAL_ATIVO, USUARIO_ID_CAD
-                    FROM EQUIPE_PROFISSIONAL
-                    WHERE EQUIPE_ID = ?',
-                    [$EQUIPE_ID]
-                );
-            }
-
-            //mudança
-            if ($temChamado) {
-
-                Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
-                ->update([
-                    'EQUIPE_ATIVO' => 0
-                ]);
-
-            }
-            else{
-
-                EquipeProfissional::where('EQUIPE_ID', '=', $EQUIPE_ID)
-                ->delete();
-                
-                Equipe::where('EQUIPE_ID', '=', $EQUIPE_ID)
-                    ->delete();
-            }
-
-        });
-
-        return response()->json([
-            'sucesso' => true,
-            'mensagem' => 'Equipe excluída com sucesso.'
+        $dados = $request->validate([
+            'EQUIPE_ID' => 'required|integer|min:1',
         ]);
 
-    }
+        return DB::transaction(function () use ($dados) {
+            $equipe = Equipe::lockForUpdate()->findOrFail($dados['EQUIPE_ID']);
 
-    public function desativarEquipes(Request $request)
-    {
+            if ((int) $equipe->EQUIPE_ATIVO !== 1) {
+                return response()->json([
+                    'sucesso' => false,
+                    'mensagem' => "A equipe Nº {$equipe->EQUIPE_ID} já está desativada.",
+                ], 422);
+            }
 
-        $agora = Carbon::now(); // com timezone America/Fortaleza no config/app.php
+            $pendentes = $equipe->chamadosPendentes()->pluck('CHAMADO_ID');
+            if ($pendentes->isNotEmpty()) {
+                return response()->json([
+                    'sucesso' => false,
+                    'mensagem' => "A equipe Nº {$equipe->EQUIPE_ID} possui chamado em fila ou em atendimento (chamado Nº "
+                        . $pendentes->implode(', ') . '). Troque o plantão ou conclua/cancele o chamado antes de desativá-la.',
+                ], 422);
+            }
 
-        $vencidas = function () use ($agora) {
-            return Equipe::where('EQUIPE_ATIVO', 1)
-                ->where(function ($q) use ($agora) {
-                    $q->where('EQUIPE_DATA_FIM', '<=', $agora->format('Y-m-d H:i:s'))
-                    // Registros antigos, sem EQUIPE_DATA_FIM: desativa se a data já passou
-                    ->orWhere(function ($q2) use ($agora) {
-                        $q2->whereNull('EQUIPE_DATA_FIM')
-                            ->where('EQUIPE_DATA', '<', $agora->copy()->startOfDay()->format('Y-m-d H:i:s'));
-                    });
-                });
-        };
+            Equipe::where('EQUIPE_ID', $equipe->EQUIPE_ID)->update([
+                'EQUIPE_ATIVO' => 0,
+                'UPDATED_AT' => Carbon::now()->format('Y-m-d H:i:s'),
+                'USUARIO_ID_CAD' => Auth::id(),
+            ]);
 
-        return $this->desativarSemPendencia($vencidas, 'Equipe(s) anterior(es) desativada(s) com sucesso.');
+            return response()->json([
+                'sucesso' => true,
+                'mensagem' => "Equipe Nº {$equipe->EQUIPE_ID} desativada com sucesso.",
+            ]);
+        }, 3);
     }
 
     public function desativarEquipesTodas(Request $request)

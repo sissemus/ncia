@@ -38,7 +38,10 @@ class PlantaoEquipeService
         $hoje = Carbon::now();
 
         // O relógio ordena as opções; a entrega efetiva é confirmada pelo regulador.
-        return $query->where(function ($query) use ($hoje) {
+        // Plantão já encerrado (ex.: SN de ontem depois das 07h) não recebe novos
+        // chamados, mesmo que a equipe ainda esteja ativa aguardando a rotina.
+        return $query->where('EQUIPE_DATA_FIM', '>', $hoje->format('Y-m-d H:i:s'))
+            ->where(function ($query) use ($hoje) {
             $query->where(function ($query) use ($hoje) {
                 $query->whereDate('EQUIPE_DATA', $hoje->toDateString())
                     ->whereIn('EQUIPE_TURNO', ['SD', 'SN']);

@@ -1,3 +1,14 @@
+// Filtros do Cadastro de Equipes (lista paginada por equipe)
+const pesquisaPadrao = () => ({
+    EQUIPE_ID: null,
+    VEICULO_ID: null,
+    VEICULO_IDENTIFICACAO: null,
+    EQUIPE_TURNO: null,
+    PROFISSIONAL_NOME: null,
+    SITUACAO: 'ATIVAS',          // ATIVAS | DESATIVADAS | TODAS
+    SITUACAO_PLANTAO: null,      // VIGENTE | ENCERRADO
+})
+
 export default {
     namespaced: true,
     state: {
@@ -7,13 +18,9 @@ export default {
             total: 0,
             last_page: 0
         },
-        equipePesquisa: {
-            EQUIPE_ID: null,
-            VEICULO_ID: null,
-            EQUIPE_ATIVO: null,
-            EQUIPE_DATA: null,
-            EQUIPE_TURNO: null,
-        },
+        equipePesquisa: pesquisaPadrao(),
+        // Filtros da última pesquisa (o formulário só vale após clicar em Pesquisar)
+        filtrosAplicados: pesquisaPadrao(),
     },
     getters: {
         getEquipePesquisa(state) {
@@ -24,21 +31,16 @@ export default {
         },
         getEquipes(state) {
             return state.equipes
+        },
+        getFiltrosAplicados(state) {
+            return state.filtrosAplicados
         }
     },
     mutations: {
         setEquipePesquisa(state, equipePesquisa = null) {
-            if (equipePesquisa) {
-                state.equipePesquisa = JSON.parse(JSON.stringify(equipePesquisa))
-            } else {
-                state.equipePesquisa = {
-                    EQUIPE_ID: null,
-                    VEICULO_ID: null,
-                    EQUIPE_DATA: null,
-                    EQUIPE_TURNO: null,
-                    EQUIPE_ATIVO: null,
-                }
-            }
+            state.equipePesquisa = equipePesquisa
+                ? JSON.parse(JSON.stringify(equipePesquisa))
+                : pesquisaPadrao()
         },
         setPagination(state, pagination = null) {
             if (pagination) {
@@ -57,6 +59,9 @@ export default {
         },
         setEquipes(state, equipes) {
             state.equipes = JSON.parse(JSON.stringify(equipes))
+        },
+        aplicarFiltros(state) {
+            state.filtrosAplicados = JSON.parse(JSON.stringify(state.equipePesquisa))
         }
     },
     actions: {
@@ -69,16 +74,24 @@ export default {
         setEquipes({ commit }, equipes) {
             commit('setEquipes', equipes)
         },
+        aplicarFiltros({ commit }) {
+            commit('aplicarFiltros')
+        },
         search(context, msgId) {
             let baseUrl = context.rootGetters['getBaseUrl']
             let page = context.state.pagination.current_page
-            axios({
+            const params = { page }
+
+            // Envia só os filtros preenchidos
+            Object.entries(context.state.filtrosAplicados).forEach(([chave, valor]) => {
+                const texto = typeof valor === 'string' ? valor.trim() : valor
+                if (texto !== null && texto !== undefined && texto !== '') params[chave] = texto
+            })
+
+            return axios({
                 method: 'GET',
                 url: `${baseUrl}/equipe/search`,
-                params: {
-                    page: page,
-                    ...context.state.equipePesquisa,
-                }
+                params
             }).then(r => {
                 context.dispatch('setEquipes', r.data['data']).then()
                 context.dispatch('setPagination', r.data).then()
