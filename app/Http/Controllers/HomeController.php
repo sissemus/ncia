@@ -45,7 +45,6 @@ class HomeController extends Controller
 
     public function chamadosAbertos(Request $request)
     {
-        $hoje = Carbon::now()->toDateString();
         $perfisAtivos = $this->perfisAtivos();
 
         $podeVisualizarTodos = $this->podeVisualizarTodos($perfisAtivos);
@@ -53,8 +52,14 @@ class HomeController extends Controller
 
         abort_unless($podeVisualizarTodos || $podeVisualizarPorUnidade, 403);
 
-        $query = $this->consultaPorSituacao(SituacaoChamadoEnum::ABERTO)
-            ->whereDate('CHAMADO.CHAMADO_DATA', $hoje);
+        $query = $this->consultaPorSituacao(SituacaoChamadoEnum::ABERTO);
+
+        // Sem corte na meia-noite. Quem tem a aba "Expirados" vê aqui os abertos
+        // das últimas 24h (os mais antigos aparecem em "Expirados"); a unidade,
+        // que não tem essa aba, vê todos os seus chamados abertos.
+        if ($this->podeCancelarPorPrazo($perfisAtivos)) {
+            $query->where('CHAMADO.CHAMADO_DATA', '>', Carbon::now()->subHours(24));
+        }
 
         if (!$podeVisualizarTodos) {
             $unidadeIds = DB::table('USUARIO_UNIDADE')
