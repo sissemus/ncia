@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\DB;
 
 class ChamadoFluxoService
 {
-    private const MOTIVO_PRAZO_EXCEDIDO = 'PRAZO DE 24 HORAS EXCEDIDO';
+    /** Horas que um chamado pode ficar ABERTO antes de ir para "Expirados" e poder ser cancelado por prazo. */
+    public const PRAZO_CHAMADO_ABERTO_HORAS = 72;
+
+    private const MOTIVO_PRAZO_EXCEDIDO = 'PRAZO DE 72 HORAS EXCEDIDO';
 
     public function recepcionar(Chamado $chamado)
     {
@@ -113,9 +116,10 @@ class ChamadoFluxoService
         $this->validarSituacao($chamado, [SituacaoChamadoEnum::ABERTO]);
 
         $abertura = Carbon::parse($chamado->getRawOriginal('CHAMADO_DATA'));
-        $limite = Carbon::now()->subHours(24);
+        $horas = self::PRAZO_CHAMADO_ABERTO_HORAS;
+        $limite = Carbon::now()->subHours($horas);
 
-        abort_if($abertura->gt($limite), 422, 'O chamado ainda não completou 24 horas em aberto.');
+        abort_if($abertura->gt($limite), 422, "O chamado ainda não completou {$horas} horas em aberto.");
 
         $motivoId = DB::table('TABELA_GENERICA')
             ->where('TABELA_ID', RTG::MOTIVO_CANCELAMENTO)
@@ -128,7 +132,7 @@ class ChamadoFluxoService
         $this->registrarCancelamento(
             $chamado,
             $motivoId,
-            'Chamado cancelado manualmente por permanecer aberto por mais de 24 horas.'
+            "Chamado cancelado manualmente por permanecer aberto por mais de {$horas} horas."
         );
     }
 

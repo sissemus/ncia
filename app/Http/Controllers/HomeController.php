@@ -55,10 +55,11 @@ class HomeController extends Controller
         $query = $this->consultaPorSituacao(SituacaoChamadoEnum::ABERTO);
 
         // Sem corte na meia-noite. Quem tem a aba "Expirados" vê aqui os abertos
-        // das últimas 24h (os mais antigos aparecem em "Expirados"); a unidade,
+        // dentro do prazo (os mais antigos aparecem em "Expirados"); a unidade,
         // que não tem essa aba, vê todos os seus chamados abertos.
         if ($this->podeCancelarPorPrazo($perfisAtivos)) {
-            $query->where('CHAMADO.CHAMADO_DATA', '>', Carbon::now()->subHours(24));
+            $query->where('CHAMADO.CHAMADO_DATA', '>',
+                Carbon::now()->subHours(ChamadoFluxoService::PRAZO_CHAMADO_ABERTO_HORAS));
         }
 
         if (!$podeVisualizarTodos) {
@@ -106,7 +107,7 @@ class HomeController extends Controller
         $perfisAtivos = $this->perfisAtivos();
         abort_unless($this->podeCancelarPorPrazo($perfisAtivos), 403);
 
-        $limite = Carbon::now()->subHours(24);
+        $limite = Carbon::now()->subHours(ChamadoFluxoService::PRAZO_CHAMADO_ABERTO_HORAS);
         $query = $this->consultaPorSituacao(SituacaoChamadoEnum::ABERTO)
             ->where('CHAMADO.CHAMADO_DATA', '<=', $limite);
 

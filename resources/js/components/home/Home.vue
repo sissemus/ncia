@@ -97,7 +97,7 @@
 
             <v-card-text>
                 <v-alert type="warning" dense outlined>
-                    Chamados que permanecem abertos por 24 horas ou mais devem ser avaliados e cancelados
+                    Chamados que permanecem abertos por 72 horas ou mais devem ser avaliados e cancelados
                     manualmente quando não houver continuidade do atendimento.
                 </v-alert>
 
@@ -378,7 +378,7 @@ export default {
             if (this.cancelandoId !== null) return;
             Swal.fire({
                 title: "Cancelar chamado por prazo excedido?",
-                text: `O chamado Nº ${chamado.CHAMADO_ID} será cancelado com o motivo “Prazo de 24 horas excedido”.`,
+                text: `O chamado Nº ${chamado.CHAMADO_ID} será cancelado com o motivo “Prazo de 72 horas excedido”.`,
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonText: "Sim, cancelar",
